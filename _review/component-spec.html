@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Loona 卡片分类 × 字段 × 组件图（9 类）</title>
+<style>
+  :root{ --bg:#08090c; --panel:#13151b; --panel2:#191c24; --line:rgba(255,255,255,.09); --t0:#e8e8ee; --t1:#9aa0ac; --t2:#6f7682; --amber:#ffb454; --req:#ff9c9c; --opt:#9fe0c0; --out:#9ab8ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(circle at 50% -10%,#16131a,#08090c 70%);color:var(--t0);
+    font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:34px 26px 90px}
+  h1{font-size:22px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h1 .dot{width:11px;height:11px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px var(--amber)}
+  .sub{color:var(--t1);margin:0 0 8px;font-size:13px;max-width:1040px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 4px;font-size:12px;color:var(--t1)}
+  .pill{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px;border:1px solid;vertical-align:1px}
+  .pill.req{color:var(--req);border-color:rgba(255,90,90,.5);background:rgba(255,90,90,.1)}
+  .pill.opt{color:var(--opt);border-color:rgba(120,230,160,.45);background:rgba(120,230,160,.08)}
+  .pill.in{color:var(--out);border-color:rgba(120,160,255,.45);background:rgba(120,160,255,.08)}
+  code{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:12px;color:#ffd9a8}
+  h2{font-size:16px;margin:30px 0 10px;color:var(--amber);letter-spacing:.3px;border-bottom:1px solid var(--line);padding-bottom:8px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  h2 .num{font-size:18px}
+  h2 .scn{font-size:11.5px;color:var(--t1);font-weight:400;margin-left:auto}
+  h4{font-size:12.5px;margin:12px 0 5px;color:var(--out);font-weight:700;letter-spacing:.3px}
+  .cat{display:grid;grid-template-columns:minmax(290px,440px) 1fr;gap:20px;align-items:start}
+  @media (max-width:900px){ .cat{grid-template-columns:1fr} }
+  .shots{display:flex;flex-direction:column;gap:10px}
+  .shots.multi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  figure img{width:100%;display:block;background:#000}
+  figcaption{padding:7px 11px;font-size:11.5px;color:var(--t1)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px}
+  th,td{padding:6px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--t1);font-weight:600;background:rgba(255,255,255,.03);font-size:11.5px}
+  td.f{color:#ffd9a8;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  .note{color:var(--t1);font-size:12px;margin:8px 0 0}
+  .gp{color:var(--t2);font-size:11.5px;margin:2px 0 6px}
+  .gate{color:var(--amber);font-weight:600}
+  .toc{columns:3;column-gap:18px;font-size:12.5px;margin:6px 0 12px;max-width:920px}
+  @media (max-width:700px){ .toc{columns:1} }
+  .toc a{color:#ffd9a8;text-decoration:none}
+  table.summary td.f{white-space:nowrap}
+</style>
+</head>
+<body>
+  <h1><span class="dot"></span>Loona 卡片分类 · 9 类 × 字段 × 组件图</h1>
+  <p class="sub">把当前链路里的卡片按 9 类整理：每类<b>用在哪些场景</b> · <b>必填/选填</b>（要输入的）· <b>出：字段</b>（卡上呈现的）· 附组件图。字段全部从真实 builder（<code>js/components.js</code> / <code>js/scenario-forms.js</code>）提取，与 <a href="../CARD_TAXONOMY.md" style="color:#ffd9a8">CARD_TAXONOMY.md</a> / <a href="../UI-SPEC.md" style="color:#ffd9a8">UI-SPEC.md</a> 同源。所有卡共用玻璃底座 <code>popLargeCard</code> + 行系统 <code>lcRow</code>。设备 812×375 横版。</p>
+  <div class="legend">
+    <span><span class="pill in">必填</span> 不给则该卡不成立</span>
+    <span><span class="pill opt">选填</span> 给了就显示</span>
+    <span><b style="color:var(--out)">出</b> = 卡上呈现的输出字段</span>
+    <span><b class="gate">门</b> = 须用户决策，无关闭 X</span>
+  </div>
+  <div class="toc">
+    <a href="#c1">① 轮播 / 列表卡</a> · <a href="#c2">② 旅行规划</a> · <a href="#c3">③ 天气卡</a> ·
+    <a href="#c4">④ 澄清卡</a> · <a href="#c5">⑤ 确认门</a> · <a href="#c6">⑥ 失败卡</a> ·
+    <a href="#c7">⑦ 餐厅卡</a> · <a href="#c8">⑧ 会议卡</a> · <a href="#c9">⑨ 状态条 + 字幕</a>
+  </div>
+
+  <table class="summary">
+    <tr><th>#</th><th>分类</th><th>场景</th><th>comp</th><th>要点</th></tr>
+    <tr><td>①</td><td>轮播 / 列表卡</td><td>邮件 · 新闻 · 日程 · 邮件×日程</td><td class="f">ListCard / NewsList·NewsFocus</td><td>多条目滚动列表；新闻另有气泡/沉浸形态 + 单条聚焦</td></tr>
+    <tr><td>②</td><td>旅行规划</td><td>上海旅行三天</td><td class="f">TravelView / TravelDayFocus（+ClarifyCard）</td><td>必填/选填 → 三日封面陈列 + 单日召回</td></tr>
+    <tr><td>③</td><td>天气卡</td><td>查天气</td><td class="f">WeatherView / SubjectCard</td><td>沉浸渐变天色 + 逐日 chips；glass 回退主体卡</td></tr>
+    <tr><td>④</td><td>澄清卡（槽位）</td><td>缺必填都用：天气问城市 · 餐厅问位置 · 日程问时间 · 旅行补偏好</td><td class="f">ClarifyCard</td><td>已填(值+✓) / 未填(待填) + 选填 + ≤2 选项</td></tr>
+    <tr><td>⑤</td><td>确认门</td><td>发送 · 创建 · 删除 · 保存（R3/R4）</td><td class="f">confirm</td><td>4 行摘要 + 双按钮，无 X / 无倒计时</td></tr>
+    <tr><td>⑥</td><td>失败卡</td><td>邮件×日程 部分失败 等</td><td class="f">FailureCard</td><td>成功✓ / 失败✕ / 原因 / 永远给下一步</td></tr>
+    <tr><td>⑦</td><td>餐厅卡</td><td>找餐厅</td><td class="f">RestaurantView / SubjectCard</td><td>全幅店内封面 + 距离·价格·标签</td></tr>
+    <tr><td>⑧</td><td>会议卡</td><td>会议总结</td><td class="f">SectionCard</td><td>分段：决策 / 行动项 / 未定，每段可带行</td></tr>
+    <tr><td>⑨</td><td>状态条 + 对话字幕</td><td>全场景</td><td class="f">toast / tts / user_query</td><td>右上任务状态机 + 底部 ASR/TTS</td></tr>
+  </table>
+
+  <!-- ① 轮播 / 列表卡 -->
+  <h2 id="c1"><span class="num">①</span> 轮播 / 列表卡 <code>ListCard</code> · <code>NewsList</code>/<code>NewsFocus</code><span class="scn">邮件 · 新闻 · 日程 · 邮件×日程</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/final_email.png"><figcaption>邮件 · P1/P2/P3 列表</figcaption></figure>
+      <figure><img src="_audit/final_calendar.png"><figcaption>日程 · 冲突/空档</figcaption></figure>
+      <figure><img src="_audit/final_news_card.png"><figcaption>新闻 list</figcaption></figure>
+      <figure><img src="_audit/final_news_focus.png"><figcaption>新闻 focus（单条铺全）</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：列表卡字段（ListCard）</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>卡标题（“今日邮件·3 封”）</td></tr>
+        <tr><td class="f">rows[]</td><td><span class="pill in">必填</span></td><td>列表行（见行字段）</td></tr>
+        <tr><td class="f">status</td><td><span class="pill opt">选填</span></td><td><code>{text,kind}</code> 标题右徽标（“1 封要紧”）</td></tr>
+        <tr><td class="f">footer</td><td><span class="pill opt">选填</span></td><td>脚注（建议 / 下一步）</td></tr>
+        <tr><td class="f">icon / state</td><td><span class="pill opt">选填</span></td><td>头部图标 / 卡状态</td></tr>
+      </table>
+      <h4>每行 <code>lcRow</code></h4>
+      <table>
+        <tr><th>行字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>行主标题（主题 / 事件名）</td></tr>
+        <tr><td class="f">lead</td><td><span class="pill opt">选填</span></td><td>左侧：时间 / 序号 / 圆点</td></tr>
+        <tr><td class="f">sub</td><td><span class="pill opt">选填</span></td><td>副信息（发件人·摘要 / 地点·人数）</td></tr>
+        <tr><td class="f">badge</td><td><span class="pill opt">选填</span></td><td>状态徽标（P1/P2/P3 · 已确认/冲突/空档）</td></tr>
+        <tr><td class="f">right / tag / dim / id</td><td><span class="pill opt">选填</span></td><td>右侧时间 / 小标 / 置灰 / 高亮 id</td></tr>
+      </table>
+      <h4>新闻额外字段（NewsList items[] / NewsFocus item）</h4>
+      <table>
+        <tr><th>item 字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>头条标题</td></tr>
+        <tr><td class="f">image</td><td><span class="pill opt">选填</span></td><td>图片（缩略图 / 大图 / 全幅封面）</td></tr>
+        <tr><td class="f">summary</td><td><span class="pill opt">选填</span></td><td>一行摘要（list 态）</td></tr>
+        <tr><td class="f">lead / points[] / why_it_matters</td><td><span class="pill opt">选填</span></td><td>导语 / 要点 / 影响（focus 态高密度）</td></tr>
+        <tr><td class="f">confidence / source / time / tag</td><td><span class="pill opt">选填</span></td><td>可信度 / 来源·时间 / 分类标</td></tr>
+      </table>
+      <p class="gp">新闻“轮播”有三形态（皮肤选）：编辑卡 / 对话气泡 / 沉浸封面陈列；并支持 list↔focus（钻取单条铺全）。</p>
+    </div>
+  </div>
+
+  <!-- ② 旅行规划 -->
+  <h2 id="c2"><span class="num">②</span> 旅行规划 <code>TravelView</code> / <code>TravelDayFocus</code><span class="scn">上海旅行三天（内部含澄清补槽）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/final_travel_clarify.png"><figcaption>入参 · 地点上海✓ / 时间3天✓</figcaption></figure>
+      <figure><img src="_audit/final_travel_imm.png"><figcaption>TravelView · 三日封面陈列</figcaption></figure>
+      <figure><img src="_audit/tv_day_focus.png"><figcaption>TravelDayFocus · 单日召回</figcaption></figure>
+      <figure><img src="_audit/final_travel_confirm.png"><figcaption>确认门 · 保存行程</figcaption></figure>
+    </div>
+    <div>
+      <h4>入：必填 / 选填（先补齐再排）</h4>
+      <table>
+        <tr><th>入参（ClarifyCard 槽位）</th><th>类型</th><th>说明</th></tr>
+        <tr><td class="f">slots.required</td><td><span class="pill in">必填</span></td><td>地点、时间（缺则问一次不猜；已知则带 value + ✓）</td></tr>
+        <tr><td class="f">slots.optional</td><td><span class="pill opt">选填</span></td><td>预算 / 节奏 / 必去点 等（可补）</td></tr>
+      </table>
+      <h4>出：三日规划 TravelView <span class="gp">（aura；非 aura → SectionCard）</span></h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">sections[]</td><td><span class="pill in">必填</span></td><td>每天一张：<code>{label(Day1·城市漫步), badge(轻松/适中 pace), text}</code></td></tr>
+        <tr><td class="f">（封面图）</td><td><span class="pill opt">选填</span></td><td>来自 <code>assets/travel/</code>（外滩 / 西岸 / 田子坊）</td></tr>
+      </table>
+      <h4>出：单日召回 TravelDayFocus</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>当天标题</td></tr>
+        <tr><td class="f">nodes[]</td><td><span class="pill in">必填</span></td><td>时段 <code>{time, place, note}</code>（上午/下午/傍晚）</td></tr>
+        <tr><td class="f">photo / badge / footer</td><td><span class="pill opt">选填</span></td><td>左图 / pace / 体力·交通脚注</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ③ 天气卡 -->
+  <h2 id="c3"><span class="num">③</span> 天气卡 <code>WeatherView</code> / <code>SubjectCard</code><span class="scn">查天气（默认沉浸）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/final_weather.png"><figcaption>WeatherView（aura）· 渐变天色 + 日 chips</figcaption></figure>
+      <figure><img src="_audit/cs_subject_weather.png"><figcaption>SubjectCard（glass 回退）</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>城市（主体卡形态用）</td></tr>
+        <tr><td class="f">headline</td><td><span class="pill in">必填</span></td><td>大字主张 / 生活动作（“周三最适合出门，周五带伞”）</td></tr>
+        <tr><td class="f">rows[]</td><td><span class="pill in">必填</span></td><td>逐日 <code>{id, lead(周一), title(18~24°), badge(最适合/带伞日)}</code></td></tr>
+        <tr><td class="f">badge</td><td><span class="pill opt">选填</span></td><td>可信度徽标（高可信）</td></tr>
+        <tr><td class="f">footer</td><td><span class="pill opt">选填</span></td><td>更新时间 / 不确定性</td></tr>
+      </table>
+      <p class="gp">缺城市时先走 ④ 澄清卡（“问城市版”变体）：城市槽位待填，不猜附近。</p>
+    </div>
+  </div>
+
+  <!-- ④ 澄清卡 -->
+  <h2 id="c4"><span class="num">④</span> 澄清卡（槽位）<code>ClarifyCard</code><span class="scn">缺必填都用：天气问城市 · 餐厅问位置 · 日程问时间 · 旅行补偏好</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/cal_slot_clarify.png"><figcaption>日程 · 时间待填 / 标题已填✓</figcaption></figure>
+      <figure><img src="_audit/rst_slot_clarify.png"><figcaption>餐厅 · 位置待填 / 场景已填✓</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段（含已填 / 未填）</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">question</td><td><span class="pill in">必填</span></td><td>卡上问题文案（<b>≠ TTS</b>：TTS 先承接再问）</td></tr>
+        <tr><td class="f">slots.required[]</td><td><span class="pill in">必填</span></td><td>必填槽 <code>{label, value?}</code>：<br>· 带 <code>value</code> = <b>已填项</b>（显示值 + ✓）<br>· 无 <code>value</code> = <b>未填项</b>（醒目琥珀“待填”框）</td></tr>
+        <tr><td class="f">slots.optional[]</td><td><span class="pill opt">选填</span></td><td>选填项 <code>label</code>（虚线 chip，可补）</td></tr>
+        <tr><td class="f">options[]</td><td><span class="pill opt">选填</span></td><td>≤2 个快选（第一个 primary；接已查到的上下文）</td></tr>
+        <tr><td class="f">title</td><td><span class="pill opt">选填</span></td><td>默认“想先确认一下”</td></tr>
+      </table>
+      <p class="note">这是 <b class="gate">门</b>：<code>closeable:false</code>，无关闭 X，靠选项/回应决策。“已填 vs 未填”= <code>required</code> 槽位是否带 <code>value</code>。</p>
+    </div>
+  </div>
+
+  <!-- ⑤ 确认门 -->
+  <h2 id="c5"><span class="num">⑤</span> 确认门 <code>confirm</code> / <code>ConfirmationCard</code><span class="scn">发送 · 创建 · 删除 · 保存（R3/R4）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/fix_confirm_card.png"><figcaption>只有 发送/取消（无 X / 无倒计时）</figcaption></figure>
+      <figure><img src="_audit/cs_confirm_email.png"><figcaption>邮件 · 发送给程楠</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">action</td><td><span class="pill in">必填</span></td><td>动作（发送邮件 / 创建日程 / 改日程 / 保存行程）</td></tr>
+        <tr><td class="f">target</td><td><span class="pill in">必填</span></td><td>对象（收件人 / 事件名）<b>须明确，不空、不自动推断</b></td></tr>
+        <tr><td class="f">impact</td><td><span class="pill opt">选填</span></td><td>影响（“对外发出，代表你正式确认”）</td></tr>
+        <tr><td class="f">content_summary</td><td><span class="pill opt">选填</span></td><td>内容摘要一行</td></tr>
+        <tr><td class="f">reversible</td><td><span class="pill opt">选填</span></td><td>布尔 → “可撤销 / 不可撤销”徽标</td></tr>
+        <tr><td class="f">confirm_label / cancel_label</td><td><span class="pill opt">选填</span></td><td>按钮文案（默认 发送 / 取消）</td></tr>
+        <tr><td class="f">outcome</td><td><span class="pill opt">选填</span></td><td><code>'fail'</code> + <code>fail_label</code>：确认后“发送中→发送失败”（接 ⑥）</td></tr>
+      </table>
+      <p class="note">这是 <b class="gate">门</b>：标题固定“需要你确认”，无 X、无倒计时（确认须显式）。回执：确认→发送中→已发送·查看详情；取消→已取消。</p>
+    </div>
+  </div>
+
+  <!-- ⑥ 失败卡 -->
+  <h2 id="c6"><span class="num">⑥</span> 失败卡 <code>FailureCard</code><span class="scn">部分/全部失败（REQ-FAIL-001）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/fix_fail_card.png"><figcaption>✓日程已改 / ✕邮件没发出 + 下一步</figcaption></figure>
+      <figure><img src="_audit/fix_fail_compare.png"><figcaption>全成功 vs 部分失败 并排</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">completed[]</td><td><span class="pill in">必填</span></td><td>已成功项（✓ 绿）</td></tr>
+        <tr><td class="f">failed[]</td><td><span class="pill in">必填</span></td><td>未成功项（✕ 红），标清<b>谁不知道</b>（“小周还不知道改期”）</td></tr>
+        <tr><td class="f">next_options[]</td><td><span class="pill in">必填</span></td><td>下一步（重发 / 换渠道 / 手动）——<b>永远给下一步</b></td></tr>
+        <tr><td class="f">reason / impact</td><td><span class="pill opt">选填</span></td><td>失败原因 / 影响</td></tr>
+        <tr><td class="f">title</td><td><span class="pill opt">选填</span></td><td>默认“部分没成功”</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ⑦ 餐厅卡 -->
+  <h2 id="c7"><span class="num">⑦</span> 餐厅卡 <code>RestaurantView</code> / <code>SubjectCard</code><span class="scn">找餐厅（默认沉浸）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/final_restaurant.png"><figcaption>RestaurantView（aura）· 全幅店内封面</figcaption></figure>
+      <figure><img src="_audit/cs_subject_restaurant.png"><figcaption>SubjectCard（glass 回退）</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>店名（叠在全幅封面上）</td></tr>
+        <tr><td class="f">headline</td><td><span class="pill opt">选填</span></td><td>推荐理由（安静、适合慢慢聊）</td></tr>
+        <tr><td class="f">meta / distance / price_band</td><td><span class="pill opt">选填</span></td><td>距离 · 价格带</td></tr>
+        <tr><td class="f">badge / tags[]</td><td><span class="pill opt">选填</span></td><td>场景适配 / 标签；脚注可标“不保证有位”</td></tr>
+      </table>
+      <p class="gp">缺位置先走 ④ 澄清卡：位置槽位待填、场景已填✓。</p>
+    </div>
+  </div>
+
+  <!-- ⑧ 会议卡 -->
+  <h2 id="c8"><span class="num">⑧</span> 会议卡 <code>SectionCard</code><span class="scn">会议总结（决策 / 行动 / 未定）</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/final_meeting.png"><figcaption>SectionCard · 三段分组</figcaption></figure>
+      <figure><img src="_audit/b_meeting_confirm.png"><figcaption>外发同步邮件 → 走 ⑤ 确认门</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">title</td><td><span class="pill in">必填</span></td><td>卡标题（“会议结论”）</td></tr>
+        <tr><td class="f">sections[]</td><td><span class="pill in">必填</span></td><td>分组段数组（见下）</td></tr>
+        <tr><td class="f">footer</td><td><span class="pill opt">选填</span></td><td>依据（“会议转录 12:30 / 18:40 段”）</td></tr>
+      </table>
+      <h4>每个 section</h4>
+      <table>
+        <tr><th>段字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">label</td><td><span class="pill in">必填</span></td><td>段标题（决策 / 行动项 / 未定）</td></tr>
+        <tr><td class="f">badge</td><td><span class="pill opt">选填</span></td><td>高可信 / 负责人待确认（pending 不乱填）</td></tr>
+        <tr><td class="f">text / rows[] / id</td><td><span class="pill opt">选填</span></td><td>段正文 / 行动项明细行 / 高亮 id</td></tr>
+      </table>
+      <p class="gp">同结构也用于<b>旅行三日</b>（glass 回退态）：每段 = 一天。</p>
+    </div>
+  </div>
+
+  <!-- ⑨ 状态条 + 字幕 -->
+  <h2 id="c9"><span class="num">⑨</span> 状态条 + 对话字幕 <code>toast</code> / <code>tts</code> / <code>user_query</code><span class="scn">全场景</span></h2>
+  <div class="cat">
+    <div class="shots multi">
+      <figure><img src="_audit/fix_sent_toast.png"><figcaption>StatusToast · 已发送✓·查看详情（右上）</figcaption></figure>
+      <figure><img src="_audit/final_companion.png"><figcaption>对话字幕（陪聊：无卡纯语音）</figcaption></figure>
+    </div>
+    <div>
+      <h4>出：字段</h4>
+      <table>
+        <tr><th>字段</th><th>必填?</th><th>出 / 说明</th></tr>
+        <tr><td class="f">toast.state</td><td><span class="pill in">必填</span></td><td>searching / verifying / reading / processing / sending / saving / done / fail（icon+默认文案在 <code>TOAST_STATE</code>）</td></tr>
+        <tr><td class="f">toast.text / btn</td><td><span class="pill opt">选填</span></td><td>覆盖文案 / <code>{label,onClick}</code> 入口（“查看详情”）</td></tr>
+        <tr><td class="f">toast.dismiss_on</td><td><span class="pill opt">选填</span></td><td><code>'card'</code> = 出卡时自动消失</td></tr>
+        <tr><td class="f">tts.text</td><td><span class="pill in">必填</span></td><td>底部字幕（结果卡期 1 行 ≤21 字；门放 2 行）</td></tr>
+        <tr><td class="f">tts.pace / highlight</td><td><span class="pill opt">选填</span></td><td>语速 slow/mid / 念到时高亮的卡·行 id</td></tr>
+        <tr><td class="f">user_query.text</td><td><span class="pill in">必填</span></td><td>用户 ASR（与 TTS 同位、先后交替）</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:26px">说明：① “已填 / 未填” = ④ 澄清卡 <code>slots.required</code> 是否带 <code>value</code>；“必填 / 选填” = ② 旅行规划等的入参槽。② 天气/餐厅/旅行默认 aura 沉浸，切 glass 自动回退 SubjectCard / SectionCard（结构同源、字段不变）。③ 字段提取自源码 builder，例值取自 <code>cases/*.js</code>。</p>
+</body>
+</html>
