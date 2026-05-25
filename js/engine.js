@@ -271,31 +271,42 @@
       return null;
     },
     _speak: function (text, opts) {
-      var self = this, myRun = this._runId;
+      var self = this;
       this._setSubtitle(text, true);
-      return new Promise(function (resolve) {
-        var done = false;
-        function fin(r) { if (done) return; done = true; self._off('cancel', onCancel); self._off('pause', onPause); self._off('resume', onResume); self._subtitleSpeaking(false); resolve(r || 'ok'); }
-        function onCancel() { try { self._synth && self._synth.cancel(); } catch (e) {} fin('cancel'); }
-        function onPause() { try { self._synth && self._synth.pause(); } catch (e) {} }
-        function onResume() { try { self._synth && self._synth.resume(); } catch (e) {} }
-        self._on('cancel', onCancel); self._on('pause', onPause); self._on('resume', onResume);
 
-        if (!self.ttsEnabled || !self._synth || !text) {           // 估时兜底，节奏照走
-          var est = Math.max(650, text ? text.length * 145 : 0) / self.speed;
-          self._sleep(est).then(function (r) { fin(r); });
-          return;
+      // 无 TTS / 无 synth / 空文本：估时兜底，节奏完全交给 pause-aware 的 _sleep（暂停即冻结、继续即续，原生支持）
+      if (!this.ttsEnabled || !this._synth || !text) {
+        return this._sleep(Math.max(650, text ? text.length * 145 : 0)).then(function (r) { self._subtitleSpeaking(false); return r; });
+      }
+
+      // 有 TTS：朗读做成可暂停/可续。
+      //  · 暂停 = 取消当前朗读（synth.cancel 比 synth.pause 可靠得多）+ 冻结(promise 不 resolve)，兜底 guard 一并停。
+      //  · 继续 = 从这句重念。
+      //  · stale-utterance 守卫：暂停时取消触发的 onend 不会误结束（curU 失配 / paused）。
+      return new Promise(function (resolve) {
+        var done = false, paused = false, guard = null, curU = null;
+        function clearGuard() { if (guard) { clearTimeout(guard); guard = null; } }
+        function fin(r) {
+          if (done) return; done = true; clearGuard(); curU = null;
+          self._off('cancel', onCancel); self._off('pause', onPause); self._off('resume', onResume);
+          self._subtitleSpeaking(false); resolve(r || 'ok');
         }
-        var u = new SpeechSynthesisUtterance(text);
-        if (self._voice) u.voice = self._voice;
-        u.lang = 'zh-CN';
-        u.rate = Math.min(1.9, Math.max(0.6, 0.98 * self.speed));
-        u.pitch = 1.02;
-        var guard = setTimeout(function () { fin('ok'); }, (Math.max(1600, text.length * 230)) / self.speed + 1800);
-        u.onend = function () { clearTimeout(guard); fin('ok'); };
-        u.onerror = function () { clearTimeout(guard); fin('ok'); };
-        try { self._synth.cancel(); self._synth.speak(u); }
-        catch (e) { clearTimeout(guard); self._sleep(Math.max(650, text.length * 145) / self.speed).then(function (r) { fin(r); }); }
+        function onCancel() { try { self._synth.cancel(); } catch (e) {} fin('cancel'); }
+        function onPause() { if (done) return; paused = true; clearGuard(); curU = null; try { self._synth.cancel(); } catch (e) {} }
+        function onResume() { if (done || !paused) return; paused = false; speak(); }
+        function armGuard() { clearGuard(); guard = setTimeout(function () { if (!paused && !done) fin('ok'); }, (Math.max(1600, text.length * 230)) / self.speed + 1800); }
+        function speak() {
+          var u = new SpeechSynthesisUtterance(text); curU = u;
+          if (self._voice) u.voice = self._voice;
+          u.lang = 'zh-CN'; u.rate = Math.min(1.9, Math.max(0.6, 0.98 * self.speed)); u.pitch = 1.02;
+          u.onend = function () { if (!paused && u === curU) fin('ok'); };       // 暂停态/旧 utterance 的 onend 不结束
+          u.onerror = function () { if (!paused && u === curU) fin('ok'); };
+          try { self._synth.cancel(); self._synth.speak(u); armGuard(); }
+          catch (e) { self._sleep(Math.max(650, text.length * 145)).then(function (r) { if (!paused) fin(r); }); }
+        }
+        self._on('cancel', onCancel); self._on('pause', onPause); self._on('resume', onResume);
+        if (self._paused) { paused = true; return; }   // 已是暂停态：等 resume 再念
+        speak();
       });
     },
 
