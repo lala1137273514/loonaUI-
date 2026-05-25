@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loona 交互工作台 v1 · 旅游 case</title>
+<link rel="stylesheet" href="css/loona.css">
+<link rel="stylesheet" href="css/skins.css">
+<link rel="stylesheet" href="css/news-forms.css">
+<link rel="stylesheet" href="css/scenario-forms.css">
+<link rel="stylesheet" href="css/console.css">
+</head>
+<body>
+<div class="wb">
+
+  <!-- ===== 顶部控制条 ===== -->
+  <header class="wb-header">
+    <span class="brand"><span class="dot"></span>Loona 工作台</span>
+    <select class="speed-sel case-sel" id="caseSel" title="切换 case"></select>
+    <div class="variant-bar" id="variantBar"></div>
+    <span class="spacer"></span>
+
+    <div class="seg" id="themeSeg" title="展现形式：同一份内容，换一种「形态」(不只是换色)">
+      <button class="seg-btn active" data-theme="glass">卡片</button>
+      <button class="seg-btn" data-theme="bubble">气泡</button>
+      <button class="seg-btn" data-theme="aura">沉浸</button>
+    </div>
+
+    <div class="ctrl-group">
+      <button class="ctrl-btn primary" id="btnPlay"><span class="ico">▶</span><span id="playLbl">播放</span></button>
+      <button class="ctrl-btn" id="btnStep"><span class="ico">⏭</span>单步</button>
+      <button class="ctrl-btn" id="btnReplay"><span class="ico">↻</span>重播</button>
+    </div>
+
+    <div class="ctrl-group">
+      <select class="speed-sel" id="speedSel" title="调速">
+        <option value="0.5">0.5×</option>
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+      <label class="tts-toggle"><input type="checkbox" id="ttsChk" checked> 朗读 TTS</label>
+      <label class="tts-toggle"><input type="checkbox" id="autoChk" checked> 自动过停等</label>
+    </div>
+
+    <div class="ctrl-group">
+      <button class="ctrl-btn" id="btnCompare" title="同场景多链路变体并排对比 (C)">⇄ 对比</button>
+      <a class="ctrl-btn" href="gallery.html" target="_blank">🧩 组件库</a>
+      <button class="ctrl-btn" id="btnShare" title="复制理想链路 JSON 到剪贴板">⧉ 分享</button>
+      <button class="ctrl-btn" id="btnExport">⬇ 导出 JSON</button>
+    </div>
+  </header>
+
+  <!-- ===== 三栏主体 ===== -->
+  <div class="wb-body">
+
+    <!-- 左：事件时间线 -->
+    <section class="wb-col left">
+      <div class="col-title"><span>事件时间线 · 理想链路</span><span id="tlCount"></span></div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <!-- 中：横版设备（Loona 产品 UI 地基，对齐 Figma Frame 26/27 · 812×375） -->
+    <section class="wb-col center">
+      <div class="now-stage" id="nowStage">IDLE · 待命</div>
+      <div class="stage-wrap">
+        <div class="device">
+          <div class="loona-stage" id="loonaStage">
+            <!-- 真实 Figma 双眼（静态，assets/loona_face.png） -->
+            <div class="loona-eyes-bg"></div>
+            <!-- 内容遮罩（出卡时柔化背景） -->
+            <div class="content-scrim"></div>
+
+            <!-- 右上菜单（vg_menu） -->
+            <button class="vg-menu" title="菜单"></button>
+            <!-- pop_small 槽（右上 44/44） -->
+            <div class="pop-slot" id="popSlot"></div>
+
+            <!-- 内容区（卡片浮层） -->
+            <div class="content-area" id="contentArea"></div>
+            <!-- toast 槽 -->
+            <div class="toast-slot" id="toastSlot"></div>
+            <!-- 底部 TTS 字幕 -->
+            <div class="subtitle" id="subtitle"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 停等横幅（澄清/确认门） -->
+      <div class="wait-banner" id="waitBanner"></div>
+    </section>
+
+    <!-- 右：agent 侧轨 + 编辑器 -->
+    <section class="wb-col right">
+      <div class="right-split">
+        <div>
+          <div class="col-title">agent 处理 · 内部决策侧轨</div>
+          <div class="sidetrack" id="sideTrack"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;min-height:0;flex:1">
+          <div class="col-title">批注 / 编辑（点事件改 4 面）</div>
+          <div class="editor" id="editor"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- 并排对比 overlay（协作控制台） -->
+<div class="cmp-overlay" id="cmpOverlay"></div>
+
+<!-- 组件库 → case 数据(多个) → 引擎 → 编辑器 → 控制台（经典 script，file:// 直接可跑） -->
+<script src="js/components.js"></script>
+<script src="js/scenario-forms.js"></script>
+<script src="cases/companion_chat.js"></script>
+<script src="cases/weather_5d.js"></script>
+<script src="cases/news_briefing.js"></script>
+<script src="cases/email_briefing.js"></script>
+<script src="cases/calendar_today.js"></script>
+<script src="cases/email_calendar_workflow.js"></script>
+<script src="cases/restaurant_quiet.js"></script>
+<script src="cases/travel_shanghai_3d.js"></script>
+<script src="cases/meeting_action.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/console.js"></script>
+<script src="js/news-gestures.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var refs = {
+    popSlot: $('popSlot'), toastSlot: $('toastSlot'), contentArea: $('contentArea'),
+    subtitle: $('subtitle'), sideTrack: $('sideTrack'), timeline: $('timeline'),
+    waitBanner: $('waitBanner'), nowStage: $('nowStage'),
+    stage: $('loonaStage'), device: document.querySelector('.device')
+  };
+
+  var engine = LoonaEngine.init(refs);
+  LoonaEditor.init(engine, { editor: $('editor') });
+  LoonaConsole.init(engine, { variantBar: $('variantBar'), btnCompare: $('btnCompare'), cmpOverlay: $('cmpOverlay'), tlCount: $('tlCount') });
+
+  /* ---- 整机缩放适配：设备内部固定 812×375，按中栏可用空间整体 scale，
+         卡片永远按 375 高渲染，不再被压扁裁切 ---- */
+  function fitDevice() {
+    var wrap = document.querySelector('.stage-wrap');
+    var device = refs.device;
+    if (!wrap || !device) return;
+    var center = wrap.parentElement;                 // .wb-col.center
+    var availW = wrap.clientWidth - 18;              // 两侧呼吸 + 机身描边
+    var availH = center.clientHeight - 104;          // 顶部 now-stage + 底部 wait-banner 预留
+    var s = Math.min(availW / 812, availH / 375);
+    if (!isFinite(s) || s <= 0) s = 1;
+    s = Math.min(s, 1.18);                           // 大屏不过度放大
+    device.style.setProperty('--device-scale', s.toFixed(4));
+  }
+  window.addEventListener('resize', fitDevice);
+  fitDevice();
+  requestAnimationFrame(fitDevice);
+  setTimeout(fitDevice, 80);
+
+  /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES） */
+  var CASES = window.LOONA_CASES || {};
+  var ORDER = ['companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
+    'email_calendar_workflow', 'restaurant_quiet', 'travel_shanghai_3d', 'meeting_action'];
+  var ids = ORDER.filter(function (k) { return CASES[k]; })
+    .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
+  var sel = $('caseSel');
+  ids.forEach(function (id) { var o = document.createElement('option'); o.value = id; o.textContent = CASES[id].title || id; sel.appendChild(o); });
+
+  /* 每个场景有最合适的「默认展现形式」(case.default_skin)；载入即切到该形式，用户仍可手动切 */
+  /* 经控制台中央加载：克隆为可编辑工作链 + 注册/恢复变体 + 渲染变体条（全局 CASES 保持原始） */
+  function loadCase(id) { LoonaConsole.loadCase(id); }
+  loadCase(ids[0]); sel.value = ids[0];
+  sel.addEventListener('change', function () { loadCase(sel.value); });
+
+  /* 风格切换（Glass / Stack / Spatial） */
+  var seg = $('themeSeg');
+  seg.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.seg-btn') : null;
+    if (b && b.dataset.theme) engine.setTheme(b.dataset.theme);
+  });
+
+  /* 控制条联动 */
+  engine.onState = function (st) {
+    var playing = st.playing && !st.paused;
+    $('playLbl').textContent = playing ? '暂停' : (st.atEnd ? '重播' : (st.paused ? '继续' : '播放'));
+    $('btnPlay').querySelector('.ico').textContent = playing ? '⏸' : '▶';
+    var btns = seg.querySelectorAll('.seg-btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].dataset.theme === st.theme);
+  };
+
+  $('btnPlay').addEventListener('click', function () {
+    if (engine.idx >= engine.events.length && engine.mode !== 'play') { engine.replay(); return; }
+    engine.toggle();
+  });
+  $('btnStep').addEventListener('click', function () { engine.step(); });
+  $('btnReplay').addEventListener('click', function () { engine.replay(); });
+  $('speedSel').addEventListener('change', function () { engine.setSpeed(this.value); });
+  $('ttsChk').addEventListener('change', function () { engine.setTTS(this.checked); });
+  $('autoChk').addEventListener('change', function () { engine.setAutoWaits(this.checked); });
+  $('btnExport').addEventListener('click', function () { LoonaEditor.exportJSON(); });
+  $('btnShare').addEventListener('click', function () { LoonaConsole.share(); });
+
+  /* 键盘：空格=播/停，→=单步，R=重播，1/2/3=切风格 */
+  document.addEventListener('keydown', function (e) {
+    if (/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ''))) return;
+    if (e.code === 'Space') { e.preventDefault(); $('btnPlay').click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); engine.step(); }
+    else if (e.key === 'r' || e.key === 'R') { engine.replay(); }
+    else if (e.key === '1') engine.setTheme('glass');
+    else if (e.key === '2') engine.setTheme('bubble');
+    else if (e.key === '3') engine.setTheme('aura');
+  });
+
+  engine._emitState();
+})();
+</script>
+</body>
+</html>

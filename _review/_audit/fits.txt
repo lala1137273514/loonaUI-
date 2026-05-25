@@ -1,0 +1,39 @@
+Loona 工作台 v1.0 · UI-SPEC §12 自动校验产物
+度量工具：_review/_audit/{verify.js, measure.js}（/browse eval，设备内部坐标）
+viewport 1440×900 · device-scale ≈ 0.938
+
+================ §12 校验清单（verify.js）================
+ALLPASS: true   (11/11)
+[#8 ] 设备框固定 812×375 ............ PASS  (812×375，未缩放 offset)
+[#9 ] 双眼在位且静态 ................ PASS  (background-image set · animation-name=none)
+[#0 ] CardStage 高 ≈273 ............ PASS  (273px = 375 − top36 − bottom66)
+[#7 ] 标准卡固定宽 ≈384 ............. PASS  (384px)
+[#7.1] 新闻聚焦固定宽 ≈548 .......... PASS  (548px)
+[#11] token 卡圆角 22 .............. PASS  (22px)
+[#11.1] token 标题 15 / 正文 14 .... PASS  (标题15 · 正文14)
+[#11.2] token 按钮 h32 / r≥999 ..... PASS
+[#1 ] 卡不超 CardStage (email) ..... PASS  (overflow −24px，留余)
+[#6 ] 结果步字幕 ≤1 行 ............. PASS  (40px · -webkit-line-clamp:1)
+[#6.1] 澄清步字幕可 2 行 ........... PASS  (62px · sub1line=false)
+[#4 ] 卡↔字幕不重叠 (email) ........ PASS  (gap 24px)
+
+================ 溢出/重叠矩阵（measure.js）================
+正常内容：14/14 组合 maxOverflowPx=0 · maxSubOverlapPx=0
+皮肤矩阵：companion(glass) · weather(aura,glass) · news(glass,bubble,aura) ·
+          email(glass) · calendar(glass) · workflow(glass) ·
+          restaurant(aura,glass) · travel(aura,glass) · meeting(glass)
+
+压力内容（densify：+6 行/+4 段/+5 条 + 超长文案）：
+                       改造前              改造后
+场景/皮肤        卡高   溢出   压字幕   |  溢出  压字幕  内部滚动
+邮件 glass       750   +477   226      |   0     0      pl-body auto ✓
+邮件×日程 glass  750   +477   236      |   0     0      pl-body auto ✓
+新闻 bubble      695   +422   199      |   0     0      thread auto ✓
+天气 glass       643   +370   173      |   0     0      pl-body auto ✓
+旅行 glass       568   +295   135      |   0     0      pl-body auto ✓
+会议 glass       568   +295   135      |   0     0      pl-body auto ✓
+日程 glass       579   +306   156      |   0     0      pl-body auto ✓
+（沉浸/aura 形式封面固定 206/236 < 273，天然安全；陪聊无卡）
+
+结论：固定包络 + 头脚常驻 + pl-body 内部滚动窗口 落地后，
+      全 9 场景 × 全形式，正常与压力内容均【零溢出 · 零重叠】，既有紧凑卡视觉零回退。

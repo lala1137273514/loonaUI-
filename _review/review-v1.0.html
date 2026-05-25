@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Loona 工作台 v1.0 · 对照图（UI-SPEC 铁律 + 协作控制台）</title>
+<style>
+  :root{ --bg:#08090c; --panel:#13151b; --line:rgba(255,255,255,.09); --t0:#e8e8ee; --t1:#9aa0ac; --amber:#ffb454; }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(circle at 50% -10%,#16131a,#08090c 70%);color:var(--t0);
+    font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:34px 28px 80px}
+  h1{font-size:22px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h1 .dot{width:11px;height:11px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px var(--amber)}
+  .sub{color:var(--t1);margin:0 0 8px;font-size:13px}
+  h2{font-size:15px;margin:34px 0 14px;color:var(--amber);letter-spacing:.4px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+  .cell{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .cell img{width:100%;display:block;background:#000}
+  .cap{padding:10px 13px;font-size:12.5px;color:var(--t0)}
+  .cap .tag{display:inline-block;font-size:10px;color:var(--amber);border:1px solid rgba(255,180,84,.35);background:rgba(255,180,84,.1);border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+  .cap .d{color:var(--t1);font-size:11.5px;display:block;margin-top:2px}
+  .wide{grid-column:1/-1}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--t1);font-weight:600;background:rgba(255,255,255,.03)}
+  td.bad{color:#ff9c9c} td.good{color:#9fe0c0;font-weight:600}
+  .note{color:var(--t1);font-size:12.5px;margin:8px 0 0}
+</style>
+</head>
+<body>
+  <h1><span class="dot"></span>Loona 交互工作台 v1.0 · 对照图</h1>
+  <p class="sub">UI-SPEC 固定尺寸铁律 + 9 场景 premium mock + persona TTS + 协作控制台。设备 812×375 横版，device-cropped 截图。校验脚本 <code>_review/_audit/measure.js</code>。</p>
+
+  <h2>① 9 场景 · 终态结果（默认/关键形态）</h2>
+  <div class="grid">
+    <div class="cell"><img src="_audit/final_companion.png"><div class="cap"><span class="tag">陪聊</span>纯语音承接<span class="d">双眼静态 + 2 行共情字幕（无卡不截断）· emotion R0 A≤A1</span></div></div>
+    <div class="cell"><img src="_audit/final_weather.png"><div class="cap"><span class="tag">天气·沉浸</span>先穿衣建议再数据<span class="d">渐变天色 + 5 日 chip + "最适合/带伞日" · 主播 persona</span></div></div>
+    <div class="cell"><img src="_audit/final_email.png"><div class="cap"><span class="tag">邮件·卡片</span>ListCard 优先级队列<span class="d">P1/P2/P3 分层 + 脚注下一步 · 草稿≠发送</span></div></div>
+    <div class="cell"><img src="_audit/final_calendar.png"><div class="cap"><span class="tag">日程·卡片</span>4 事件 · 冲突/空档判断<span class="d">时间+地点副信息 · 找到空档≠已创建 · 创建走槽位澄清</span></div></div>
+    <div class="cell"><img src="_audit/final_workflow.png"><div class="cap"><span class="tag">邮件×日程·卡片</span>可见多步 + 双确认<span class="d">步骤行状态 · 发送与日程写入分开确认</span></div></div>
+    <div class="cell"><img src="_audit/final_meeting.png"><div class="cap"><span class="tag">会议·卡片</span>SectionCard 决策/行动/未定<span class="d">决策先行 · 负责人 pending 不乱填</span></div></div>
+    <div class="cell"><img src="_audit/final_restaurant.png"><div class="cap"><span class="tag">餐厅·沉浸</span>主推一家 + 换一个<span class="d">全幅店内封面 · 不编菜单/不保证有位</span></div></div>
+    <div class="cell"><img src="_audit/final_travel_card.png"><div class="cap"><span class="tag">旅行·卡片</span>SectionCard 三日分段<span class="d">pace badge + 可改 tag + 交通/天气脚注</span></div></div>
+    <div class="cell"><img src="_audit/final_travel_imm.png"><div class="cap"><span class="tag">旅行·沉浸</span>三日封面横向陈列<span class="d">真实图 · 规划师 persona 整体基调→逐日</span></div></div>
+  </div>
+
+  <h2>② 新闻 · 一套数据 × 三种展现形式（皮肤=形态，非颜色）× list↔focus</h2>
+  <div class="grid">
+    <div class="cell"><img src="_audit/final_news_card.png"><div class="cap"><span class="tag">编辑卡 list</span>图+标题+摘要+可信度</div></div>
+    <div class="cell"><img src="_audit/final_news_focus.png"><div class="cap"><span class="tag">编辑卡 focus</span>大图+导语+要点+影响（高密度）</div></div>
+    <div class="cell"><img src="_audit/final_news_bubble.png"><div class="cap"><span class="tag">对话气泡 list</span>Loona「说」新闻（暖凝胶气泡串）</div></div>
+    <div class="cell"><img src="_audit/final_news_imm.png"><div class="cap"><span class="tag">沉浸 list</span>封面横向陈列（杂志架）</div></div>
+  </div>
+
+  <h2>③ 澄清 / 确认门（短卡居中，2 行字幕安全）</h2>
+  <div class="grid">
+    <div class="cell"><img src="_audit/final_travel_clarify.png"><div class="cap"><span class="tag">ClarifyCard 槽位</span>必填(已填✓)+选填 + 选项；卡≠TTS</div></div>
+    <div class="cell"><img src="_audit/final_travel_confirm.png"><div class="cap"><span class="tag">ConfirmCard</span>摘要 + 双按钮（R4 保存，无 X/无倒计时，显式决策）</div></div>
+  </div>
+
+  <h2>④ 协作控制台</h2>
+  <div class="grid">
+    <div class="cell wide"><img src="_audit/c_editor_zoom.png"><div class="cap"><span class="tag">链路增删改 + 契约映射</span>4×2 操作 + 快捷键 + 事件↔真实 agent 调用契约 chips（frame › evidence › risk）</div></div>
+    <div class="cell wide"><img src="_audit/c_compare.png"><div class="cap"><span class="tag">变体并排对比</span>双列 mini-device 结果卡预览 + 事件链 chips + LCS diff + 契约体检表</div></div>
+    <div class="cell"><img src="_audit/c_compare_colB.png"><div class="cap"><span class="tag">对比列细节</span>体检表(最高风险/确认门/低证据) + 逐步 chips + diff 统计</div></div>
+    <div class="cell"><img src="_audit/c_home.png"><div class="cap"><span class="tag">工作台外壳</span>变体条 + 形态段控 + 播放控制 + 对比/分享/导出</div></div>
+  </div>
+
+  <h2>⑤ 铁律证据 · 溢出根治（压力测试 before → after）</h2>
+  <p class="note">对 9 场景灌入"压力内容"（多塞 6 行 / 4 段 / 5 条 + 超长文案），度量最高卡高与对 CardStage(287px) 的溢出、对字幕的压盖。（容器本轮已统一放大到 430×287，压力测试仍 0 溢出。）</p>
+  <table>
+    <tr><th>场景 / 皮肤</th><th>改造前 卡高</th><th>改造前 溢出</th><th>改造前 压字幕</th><th>改造后 溢出</th><th>改造后 压字幕</th></tr>
+    <tr><td>邮件 glass</td><td>750px</td><td class="bad">+477</td><td class="bad">226px</td><td class="good">0</td><td class="good">0</td></tr>
+    <tr><td>邮件×日程 glass</td><td>750px</td><td class="bad">+477</td><td class="bad">236px</td><td class="good">0</td><td class="good">0</td></tr>
+    <tr><td>新闻 bubble</td><td>695px</td><td class="bad">+422</td><td class="bad">199px</td><td class="good">0</td><td class="good">0</td></tr>
+    <tr><td>天气 glass</td><td>643px</td><td class="bad">+370</td><td class="bad">173px</td><td class="good">0</td><td class="good">0</td></tr>
+    <tr><td>旅行 / 会议 glass</td><td>568px</td><td class="bad">+295</td><td class="bad">135px</td><td class="good">0</td><td class="good">0</td></tr>
+  </table>
+  <p class="note">改造后全 16 组合（含内置变体）<b>maxOverflow=0 · maxSubOverlap=0</b>，超高处 <code>pl-body</code> 内部滚动、头/脚常驻、渐隐边提示。§12 校验 <code>verify.js</code> 现跑满 9 场景×形态全矩阵（token/宽度/溢出/字幕，11/11 PASS），无死角。压力卡示例：</p>
+  <div class="grid">
+    <div class="cell"><img src="_audit/s_email_stress.png"><div class="cap"><span class="tag">压力·邮件</span>头脚常驻 + 正文内滚 + 渐隐边（封顶 287）</div></div>
+    <div class="cell"><img src="_audit/s_travel_stress.png"><div class="cap"><span class="tag">压力·旅行</span>分段超量内部滚动，不撑卡</div></div>
+  </div>
+
+  <h2>⑥ 交互模式（本轮新增 · UI-SPEC §14）</h2>
+  <p class="note">缺必填→槽位卡问一次(不猜) · 列表→单卡召回 · 沉浸聚光 · 确认门=显式二选一+状态回执 · 详情可收起。</p>
+  <div class="grid">
+    <div class="cell"><img src="_audit/wx_slot_clarify.png"><div class="cap"><span class="tag">槽位澄清·天气</span>缺城市→待填槽位（不猜附近，REQ-WX-001）</div></div>
+    <div class="cell"><img src="_audit/rst_slot_clarify.png"><div class="cap"><span class="tag">槽位澄清·餐厅</span>位置待填 + 场景已填✓ + 选填</div></div>
+    <div class="cell"><img src="_audit/cal_slot_clarify.png"><div class="cap"><span class="tag">槽位澄清·日程</span>动作槽：时间待填+标题✓，快选接已查空档</div></div>
+    <div class="cell"><img src="_audit/tv_day_focus.png"><div class="cap"><span class="tag">单日召回·旅行</span>左图 + 上午/下午/傍晚（像新闻 list→focus）</div></div>
+    <div class="cell"><img src="_audit/tv_spotlight_day2.png"><div class="cap"><span class="tag">沉浸聚光</span>讲到哪张：放大呼吸 + 其余压暗 + 居中</div></div>
+    <div class="cell"><img src="_audit/fix_confirm_card.png"><div class="cap"><span class="tag">确认门</span>只有 发送/取消（无 X / 无倒计时）</div></div>
+    <div class="cell"><img src="_audit/fix_sent_toast.png"><div class="cap"><span class="tag">动作回执</span>发送中→已发送✓·查看详情（卡退回双眼，留回执）</div></div>
+    <div class="cell wide"><img src="_audit/wx_compare.png"><div class="cap"><span class="tag">变体并排·天气</span>直接版 vs 问城市版（相同10 / 改动3 / 独有4）</div></div>
+  </div>
+
+  <h2>⑦ 失败 / 部分成功 + 评审结论（本轮新增）</h2>
+  <p class="note">规格最有分量、却一度 0 演示覆盖的一块：诚实报状态、谁知道 / 谁不知道、永远给下一步（REQ-FAIL-001）。邮件×日程做成「全成功 / 部分失败」两个内置变体并排——失败也不慌。persona 深度也拉平：天气/邮件/餐厅/会议提到与新闻/旅行同档的多拍叙述。</p>
+  <div class="grid">
+    <div class="cell"><img src="_audit/fix_fail_card.png"><div class="cap"><span class="tag">部分失败·回执</span>✓ 日程已改 / ✕ 邮件没发出 · 小周还不知道改期 + 下一步三选项<span class="d">发送门确认后超时失败 → 不假称已发(outcome:fail→发送中→发送失败)；FailureCard 拆开成功/失败</span></div></div>
+    <div class="cell"><img src="_audit/persona_weather_beat.png"><div class="cap"><span class="tag">persona 拉平·天气主播</span>开场→整体→最适合日(穿衣)→转折→带伞，多拍逐日高亮<span class="d">字幕每拍 ≤21 字，结果卡恒 1 行不截断</span></div></div>
+    <div class="cell wide"><img src="_audit/fix_fail_compare.png"><div class="cap"><span class="tag">全成功 vs 部分失败 · 并排</span>同一计划两种结局：左列 ListCard、右列 FailureCard<span class="d">LCS diff 标"相同/改动/独有"；前半段共用 OPEN，仅第 2 道门后分叉</span></div></div>
+    <div class="cell wide"><img src="_audit/fix_verdict_bar.png"><div class="cap"><span class="tag">评审结论条</span>更倾向 A/B/势均力敌 + 备注 → 对比直接产出团队结论<span class="d">持久化(localStorage)，随 variants.json 导出；用户标注也一并带走(annotations_resolved)</span></div></div>
+  </div>
+  <p class="note">控制台另加两条契约校验：<b>私域数据·未见授权声明</b>（read_private_data 全链须 OAuth/已连）、<b>外发·收件人未明确</b>（发送门 target 不空/不纯占位）。9 条理想链均已声明授权 → 体检表全绿；编辑出违规时实时标 ⚠。</p>
+</body>
+</html>

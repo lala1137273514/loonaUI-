@@ -1,0 +1,118 @@
+/* ============================================================
+   Loona 卡片皮肤 · Bubble / Aura（叠在内容之上，只换材质 + 动效）
+   Glass 皮肤是默认(见 loona.css)。本文件只定义 [data-skin="bubble"] 与 [data-skin="aura"]。
+   纪律：入场动效用 transform(跑一次)；常驻"活着"的效果用非 transform 属性(border-radius / box-shadow / opacity)，避免同属性动画打架。
+   ============================================================ */
+
+/* ============================================================
+   ① Bubble 皮肤 —— Loona 吹出来的肥皂泡 / 凝胶（和琥珀眼同材质）
+   ============================================================ */
+.loona-stage[data-skin="bubble"] .pop-large {
+  position: relative;
+  background:
+    radial-gradient(130% 105% at 26% 14%, rgba(255, 230, 175, .30), rgba(255, 175, 75, .10) 46%, transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .03)),
+    linear-gradient(180deg, rgba(44, 30, 18, .58), rgba(24, 16, 9, .64));
+  border: 1px solid rgba(255, 210, 150, .30);
+  border-radius: 34px 30px 33px 30px;
+  box-shadow: 0 16px 46px rgba(0, 0, 0, .45), inset 0 1px 1px rgba(255, 255, 255, .4), inset 0 -16px 30px rgba(255, 150, 40, .10);
+  overflow: visible;
+  animation: bubble-in .6s cubic-bezier(.22, 1.2, .36, 1) both, bubble-breathe 6.5s ease-in-out infinite .6s;
+}
+/* 虹彩薄膜边（mask-composite 只留描边环） */
+.loona-stage[data-skin="bubble"] .pop-large::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from 210deg, rgba(255,212,142,.78), rgba(188,220,255,.46), rgba(255,236,184,.7), rgba(255,182,120,.7), rgba(255,212,142,.78));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  opacity: .72;
+}
+/* 左上高光点 */
+.loona-stage[data-skin="bubble"] .pop-large::after {
+  content: ""; position: absolute; left: 11%; top: 6%; width: 36%; height: 20%; border-radius: 50%; pointer-events: none; z-index: 2;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .5), transparent); filter: blur(3px);
+}
+@keyframes bubble-in { 0% { opacity: 0; transform: scale(.62) translateY(10px) } 55% { opacity: 1 } 100% { opacity: 1; transform: scale(1) } }
+@keyframes bubble-breathe { 0%, 100% { border-radius: 34px 30px 33px 30px } 50% { border-radius: 30px 34px 30px 33px } }
+
+/* 状态泡 / pop_small：小圆泡，吹出 + 轻微发光呼吸 */
+.loona-stage[data-skin="bubble"] .pop-small,
+.loona-stage[data-skin="bubble"] .toast {
+  position: relative; border-radius: 999px;
+  background: radial-gradient(130% 130% at 28% 20%, rgba(255, 228, 170, .26), rgba(255, 170, 70, .10) 52%, rgba(22, 15, 9, .72));
+  border: 1px solid rgba(255, 210, 150, .42);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .4), inset 0 1px 1px rgba(255, 255, 255, .45);
+  animation: bubble-in .5s cubic-bezier(.22, 1.2, .36, 1) both, bubble-glow 3.6s ease-in-out infinite .5s;
+}
+@keyframes bubble-glow { 0%, 100% { box-shadow: 0 8px 26px rgba(0, 0, 0, .4), inset 0 1px 1px rgba(255, 255, 255, .45), 0 0 0 rgba(255, 170, 70, 0) } 50% { box-shadow: 0 8px 26px rgba(0, 0, 0, .4), inset 0 1px 1px rgba(255, 255, 255, .45), 0 0 16px rgba(255, 170, 70, .35) } }
+
+/* 行/段高亮：鼓起 */
+.loona-stage[data-skin="bubble"] .row-hl { background: rgba(255, 200, 120, .15); box-shadow: inset 0 0 0 1px rgba(255, 200, 120, .38) }
+.loona-stage[data-skin="bubble"] .lc-row.row-hl, .loona-stage[data-skin="bubble"] .sec-block.row-hl { transform: scale(1.03) }
+
+/* 离场：破（放大 + 淡出） */
+.loona-stage[data-skin="bubble"] .pop-large.leaving { transform: scale(1.12); opacity: 0; transition: transform .34s ease, opacity .34s ease }
+
+/* 确认泡的"!"徽章也圆润发光 */
+.loona-stage[data-skin="bubble"] .cc-badge, .loona-stage[data-skin="bubble"] .kind-badge { box-shadow: 0 0 14px rgba(255, 170, 70, .4) }
+
+/* ============================================================
+   ② Aura 皮肤 —— 无框，文字浮于纯黑，暖琥珀呼吸光晕（= Loona 自身的光）
+   ============================================================ */
+.loona-stage[data-skin="aura"] .pop-large {
+  position: relative; border: none; border-radius: 30px;
+  /* 柔和暗底：整片压暗保证可读，边缘渐隐成"无框" */
+  background: radial-gradient(120% 132% at 50% 46%, rgba(5, 3, 1, .90), rgba(5, 3, 1, .74) 64%, rgba(5, 3, 1, .30) 100%);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); box-shadow: none;
+  animation: aura-in .55s cubic-bezier(.2, .8, .25, 1) both;
+}
+/* 外圈暖光晕(呼吸)：= Loona 自身的光 */
+.loona-stage[data-skin="aura"] .pop-large::before {
+  content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: 38px; pointer-events: none; background: transparent;
+  box-shadow: 0 0 58px 12px rgba(255, 150, 40, .26), 0 0 132px 40px rgba(255, 120, 20, .12);
+  animation: aura-breathe 4.6s ease-in-out infinite;
+}
+@keyframes aura-in { from { opacity: 0; transform: translateY(12px) scale(.98) } to { opacity: 1; transform: none } }
+@keyframes aura-breathe { 0%, 100% { opacity: .85; transform: scale(1) } 50% { opacity: 1; transform: scale(1.045) } }
+
+/* divider → 淡光线；行/段高亮 → 暖光底(无框) */
+.loona-stage[data-skin="aura"] .pl-divider { background: linear-gradient(90deg, transparent, rgba(255, 180, 84, .5), transparent) }
+.loona-stage[data-skin="aura"] .sec-block { border-color: transparent; background: transparent }
+.loona-stage[data-skin="aura"] .row-hl,
+.loona-stage[data-skin="aura"] .sec-block.row-hl { background: radial-gradient(80% 150% at 50% 50%, rgba(255, 170, 70, .20), transparent); box-shadow: none }
+
+/* 状态：无框发光 + 旋转扫光环（"working"暖色版 spinner） */
+.loona-stage[data-skin="aura"] .pop-small,
+.loona-stage[data-skin="aura"] .toast {
+  position: relative; background: rgba(10, 7, 3, .5); border: 1px solid rgba(255, 180, 84, .35);
+  box-shadow: 0 0 26px rgba(255, 150, 40, .28); overflow: visible;
+  animation: aura-in .5s ease both;
+}
+/* working 态：宽胶囊【不旋转整枚】(旋转矩形环会甩出尖角，沉浸态尤其明显)；
+   改为柔和呼吸光晕——"转动感"交给内部图标 spinner(32px 方形、绕中心旋转，任意皮肤都正常)。 */
+.loona-stage[data-skin="aura"] .toast {
+  animation: aura-in .5s ease both, aura-toast-pulse 1.8s ease-in-out infinite .5s;
+}
+@keyframes aura-toast-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(255, 150, 40, .22) }
+  50%      { box-shadow: 0 0 32px rgba(255, 170, 60, .46) }
+}
+
+/* 离场：呼气回吸 */
+.loona-stage[data-skin="aura"] .pop-large.leaving { opacity: 0; transform: scale(.96); transition: opacity .3s, transform .3s }
+
+/* 余烬火花：舞台上两点缓慢上飘的暖光 */
+.loona-stage[data-skin="aura"]::before,
+.loona-stage[data-skin="aura"]::after {
+  content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%; z-index: 6; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 200, 110, .9), transparent);
+}
+.loona-stage[data-skin="aura"]::before { left: 30%; bottom: 22%; animation: ember 6s ease-in-out infinite }
+.loona-stage[data-skin="aura"]::after { left: 64%; bottom: 30%; animation: ember 7.5s ease-in-out infinite 1.5s }
+@keyframes ember { 0% { opacity: 0; transform: translateY(0) } 30% { opacity: .9 } 100% { opacity: 0; transform: translateY(-46px) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .loona-stage[data-skin] .pop-large, .loona-stage[data-skin] .pop-small, .loona-stage[data-skin] .toast,
+  .loona-stage[data-skin] .pop-large::before, .loona-stage[data-skin] .toast::after,
+  .loona-stage[data-skin="aura"]::before, .loona-stage[data-skin="aura"]::after { animation: none !important }
+}

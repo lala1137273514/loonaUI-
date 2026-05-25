@@ -1,0 +1,381 @@
+/* ============================================================
+   Loona 工作台 · 批注/编辑器（S4）
+   点任一事件 → 改 4 面（① 文案 ② 节奏 ③ 卡内容 ④ agent 处理）+ 标卡点 + 批注
+   + 即改即重播 + 导出"认可的理想链路"JSON。直接改 engine 内存里的 caseObj。
+   ============================================================ */
+(function (global) {
+  'use strict';
+  var UI = global.LoonaUI;
+  var el = UI.el, esc = UI.esc;
+
+  var Editor = {
+    init: function (engine, refs) {
+      this.engine = engine;
+      this.refs = refs;                  // {editor}
+      this.curIdx = -1;
+      this._undoStack = []; this._redoStack = [];
+      var self = this;
+      engine.onSelect = function (idx, ev) { self.select(idx, ev); };
+      /* 链路增删改 快捷键：Alt+↑/↓ 移动 · Ctrl/⌘+D 复制 · Delete 删除 · Ctrl/⌘+Z 撤销/重做 */
+      document.addEventListener('keydown', function (e) {
+        if (/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || ''))) return;
+        var mod = e.ctrlKey || e.metaKey;
+        if (mod && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); e.shiftKey ? self._redo() : self._undo(); return; }
+        if (self.curIdx < 0) return;
+        if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); self._move(self.curIdx, -1); }
+        else if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); self._move(self.curIdx, 1); }
+        else if (mod && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); self._duplicate(self.curIdx); }
+        else if (e.key === 'Delete') { e.preventDefault(); self._delete(self.curIdx); }
+      });
+      this._renderEmpty();
+      return this;
+    },
+
+    _renderEmpty: function () {
+      this.refs.editor.innerHTML =
+        '<div class="empty">← 点左侧时间线任一事件，在这里改它的<br>① 文案　② 节奏　③ 卡内容　④ agent 处理<br><br>并可标【卡点】、写批注、即改即重播、导出 JSON。</div>';
+    },
+
+    /* ---------- 选中一个事件 → 建表单 ---------- */
+    select: function (idx, ev) {
+      this.curIdx = idx;
+      if (!ev) ev = this.engine.events[idx];
+      if (!ev) { this._renderEmpty(); return; }
+      var self = this, box = this.refs.editor;
+      box.innerHTML = '';
+
+      /* 头：comp + idx + 卡点 */
+      var head = el('div', 'ed-section');
+      head.appendChild(el('label', null, '事件 #' + (idx + 1) + ' / ' + this.engine.events.length + '　·　' + esc(ev.comp) + (ev.internal ? '（侧轨）' : '')));
+      box.appendChild(head);
+
+      /* 链路增删改 + 事件↔契约映射（控制台核心） */
+      this._chainOps(box, idx);
+      if (global.LoonaConsole && LoonaConsole.contractPanel) {
+        var sc = this._section('事件 ↔ 真实 agent 调用契约');
+        sc.appendChild(LoonaConsole.contractPanel(ev, this.engine.caseObj));
+        box.appendChild(sc);
+      }
+
+      /* ① 文案（按事件类型给对应字段） */
+      if (ev.comp === 'user_query' || ev.comp === 'toast') {
+        var s1 = this._section(ev.comp === 'toast' ? '① 文案（toast 文字）' : '① 文案（用户气泡）');
+        s1.appendChild(this._field('文字', ev.text || '', function (v) { ev.text = v; }, true));
+        box.appendChild(s1);
+      } else if (ev.comp === 'pop_small') {
+        var s1 = this._section('① 文案');
+        s1.appendChild(this._field('屏幕气泡文字', ev.text || '', function (v) { ev.text = v; }, true));
+        s1.appendChild(this._field('口播 TTS（留空则不念）', (ev.tts && ev.tts.text) || '', function (v) { ev.tts = ev.tts || {}; ev.tts.text = v; }, true));
+        box.appendChild(s1);
+      } else if (ev.comp === 'tts') {
+        var s1 = this._section('① 口播 TTS');
+        s1.appendChild(this._field('口播文字（会被念出 + 显示为字幕）', ev.text || '', function (v) { ev.text = v; }, true));
+        box.appendChild(s1);
+      }
+
+      /* ② 节奏 */
+      var s2 = this._section('② 节奏（时序）');
+      var rhythmRow = el('div', 'ed-row');
+      rhythmRow.appendChild(this._numCell('gap_ms（距上一步）', ev.gap_ms != null ? ev.gap_ms : '', function (v) { ev.gap_ms = v === '' ? null : +v; }));
+      rhythmRow.appendChild(this._numCell('t（时间线标签）', ev.t != null ? ev.t : '', function (v) { ev.t = v === '' ? null : +v; }));
+      s2.appendChild(rhythmRow);
+      s2.appendChild(this._checkbox('wait_for_user（停等用户）', !!ev.wait_for_user, function (v) { ev.wait_for_user = v; }));
+      if (ev.comp === 'tts') {
+        var ids = this._cardIds();
+        s2.appendChild(this._select('highlight 高亮哪张卡', ['（无）'].concat(ids), ev.highlight || '（无）', function (v) { ev.highlight = (v === '（无）') ? null : v; }));
+      }
+      if (ev.comp === 'toast') s2.appendChild(this._select('dismiss_on（何时消失）', ['（不自动）', 'card'], ev.dismiss_on || '（不自动）', function (v) { ev.dismiss_on = (v === '（不自动）') ? null : v; }));
+      box.appendChild(s2);
+
+      /* ③ 卡内容 */
+      if (ev.comp === 'TravelDayCard' || ev.comp === 'card') this._cardEditor(box, ev);
+      if (ev.comp === 'confirm' || ev.comp === 'ConfirmationCard') this._confirmEditor(box, ev);
+      if (ev.comp === 'pop_small') {
+        var s3p = this._section('③ 气泡角色 / 状态');
+        s3p.appendChild(this._select('role', ['query', 'clarify', 'status'], ev.role || 'status', function (v) { ev.role = v; }));
+        s3p.appendChild(this._select('state_visual（状态图标）', ['（无）', 'searching', 'loading', 'sending', 'done', 'fail', 'mail'], ev.state_visual || '（无）', function (v) { ev.state_visual = v === '（无）' ? null : v; }));
+        box.appendChild(s3p);
+      }
+      if (ev.comp === 'toast') {
+        var s3t = this._section('③ 状态图标');
+        s3t.appendChild(this._select('state_visual', ['（无）', 'searching', 'loading', 'sending', 'done', 'fail', 'mail'], ev.state_visual || '（无）', function (v) { ev.state_visual = v === '（无）' ? null : v; }));
+        box.appendChild(s3t);
+      }
+
+      /* ④ agent 处理 */
+      if (ev.comp === 'agent_step') {
+        var s4 = this._section('④ agent 处理（决策记录 · 侧轨）');
+        s4.appendChild(this._field('label', ev.label || '', function (v) { ev.label = v; }));
+        s4.appendChild(this._field('decision（怎么判的）', ev.decision || '', function (v) { ev.decision = v; }, true));
+        s4.appendChild(this._field('fields（逗号分隔的字段）', (ev.fields || []).join(', '), function (v) { ev.fields = v.split(/[,，]/).map(function (x) { return x.trim(); }).filter(Boolean); }));
+        s4.appendChild(this._checkbox('internal（只进侧轨）', ev.internal !== false, function (v) { ev.internal = v; }));
+        box.appendChild(s4);
+      }
+
+      /* 标卡点 + 批注 */
+      var sa = this._section('卡点 / 批注');
+      var flagBtn = el('button', 'ed-flag-btn' + (this._hasAnn(idx, '卡点') ? ' on' : ''), (this._hasAnn(idx, '卡点') ? '🚩 已标卡点（点击取消）' : '🚩 标记为卡点'));
+      flagBtn.addEventListener('click', function () { self._toggleAnn(idx, '卡点'); flagBtn.classList.toggle('on'); flagBtn.textContent = self._hasAnn(idx, '卡点') ? '🚩 已标卡点（点击取消）' : '🚩 标记为卡点'; });
+      var flagWrap = el('div', 'ed-actions'); flagWrap.appendChild(flagBtn); sa.appendChild(flagWrap);
+      sa.appendChild(this._field('批注（设计意见 / 待改）', this._annText(idx, 'note'), function (v) { self._setNote(idx, v); }, true));
+      box.appendChild(sa);
+
+      /* 操作 */
+      var act = this._section('即改即播 / 导出');
+      var actRow = el('div', 'ed-actions');
+      var prevBtn = el('button', 'ed-flag-btn', '↻ 预览本步');
+      prevBtn.addEventListener('click', function () { self.previewStep(idx); });
+      var playBtn = el('button', 'ed-flag-btn', '▶ 从此处播');
+      playBtn.addEventListener('click', function () { self.engine.seekTo(Math.max(0, idx) - 1 < 0 ? 0 : idx - 1); self.engine.idx = idx; self.engine.play(); });
+      actRow.appendChild(prevBtn); actRow.appendChild(playBtn);
+      act.appendChild(actRow);
+      var expBtn = el('button', 'ctrl-btn primary', '⬇ 导出理想链路 JSON');
+      expBtn.style.width = '100%'; expBtn.style.marginTop = '8px';
+      expBtn.addEventListener('click', function () { self.exportJSON(); });
+      act.appendChild(expBtn);
+      var applied = el('div', 'ed-applied', '✓ 已写回内存（导出即得最新链路）');
+      act.appendChild(applied); box._applied = applied;
+      box.appendChild(act);
+    },
+
+    /* ---------- ③ TravelDayCard 编辑 ---------- */
+    _cardEditor: function (box, ev) {
+      var self = this, c = ev.content = ev.content || {};
+      var s = this._section('③ 卡内容 · TravelDayCard');
+      var r1 = el('div', 'ed-row');
+      r1.appendChild(this._numCell('day', c.day != null ? c.day : '', function (v) { c.day = +v; self._touchRow(); }));
+      var paceCell = el('div'); paceCell.appendChild(el('span', 'mini-label', 'pace'));
+      paceCell.appendChild(this._rawSelect(['light', 'normal', 'intense'], c.pace || 'normal', function (v) { c.pace = v; }));
+      r1.appendChild(paceCell);
+      s.appendChild(r1);
+      s.appendChild(this._field('theme 主题', c.theme || '', function (v) { c.theme = v; self._touchRow(); }));
+      s.appendChild(this._field('transport_notes 交通', c.transport_notes || '', function (v) { c.transport_notes = v; }));
+      s.appendChild(this._field('weather_notes 天气', c.weather_notes || '', function (v) { c.weather_notes = v; }));
+
+      // 节点列表（含「可改」开关）
+      var nl = el('div'); nl.appendChild(el('span', 'mini-label', 'nodes 节点（勾=可改）'));
+      var listWrap = el('div', 'ed-nodes');
+      c.nodes = c.nodes || []; c.modifiable_nodes = c.modifiable_nodes || [];
+      function redraw() {
+        listWrap.innerHTML = '';
+        c.nodes.forEach(function (name, ni) {
+          var row = el('div', 'ed-node-row');
+          var inp = el('input', 'ed-input'); inp.value = name;
+          inp.addEventListener('input', function () {
+            var old = c.nodes[ni]; c.nodes[ni] = inp.value;
+            var mi = c.modifiable_nodes.indexOf(old); if (mi >= 0) c.modifiable_nodes[mi] = inp.value;
+          });
+          var modLbl = el('label'); modLbl.style.cssText = 'display:flex;align-items:center;gap:3px;font-size:11px;color:var(--wb-text-dim)';
+          var cb = el('input'); cb.type = 'checkbox'; cb.checked = c.modifiable_nodes.indexOf(name) >= 0;
+          cb.addEventListener('change', function () { var cur = c.nodes[ni]; var mi = c.modifiable_nodes.indexOf(cur); if (cb.checked && mi < 0) c.modifiable_nodes.push(cur); else if (!cb.checked && mi >= 0) c.modifiable_nodes.splice(mi, 1); });
+          modLbl.appendChild(cb); modLbl.appendChild(document.createTextNode('可改'));
+          var x = el('button', 'x', '✕'); x.addEventListener('click', function () { c.nodes.splice(ni, 1); redraw(); });
+          row.appendChild(inp); row.appendChild(modLbl); row.appendChild(x);
+          listWrap.appendChild(row);
+        });
+      }
+      redraw();
+      nl.appendChild(listWrap);
+      var add = el('button', 'ed-add', '+ 加一个节点');
+      add.addEventListener('click', function () { c.nodes.push('新节点'); redraw(); });
+      nl.appendChild(add);
+      s.appendChild(nl);
+      box.appendChild(s);
+    },
+
+    /* ---------- ③ ConfirmationCard 编辑 ---------- */
+    _confirmEditor: function (box, ev) {
+      var c = ev.content = ev.content || {};
+      var s0 = this._section('① 口播 TTS（确认前提示）');
+      s0.appendChild(this._field('口播文字', (ev.tts && ev.tts.text) || '', function (v) { ev.tts = ev.tts || {}; ev.tts.text = v; }, true));
+      box.appendChild(s0);
+      var s = this._section('③ 卡内容 · 确认门');
+      s.appendChild(this._field('action 动作', c.action || '', function (v) { c.action = v; }));
+      s.appendChild(this._field('target 对象', c.target || '', function (v) { c.target = v; }));
+      s.appendChild(this._field('impact 影响', c.impact || '', function (v) { c.impact = v; }));
+      s.appendChild(this._field('content_summary 内容摘要', c.content_summary || '', function (v) { c.content_summary = v; }));
+      var r = el('div', 'ed-row');
+      r.appendChild(this._numCell('countdown 秒', c.countdown != null ? c.countdown : 30, function (v) { c.countdown = +v; }));
+      var revCell = el('div'); revCell.appendChild(el('span', 'mini-label', 'reversible'));
+      revCell.appendChild(this._rawSelect(['true', 'false'], String(c.reversible !== false), function (v) { c.reversible = (v === 'true'); }));
+      r.appendChild(revCell);
+      s.appendChild(r);
+      box.appendChild(s);
+    },
+
+    /* ---------- 预览 / 重播 ---------- */
+    previewStep: function (idx) {
+      this.engine.seekTo(idx);
+      var ev = this.engine.events[idx];
+      var tp = this.engine._ttsOf(ev);
+      if (tp && tp.text) { if (tp.highlight) this.engine._highlightCard(tp.highlight); this.engine._speak(tp.text, tp); }
+      this._flashApplied();
+    },
+    _touchRow: function () { this.engine.rebuildTimeline(); this.engine._setCurrent(this.curIdx); },
+    _flashApplied: function () { var a = this.refs.editor._applied; if (a) { a.classList.add('show'); setTimeout(function () { a.classList.remove('show'); }, 1400); } },
+
+    /* ---------- 导出 ---------- */
+    exportJSON: function () {
+      var data = this.engine.caseObj;
+      var clean = JSON.parse(JSON.stringify(data));
+      if (global.LoonaConsole && LoonaConsole.resolveAnnotations) clean.annotations_resolved = LoonaConsole.resolveAnnotations(clean);   // 标注自描述带走（事件号/类型/原文）
+      var blob = new Blob([JSON.stringify(clean, null, 2)], { type: 'application/json;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = (data.task_id || 'loona_case') + '.ideal_chain.json';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+      this._flashApplied();
+    },
+
+    /* ---------- 批注模型 ---------- */
+    _anns: function () { var c = this.engine.caseObj; return (c.annotations = c.annotations || []); },
+    _hasAnn: function (idx, type) { return this._anns().some(function (a) { return a.event_idx === idx && a.type === type; }); },
+    _annText: function (idx, type) { var a = this._anns().filter(function (a) { return a.event_idx === idx && a.type === type; })[0]; return a ? a.text : ''; },
+    _toggleAnn: function (idx, type) {
+      var arr = this._anns(), i = arr.findIndex(function (a) { return a.event_idx === idx && a.type === type; });
+      if (i >= 0) arr.splice(i, 1); else arr.push({ event_idx: idx, type: type, text: '' });
+      this.engine.refreshRowFlags();
+    },
+    _setNote: function (idx, text) {
+      var arr = this._anns(), i = arr.findIndex(function (a) { return a.event_idx === idx && a.type === 'note'; });
+      if (!text) { if (i >= 0) arr.splice(i, 1); }
+      else if (i >= 0) arr[i].text = text; else arr.push({ event_idx: idx, type: 'note', text: text });
+      this.engine.refreshRowFlags();
+    },
+
+    /* ---------- 表单零件 ---------- */
+    _section: function (title) { var s = el('div', 'ed-section'); if (title) s.appendChild(el('label', null, title)); return s; },
+    _lastSection: function (box) { var ss = box.querySelectorAll('.ed-section'); return ss[ss.length - 1] || this._section(); },
+    _field: function (label, val, onInput, multiline) {
+      var wrap = el('div'); wrap.style.marginBottom = '8px';
+      if (label) wrap.appendChild(el('span', 'mini-label', esc(label)));
+      var inp = el(multiline ? 'textarea' : 'input', multiline ? 'ed-textarea' : 'ed-input');
+      inp.value = val == null ? '' : val;
+      var self = this;
+      inp.addEventListener('input', function () { onInput(inp.value); self._liveTimeline(); });
+      wrap.appendChild(inp); return wrap;
+    },
+    _numCell: function (label, val, onInput) {
+      var cell = el('div'); cell.appendChild(el('span', 'mini-label', esc(label)));
+      var inp = el('input', 'ed-num'); inp.type = 'number'; inp.value = val === '' ? '' : val;
+      var self = this;
+      inp.addEventListener('input', function () { onInput(inp.value); self._liveTimeline(); });
+      cell.appendChild(inp); return cell;
+    },
+    _checkbox: function (label, checked, onChange) {
+      var lab = el('label'); lab.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;color:var(--wb-text);margin:6px 0';
+      var cb = el('input'); cb.type = 'checkbox'; cb.checked = !!checked;
+      var self = this;
+      cb.addEventListener('change', function () { onChange(cb.checked); self._liveTimeline(); });
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(label)); return lab;
+    },
+    _select: function (label, opts, val, onChange) {
+      var wrap = el('div'); wrap.style.marginBottom = '8px';
+      wrap.appendChild(el('span', 'mini-label', esc(label)));
+      wrap.appendChild(this._rawSelect(opts, val, onChange));
+      return wrap;
+    },
+    _rawSelect: function (opts, val, onChange) {
+      var sel = el('select', 'ed-pace-sel');
+      opts.forEach(function (o) { var op = el('option', null, esc(o)); op.value = o; if (o === val) op.selected = true; sel.appendChild(op); });
+      var self = this;
+      sel.addEventListener('change', function () { onChange(sel.value); self._liveTimeline(); });
+      return sel;
+    },
+    _cardIds: function () { var ids = []; this.engine.events.forEach(function (e) { if (e.card_id) ids.push(e.card_id); }); return ids; },
+    _liveTimeline: function () {
+      // 实时把改动反映到左侧时间线那一行 + 标记已写回
+      var r = this.engine.refs.timeline.querySelector('.tl-event[data-idx="' + this.curIdx + '"]');
+      if (r) { var fresh = this.engine._timelineRow(this.engine.events[this.curIdx], this.curIdx); r.replaceWith(fresh); fresh.classList.add('current'); }
+      this._flashApplied();
+    },
+
+    /* ============ 链路增删改（控制台核心） ============ */
+    _chainOps: function (box, idx) {
+      var self = this, n = this.engine.events.length;
+      var s = this._section('链路 · 增删改（Alt+↑↓ 移动 · ⌘D 复制 · Del 删除 · ⌘Z 撤销）');
+      s.classList.add('chain-section');
+      function btn(label, ico, fn, danger, dis) {
+        var b = el('button', 'co-btn' + (danger ? ' danger' : ''));
+        b.innerHTML = '<span class="ico">' + ico + '</span>' + label; if (dis) b.disabled = true;
+        b.addEventListener('click', fn); return b;
+      }
+      var row1 = el('div', 'chain-ops');
+      row1.appendChild(btn('上移', '↑', function () { self._move(idx, -1); }, false, idx <= 0));
+      row1.appendChild(btn('下移', '↓', function () { self._move(idx, 1); }, false, idx >= n - 1));
+      row1.appendChild(btn('复制', '⧉', function () { self._duplicate(idx); }));
+      row1.appendChild(btn('删除', '✕', function () { self._delete(idx); }, true, n <= 1));
+      s.appendChild(row1);
+      var row2 = el('div', 'chain-ops');
+      row2.appendChild(btn('上方插入', '⤒', function () { self._togglePicker(s, idx, 'above'); }));
+      row2.appendChild(btn('下方插入', '⤓', function () { self._togglePicker(s, idx, 'below'); }));
+      row2.appendChild(btn('撤销', '↺', function () { self._undo(); }, false, !self._undoStack.length));
+      row2.appendChild(btn('重做', '↻', function () { self._redo(); }, false, !self._redoStack.length));
+      s.appendChild(row2);
+      box.appendChild(s);
+    },
+    _togglePicker: function (section, idx, where) {
+      var self = this, old = section.querySelector('.ins-pop'); if (old) { old.remove(); return; }
+      var pop = el('div', 'ins-pop');
+      pop.appendChild(el('div', 'ip-title', where === 'above' ? '在上方插入一个事件' : '在下方插入一个事件'));
+      var types = [['user_query', '用户'], ['agent_step', 'agent 决策'], ['tts', '口播 TTS'], ['toast', '状态 toast'],
+        ['ClarifyCard', '澄清卡'], ['ListCard', '列表卡'], ['SubjectCard', '主体卡'], ['SectionCard', '分段卡'], ['confirm', '确认门']];
+      types.forEach(function (t) {
+        var c = el('span', 'ip-chip', t[1]);
+        c.addEventListener('click', function () { self._insert(where === 'above' ? idx : idx + 1, t[0]); });
+        pop.appendChild(c);
+      });
+      section.appendChild(pop);
+    },
+    _newEvent: function (comp) {
+      var uid = comp.toLowerCase().replace(/[^a-z]/g, '').slice(0, 6) + '_' + (Date.now() % 10000);
+      switch (comp) {
+        case 'user_query': return { comp: 'user_query', text: '用户说的话…', gap_ms: 300 };
+        case 'agent_step': return { comp: 'agent_step', internal: true, label: 'STEP', decision: 'agent 怎么判的…', fields: [], gap_ms: 200 };
+        case 'tts': return { comp: 'tts', text: '口播一句…', pace: 'mid', gap_ms: 300 };
+        case 'toast': return { comp: 'toast', text: '正在…', state_visual: 'loading', dismiss_on: 'card', gap_ms: 200 };
+        case 'ClarifyCard': return { comp: 'ClarifyCard', card_id: uid, wait_for_user: true, tts: { text: '要补点什么吗？', pace: 'mid' }, content: { question: '想先确认一下：要补 X 吗？不补我按默认走。', options: [{ label: '直接来' }, { label: '我补一下' }] }, gap_ms: 300 };
+        case 'ListCard': return { comp: 'ListCard', card_id: uid, visual_state: 'active', content: { title: '列表标题', rows: [{ lead: 'dot', title: '第一行' }, { lead: 'dot', title: '第二行' }] }, gap_ms: 600 };
+        case 'SubjectCard': return { comp: 'SubjectCard', card_id: uid, visual_state: 'active', content: { title: '主体', headline: '一句主张/结论', meta: '附加信息', tags: [] }, gap_ms: 600 };
+        case 'SectionCard': return { comp: 'SectionCard', card_id: uid, visual_state: 'active', content: { title: '分段标题', sections: [{ id: 's1', label: '第一段', text: '内容…' }] }, gap_ms: 600 };
+        case 'confirm': return { comp: 'confirm', card_id: uid, wait_for_user: true, tts: { text: '要确认执行吗？', pace: 'mid' }, content: { action: '动作', target: '对象', impact: '影响', content_summary: '内容摘要', reversible: false, countdown: 30, confirm_label: '确认', cancel_label: '取消' }, gap_ms: 400 };
+        default: return { comp: comp, gap_ms: 300 };
+      }
+    },
+    _insert: function (at, comp) { this._pushUndo(); this.engine.events.splice(at, 0, this._newEvent(comp)); this._afterMutate(at, '已插入 ' + comp); },
+    _delete: function (idx) {
+      if (this.engine.events.length <= 1) return;
+      this._pushUndo();
+      this.engine.events.splice(idx, 1);
+      this._afterMutate(Math.min(idx, this.engine.events.length - 1), '已删除事件 #' + (idx + 1) + '（⌘Z 撤销）');
+    },
+    _move: function (idx, dir) {
+      var j = idx + dir, ev = this.engine.events; if (j < 0 || j >= ev.length) return;
+      this._pushUndo(); var t = ev[idx]; ev[idx] = ev[j]; ev[j] = t; this._afterMutate(j, null);
+    },
+    _duplicate: function (idx) {
+      this._pushUndo();
+      var copy = JSON.parse(JSON.stringify(this.engine.events[idx]));
+      if (copy.card_id) copy.card_id += '_c' + (Date.now() % 1000);
+      this.engine.events.splice(idx + 1, 0, copy);
+      this._afterMutate(idx + 1, '已复制事件');
+    },
+    _pushUndo: function () { this._undoStack.push(JSON.stringify(this.engine.events)); if (this._undoStack.length > 60) this._undoStack.shift(); this._redoStack.length = 0; },
+    _undo: function () { if (!this._undoStack.length) return; this._redoStack.push(JSON.stringify(this.engine.events)); this._restoreEvents(JSON.parse(this._undoStack.pop()), '已撤销'); },
+    _redo: function () { if (!this._redoStack.length) return; this._undoStack.push(JSON.stringify(this.engine.events)); this._restoreEvents(JSON.parse(this._redoStack.pop()), '已重做'); },
+    _restoreEvents: function (arr, msg) {
+      var ev = this.engine.events; ev.length = 0; for (var i = 0; i < arr.length; i++) ev.push(arr[i]);
+      this._afterMutate(Math.min(this.curIdx, ev.length - 1), msg);
+    },
+    _afterMutate: function (selIdx, msg) {
+      this.engine.rebuildTimeline();
+      var tc = document.getElementById('tlCount'); if (tc) tc.textContent = this.engine.events.length + ' 步';
+      selIdx = Math.max(0, Math.min(selIdx, this.engine.events.length - 1));
+      this.engine.seekTo(selIdx);   // 重建画面 + onSelect → 重建本编辑面板（含新链路状态）
+      if (msg && global.LoonaConsole && LoonaConsole.toast) LoonaConsole.toast(msg);
+    }
+  };
+
+  global.LoonaEditor = Editor;
+})(window);

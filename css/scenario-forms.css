@@ -1,0 +1,184 @@
+/* ============================================================
+   scenario-forms.css — scenario-specific visual bits
+   Reuses .nfi-* classes from news-forms.css for IMMERSIVE form.
+   Every builder returns a root with class "scenario-form" so the
+   engine can detect and re-render on skin switch.
+   ============================================================ */
+
+/* Base: center within the content-area (harmless for pop-large fallback) */
+.content-area .scenario-form { align-self: center; }
+
+/* ============================================================
+   WeatherView · AURA branch
+   Sky gradient background, headline, day-chip strip
+   ============================================================ */
+
+/* Contain the focus-wrap width + enter animation aligned with news */
+.wx-imm-wrap { will-change: transform, opacity; }
+
+/* CSS-gradient sky: warm dawn-to-dusk amber palette that keeps text legible */
+.wx-sky {
+  background:
+    linear-gradient(
+      160deg,
+      #1a1028 0%,
+      #2e1a3a 18%,
+      #6b2d52 36%,
+      #c45a28 58%,
+      #e8913a 76%,
+      #f5c96a 100%
+    );
+}
+
+/* Override nfi-scrim to a slightly heavier bottom fade for the sky */
+.wx-sky .nfi-scrim {
+  background: linear-gradient(to top,
+    rgba(0,0,0,.92) 0%,
+    rgba(0,0,0,.54) 40%,
+    rgba(0,0,0,.08) 68%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+/* Overlay: give more padding since there's no photo to obscure */
+.wx-overlay {
+  padding: 13px 14px 14px;
+  gap: 7px;
+}
+
+/* Headline: slightly larger, warm white */
+.wx-headline {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  -webkit-line-clamp: 2;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,.7);
+}
+
+/* Day-chip horizontal strip */
+.wx-day-strip {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  max-width: 100%;
+}
+.wx-day-strip::-webkit-scrollbar { display: none; }
+
+/* Individual day chip */
+.wx-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 42px;
+  padding: 5px 6px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  flex: 0 0 auto;
+  transition: background .22s, box-shadow .22s, transform .22s;
+}
+
+.wx-chip-lead {
+  font-size: 10px;
+  color: rgba(255,255,255,.70);
+  font-weight: 500;
+  line-height: 1;
+}
+.wx-chip-temp {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* TTS highlight: amber emphasis on the active day chip */
+.wx-chip.row-hl {
+  background: rgba(255,180,84,.25);
+  border-color: rgba(255,180,84,.75);
+  box-shadow: 0 0 0 1px rgba(255,180,84,.5), 0 4px 12px rgba(255,130,30,.3);
+  transform: translateY(-2px) scale(1.06);
+}
+
+/* Footer meta within sky overlay */
+.wx-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,.65);
+  font-variant-numeric: tabular-nums;
+}
+.wx-meta .lbl { color: rgba(255,220,150,.7); }
+
+/* ============================================================
+   TravelView · AURA branch
+   Carousel of 3 destination covers (150×206 from .nfi-cover).
+   .nfi-summary is shown on each cover (text of the section).
+   ============================================================ */
+
+.tv-imm-wrap { will-change: transform, opacity; }
+
+/* 单日聚焦卡（TravelDayFocus）：左图 + 右(上午/下午/傍晚 时段行)，横排像新闻聚焦，3 段全见不滚 */
+.tv-focus-dense { display: flex; gap: 12px; align-items: stretch; width: 100%; }
+.tv-focus-media { flex: 0 0 118px; align-self: stretch; min-height: 116px; border-radius: 12px; overflow: hidden;
+  background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.tv-focus-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tv-focus-nodes { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+/* 时段(上午/下午/傍晚)用 lc-lead 槽，琥珀加粗对齐 */
+.tv-focus-nodes .lc-row .lc-lead { min-width: 34px; color: var(--amber-1); font-weight: 600; }
+
+/* Apply nfi-summary style for list-mode covers (news-forms.css scopes it to focus-wrap only) */
+.tv-imm-wrap .nfi-summary {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.85);
+  line-height: 1.38;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 5px rgba(0,0,0,.6);
+}
+
+/* ============================================================
+   RestaurantView · AURA branch
+   Single full-cover with photo (236px tall from .nf-imm-focus-wrap).
+   ============================================================ */
+
+.rst-imm-wrap { will-change: transform, opacity; }
+
+/* Meta row: distance/price text + inline tags */
+.rst-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.rst-dist-price {
+  font-size: 11px;
+  color: rgba(255,255,255,.84);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+/* Make inline badge text smaller to fit nfi-meta row */
+.rst-meta-row .badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Reduced motion: suppress chip lift animation
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .wx-chip,
+  .wx-chip.row-hl,
+  .tv-imm-wrap .nfi-cover,
+  .rst-imm-wrap .nfi-cover { transition: none !important; transform: none !important; }
+}

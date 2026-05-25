@@ -1,0 +1,151 @@
+/* ============================================================
+   Loona 工作台 · 协作控制台层（变体管理 / 链路增删改 / 事件↔契约映射 / 并排对比 / 导出分享）
+   只作用于 IDE 外壳（非 Loona 产品 UI），不碰设备内部的 UI-SPEC 包络。
+   token 复用 loona.css（--wb-*, --amber-*, --t*）。
+   ============================================================ */
+
+/* ===== 顶栏：变体条 ===== */
+.variant-bar{display:inline-flex;align-items:center;gap:6px;background:var(--wb-panel-2);
+  border:1px solid var(--wb-line);border-radius:10px;padding:3px 4px 3px 10px}
+.variant-bar .vb-label{font-size:11px;letter-spacing:.4px;color:var(--wb-text-dim);text-transform:uppercase;margin-right:2px}
+.variant-bar .vb-cur{font-size:12.5px;color:var(--wb-text);font-weight:600;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.variant-bar .vb-count{font-size:10.5px;color:var(--amber-2);background:rgba(255,180,84,.12);border:1px solid rgba(255,180,84,.3);
+  border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.vb-btn{background:none;border:none;color:var(--wb-text-dim);cursor:pointer;font-size:13px;font-family:var(--font);
+  border-radius:7px;padding:5px 8px;display:inline-flex;align-items:center;gap:4px;transition:background .15s,color .15s}
+.vb-btn:hover{background:#222634;color:var(--wb-text)}
+.vb-btn.accent{color:var(--amber-2)}
+.vb-menu{position:absolute;z-index:120;background:var(--wb-panel-2);border:1px solid var(--wb-line);border-radius:11px;
+  box-shadow:0 18px 48px rgba(0,0,0,.6);padding:5px;min-width:230px;max-height:60vh;overflow:auto}
+.vb-item{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:8px;cursor:pointer;transition:background .12s}
+.vb-item:hover{background:#222634}
+.vb-item.cur{background:rgba(255,180,84,.12);outline:1px solid rgba(255,180,84,.3)}
+.vb-item .vi-name{flex:1;min-width:0;font-size:12.5px;color:var(--wb-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vb-item .vi-steps{font-size:10.5px;color:var(--wb-text-dim);font-variant-numeric:tabular-nums}
+.vb-item .vi-x{background:none;border:none;color:var(--wb-text-dim);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:5px}
+.vb-item .vi-x:hover{background:rgba(255,90,90,.18);color:#ff9c9c}
+.vb-sep{height:1px;background:var(--wb-line);margin:5px 6px}
+
+/* ===== 编辑器：链路增删改工具条 ===== */
+.chain-ops{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chain-ops .co-btn{flex:1 1 auto;min-width:42px;background:var(--wb-panel-2);border:1px solid var(--wb-line);color:var(--wb-text);
+  border-radius:8px;padding:7px 6px;font-size:12px;font-family:var(--font);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:background .14s,border-color .14s,transform .06s}
+.chain-ops .co-btn:hover{background:#232838;border-color:rgba(255,255,255,.2)}
+.chain-ops .co-btn:active{transform:translateY(1px)}
+.chain-ops .co-btn.danger:hover{background:rgba(255,90,90,.16);border-color:rgba(255,90,90,.5);color:#ff9c9c}
+.chain-ops .co-btn .ico{font-size:13px;line-height:1}
+.chain-ops .co-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* 插入类型选择小面板 */
+.ins-pop{display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:var(--wb-bg);border:1px solid var(--wb-line);border-radius:9px;margin-bottom:10px}
+.ins-pop .ip-chip{font-size:11.5px;padding:5px 10px;border-radius:7px;border:1px solid var(--wb-line);background:var(--wb-panel-2);
+  color:var(--wb-text);cursor:pointer;transition:background .14s,border-color .14s}
+.ins-pop .ip-chip:hover{background:#232838;border-color:var(--amber-3);color:#fff}
+.ins-pop .ip-title{flex-basis:100%;font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--wb-text-dim);margin-bottom:2px}
+
+/* ===== 事件 ↔ 契约映射（chips） ===== */
+.contract-panel{display:flex;flex-direction:column;gap:7px}
+.ct-flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ct-chip{font-size:10.5px;line-height:1.5;padding:2px 8px;border-radius:6px;border:1px solid;white-space:nowrap;
+  font-variant-numeric:tabular-nums;letter-spacing:.02em;display:inline-flex;align-items:center;gap:4px}
+.ct-arrow{color:var(--wb-text-dim);font-size:11px}
+.ct-frame{color:#cdbcff;border-color:rgba(180,160,255,.4);background:rgba(180,160,255,.12)}
+.ct-frame.card{color:#9fe0c0;border-color:rgba(120,230,160,.4);background:rgba(120,230,160,.12)}
+.ct-frame.tool{color:#ffd49a;border-color:rgba(255,180,84,.4);background:rgba(255,180,84,.12)}
+.ct-frame.delta{color:#a9d6ff;border-color:rgba(120,200,255,.4);background:rgba(120,200,255,.12)}
+.ct-frame.user{color:#bcd6ff;border-color:rgba(158,197,255,.4);background:rgba(158,197,255,.12)}
+.ct-frame.fail{color:#ff9c9c;border-color:rgba(255,90,90,.5);background:rgba(255,90,90,.14)}
+.ct-ev{color:#7fd6c4;border-color:rgba(110,210,190,.45);background:rgba(110,210,190,.1)}
+.ct-r0,.ct-r1{color:#9fe0c0;border-color:rgba(120,230,160,.4);background:rgba(120,230,160,.1)}
+.ct-r2{color:#ffd49a;border-color:rgba(255,180,84,.4);background:rgba(255,180,84,.1)}
+.ct-r3,.ct-r4{color:#ff9c9c;border-color:rgba(255,90,90,.55);background:rgba(255,90,90,.14);font-weight:600}
+.ct-confirm{color:#ffb454;border-color:rgba(255,180,84,.6);background:transparent}
+.ct-needconfirm{color:#ffd49a;border-color:rgba(255,180,84,.45);background:transparent;border-style:dashed}
+.ct-mode{color:#000;background:var(--amber-2);border-color:var(--amber-2);font-weight:600}
+.ct-tool{color:var(--wb-text-dim);border-color:var(--wb-line);background:rgba(255,255,255,.04)}
+.ct-warn{color:#ff9c9c;border-color:rgba(255,90,90,.6);background:rgba(255,90,90,.16);font-weight:600;animation:ct-warn-pulse 1.6s ease-in-out infinite}
+.ct-warn-txt{color:#ff9c9c}
+@keyframes ct-warn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,0)}50%{box-shadow:0 0 0 2px rgba(255,90,90,.25)}}
+@media (prefers-reduced-motion:reduce){.ct-warn{animation:none}}
+/* 对比：契约体检表 */
+.cmp-score{flex:0 0 auto;padding:7px 12px;border-bottom:1px solid var(--wb-line);background:var(--wb-bg);
+  font-size:11px;color:var(--wb-text-dim);font-variant-numeric:tabular-nums}
+.cmp-score b{color:var(--wb-text);margin:0 2px}
+.cmp-score b.ct-r3,.cmp-score b.ct-r4{color:#ff9c9c}
+.cmp-score b.ct-r2{color:#ffd49a}
+.cmp-score b.ct-r0,.cmp-score b.ct-r1{color:#9fe0c0}
+.ct-note{font-size:11px;color:var(--wb-text-dim);line-height:1.5}
+.ct-note .lbl{color:var(--amber-1)}
+
+/* ===== 并排对比 overlay ===== */
+.cmp-overlay{position:fixed;inset:0;z-index:200;background:rgba(6,7,10,.86);backdrop-filter:blur(7px);
+  display:none;flex-direction:column;padding:22px 26px}
+.cmp-overlay.show{display:flex;animation:cmp-fade .22s ease both}
+@keyframes cmp-fade{from{opacity:0}to{opacity:1}}
+.cmp-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex:0 0 auto}
+.cmp-head .cmp-title{font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:9px}
+.cmp-head .cmp-title .dot{width:9px;height:9px;border-radius:50%;background:var(--amber-2);box-shadow:0 0 10px var(--amber-2)}
+.cmp-head .spacer{flex:1}
+.cmp-head .cmp-x{background:var(--wb-panel-2);border:1px solid var(--wb-line);color:var(--wb-text);border-radius:9px;
+  padding:7px 13px;font-size:13px;cursor:pointer;font-family:var(--font)}
+.cmp-head .cmp-x:hover{background:#232838}
+.cmp-legend{display:flex;gap:12px;font-size:11px;color:var(--wb-text-dim);align-items:center}
+.cmp-legend .lg{display:inline-flex;align-items:center;gap:5px}
+.cmp-legend .sw{width:10px;height:10px;border-radius:3px}
+.sw-add{background:rgba(120,230,160,.7)} .sw-del{background:rgba(255,90,90,.7)} .sw-chg{background:rgba(255,180,84,.8)} .sw-same{background:rgba(255,255,255,.2)}
+
+.cmp-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cmp-col{min-height:0;display:flex;flex-direction:column;background:var(--wb-panel);border:1px solid var(--wb-line);
+  border-radius:14px;overflow:hidden}
+.cmp-col-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--wb-line);background:var(--wb-panel-2)}
+.cmp-col-head select{flex:1;background:var(--wb-bg);color:var(--wb-text);border:1px solid var(--wb-line);border-radius:8px;
+  padding:6px 8px;font-size:12.5px;font-family:var(--font);cursor:pointer}
+.cmp-col-head .cc-steps{font-size:10.5px;color:var(--wb-text-dim);font-variant-numeric:tabular-nums}
+/* mini device preview */
+.cmp-preview{flex:0 0 auto;height:212px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 36%,#161922,#0b0d12 70%);border-bottom:1px solid var(--wb-line);position:relative;overflow:hidden}
+.mini-device{width:406px;height:187px;position:relative;border-radius:18px;background:#000;overflow:hidden;
+  box-shadow:0 0 0 5px #14151a,0 0 0 7px #2a2c33,0 16px 40px rgba(0,0,0,.6)}
+.mini-device .loona-stage{position:absolute;inset:0;transform-origin:top left;transform:scale(.5)}  /* 812×375 → 406×187 */
+.mini-device .loona-stage{width:812px;height:375px}
+/* 对比里的事件链（带契约 chips） */
+.cmp-steps{flex:1;min-height:0;overflow-y:auto;padding:8px 10px;scrollbar-width:thin}
+.cmp-step{display:flex;gap:8px;padding:7px 8px;border-radius:9px;margin-bottom:5px;border:1px solid transparent;background:var(--wb-panel-2)}
+.cmp-step .cs-idx{font-size:10px;color:var(--wb-text-dim);flex:0 0 18px;font-variant-numeric:tabular-nums;padding-top:2px}
+.cmp-step .cs-main{flex:1;min-width:0}
+.cmp-step .cs-comp{font-size:10px;font-weight:600;letter-spacing:.3px;padding:1px 6px;border-radius:5px;display:inline-block;margin-bottom:3px}
+.cmp-step .cs-text{font-size:11.5px;color:var(--wb-text);line-height:1.35;word-break:break-word}
+.cmp-step .cs-chips{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.cmp-step.d-add{border-color:rgba(120,230,160,.5);background:rgba(120,230,160,.08)}
+.cmp-step.d-del{border-color:rgba(255,90,90,.45);background:rgba(255,90,90,.07);opacity:.7}
+.cmp-step.d-del .cs-text{text-decoration:line-through;color:var(--wb-text-dim)}
+.cmp-step.d-chg{border-color:rgba(255,180,84,.5);background:rgba(255,180,84,.08)}
+.cmp-step .d-tag{font-size:9px;font-weight:700;letter-spacing:.4px;padding:0 5px;border-radius:4px;margin-left:6px;vertical-align:1px}
+.d-add .d-tag{background:rgba(120,230,160,.25);color:#9fe0c0} .d-del .d-tag{background:rgba(255,90,90,.25);color:#ff9c9c} .d-chg .d-tag{background:rgba(255,180,84,.25);color:#ffd49a}
+.cmp-summary{flex:0 0 auto;padding:8px 12px;border-top:1px solid var(--wb-line);font-size:11.5px;color:var(--wb-text-dim);display:flex;gap:14px}
+.cmp-summary b{color:var(--wb-text);font-variant-numeric:tabular-nums}
+
+@media (max-width:1100px){ .cmp-body{grid-template-columns:1fr} }
+
+/* 评审结论条：更倾向 A/B/势均力敌 + 备注（对比直接产出团队结论，随导出带走） */
+.cmp-verdict{flex:0 0 auto;display:flex;align-items:center;gap:12px;margin-top:14px;padding:11px 14px;
+  background:var(--wb-panel);border:1px solid var(--wb-line);border-radius:12px;flex-wrap:wrap}
+.cmp-verdict .cv-label{font-size:12px;font-weight:700;color:var(--amber-2);letter-spacing:.4px;flex:0 0 auto}
+.cv-votes{display:flex;gap:8px;flex:0 0 auto}
+.cv-vote{background:var(--wb-panel-2);border:1px solid var(--wb-line);color:var(--wb-text);border-radius:9px;
+  padding:6px 12px;font-size:12px;cursor:pointer;transition:background .15s,border-color .15s,color .15s;max-width:240px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-vote:hover{background:#232838}
+.cv-vote.on{background:rgba(255,180,84,.16);border-color:var(--amber-2);color:#ffd49a;font-weight:700}
+.cv-note{flex:1 1 220px;min-width:160px;background:var(--wb-bg);color:var(--wb-text);border:1px solid var(--wb-line);
+  border-radius:9px;padding:7px 10px;font:12px/1.4 inherit;resize:none;height:38px}
+.cv-note:focus{outline:none;border-color:var(--amber-3)}
+.cv-status{flex:0 0 auto;font-size:11px;color:var(--wb-text-dim)}
+.cv-status.on{color:#9fe0c0}
+
+/* toast 提示（分享/导出反馈） */
+.console-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);z-index:300;
+  background:var(--wb-panel-2);border:1px solid var(--amber-3);color:var(--wb-text);padding:10px 18px;border-radius:11px;
+  font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.5);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none}
+.console-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}

@@ -1,0 +1,46 @@
+Loona 工作台 · 卡片尺寸 / 字幕避让 验证报告
+================================================
+日期：2026-05-24
+
+【根因修复】卡片"溢出屏幕"的真因
+------------------------------------------------
+旧：.device { width:min(100%,812px); aspect-ratio:812/375 }
+    → 设备随中栏宽度被压缩到 ~576×266，内部按 266 高布局，
+      content-area 仅余 ~140px，所有卡片被裁切。
+新：.device 固定内部 812×375 + transform:scale(--device-scale) 整机缩放，
+    index.html 的 fitDevice() 按中栏宽/高算 scale，随窗口 resize。
+    → 内部恒为 812×375，content-area 恒为 273px，卡片按设计尺寸渲染，
+      整机作为一个单位缩放贴合，永不裁切。
+
+【内容区预算】
+------------------------------------------------
+content-area: top:36  bottom:66  → 高 273px（横版 375 舞台内）
+卡片对齐：align-self:center（短卡居中浮于双眼上方，长卡占满；
+          底部留白用于避让 TTS 字幕）
+
+【全 9 case 最高卡片实测（含逐行/逐段高亮态）】
+------------------------------------------------
+companion_chat             tallest=  0/273  FIT （纯口播，无卡）
+weather_5d                 tallest=272/273  FIT
+news_briefing              tallest=186/273  FIT
+email_briefing             tallest=261/273  FIT
+calendar_today             tallest=213/273  FIT
+email_calendar_workflow    tallest=261/273  FIT （5 行→3 行重排）
+restaurant_quiet           tallest=172/273  FIT
+travel_shanghai_3d         tallest=271/273  FIT
+meeting_action             tallest=271/273  FIT
+→ maxCardH=272 ≤ 273，三皮肤(glass/bubble/aura)卡片高度一致。
+
+【卡底 ↔ TTS 字幕 避让】
+------------------------------------------------
+结果卡阶段 TTS 恒为 1 行（≤21 中文字），2 行字幕只在澄清/确认(短卡)出现。
+全帧扫描最小间距 = +9px（无重叠）。
+为此精简了 6 句较长口播（更口语、更短促，高亮锚点不变）。
+
+【交互链路】
+------------------------------------------------
+全 9 case 的 TTS 高亮锚点 100% 命中对应行/段（含 workflow 重排后的 s2/s4）。
+确认门：按钮(2)+倒计时环+摘要 4 行 正常渲染（badge 遮蔽 bug 已修）。
+实时播放无 console 报错，is-playing 级联入场动画正常。
+
+【对照图】见本目录 27 张 PNG（<case>__<skin>.png）/ review.html

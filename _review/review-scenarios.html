@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>九场景 · 每个配最合适的「展现形式」</title>
+<style>
+  :root{--bg:#0c0e13;--panel:#14171f;--line:rgba(255,255,255,.08);--t0:#e8eaf0;--t1:#aeb3c0;--t2:#7e8494;--amber:#ffb454}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--t0);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:30px 34px 70px}
+  h1{font-size:21px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h1 .dot{width:11px;height:11px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+  .lede{color:var(--t1);font-size:13.5px;line-height:1.6;max-width:1000px;margin:0 0 4px}
+  .lede b{color:var(--amber)}
+  .note{color:var(--t2);font-size:12.5px;margin:0 0 22px}
+  .note a{color:var(--amber)}
+  .sec{font-size:13px;font-weight:700;letter-spacing:.5px;color:#fff;margin:26px 0 2px;border-top:1px solid var(--line);padding-top:16px}
+  .sec .sub{font-weight:400;color:var(--t2);font-size:12px;margin-left:8px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 18px;max-width:1320px;margin-top:10px}
+  figure{margin:0;background:#000;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  figure img{width:100%;display:block;background:#000}
+  figcaption{font-size:12px;color:var(--t1);padding:7px 11px;background:var(--panel);border-top:1px solid var(--line)}
+  figcaption b{color:var(--t0)}
+</style>
+</head>
+<body>
+  <h1><span class="dot"></span>九场景 · 每个配最合适的「展现形式」</h1>
+  <p class="lede">皮肤 = <b>展现形式</b>。每个场景载入时落到它<b>最合适的默认形式</b>（顶栏仍可手动切 卡片/气泡/沉浸）。
+    天气/旅行/餐厅天然适合<b>沉浸</b>（图片/天色为主）；新闻/邮件/日程/会议是结构化信息，用<b>编辑卡</b>。</p>
+  <p class="note">新闻 case 三形式全做（<a href="review-news.html">见 review-news.html</a>）。陪聊目前是纯语音对话，下一步做成<b>对话气泡线程</b>（需引擎加"气泡累积"模式）。</p>
+
+  <div class="sec">沉浸聚焦 · Immersive Spotlight <span class="sub">图片/天色为主，文字压 scrim · default_skin=aura</span></div>
+  <div class="grid">
+    <figure><img src="scenarios/weather_5d__default.png"><figcaption><b>查天气</b> · 沉浸天卡（CSS 天色渐变 + 5 日条，无需图片）</figcaption></figure>
+    <figure><img src="scenarios/travel_shanghai_3d__default.png"><figcaption><b>上海旅行</b> · 三日封面横向陈列（真实外滩/西岸/田子坊）</figcaption></figure>
+    <figure><img src="scenarios/restaurant_quiet__default.png"><figcaption><b>找餐厅</b> · 全幅封面（店内实景 + 安静/距离/人均）</figcaption></figure>
+  </div>
+
+  <div class="sec">编辑卡 · Editorial Card <span class="sub">结构化、可扫读 · default_skin=glass</span></div>
+  <div class="grid">
+    <figure><img src="scenarios/news_briefing__default.png"><figcaption><b>新闻播报</b> · 精选列表（可切气泡/沉浸）</figcaption></figure>
+    <figure><img src="scenarios/email_briefing__default.png"><figcaption><b>邮件简报</b> · 优先级列表</figcaption></figure>
+    <figure><img src="scenarios/calendar_today__default.png"><figcaption><b>今日日程</b> · 事件列表</figcaption></figure>
+    <figure><img src="scenarios/email_calendar_workflow__default.png"><figcaption><b>邮件×日程联动</b> · 步骤列表</figcaption></figure>
+    <figure><img src="scenarios/meeting_action__default.png"><figcaption><b>会议总结</b> · 决策/行动/未定 分段</figcaption></figure>
+  </div>
+
+  <div class="sec">纯语音对话 <span class="sub">下一步 → 对话气泡线程</span></div>
+  <div class="grid">
+    <figure><img src="scenarios/companion_chat__default.png"><figcaption><b>陪聊 · 情绪承接</b> · 现为底部对话字幕（待升级为气泡线程）</figcaption></figure>
+  </div>
+</body>
+</html>

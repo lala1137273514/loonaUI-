@@ -1,0 +1,16 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# gstack browse session logs (tooling noise)
+.gstack/
+
+# scratch/working screenshots (not referenced by review pages)
+_ref/

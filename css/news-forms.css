@@ -1,0 +1,241 @@
+/* ============================================================
+   新闻「展现形式」皮肤 —— 同一份新闻数据(image/title/summary/source/time/confidence)
+   渲染成三种「展现形式 form」，由 data-skin 选择（皮肤 = 形式，而非颜色）：
+     glass → 编辑卡 Editorial Card     bubble → 对话气泡 Conversational Bubble
+     aura  → 沉浸聚焦 Immersive Spotlight
+   每种 form 有 list(多条) 与 focus(单条) 两态。
+   设计依据：NYT/BBC「热点块放大」层级 + VUI 语音×视觉互补、钻取复用已取数据。
+   ============================================================ */
+
+/* 非 pop-large 的新闻容器在内容区里的定位 + 入场 */
+.content-area .news-form { align-self:center; will-change:transform,opacity; }
+.content-area .news-form { animation:glass-in .5s cubic-bezier(.2,.8,.25,1) both; }
+
+/* 缩略图通用 */
+.nf-thumb { flex:0 0 auto; width:60px; height:44px; border-radius:8px; overflow:hidden;
+  background:rgba(255,255,255,.06); display:block; position:relative; }
+.nf-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* ============================================================
+   Form A · 编辑卡 (Editorial Card) —— glass 皮肤
+   列表=中密度(图+标题+摘要+meta)；聚焦=高密度横排(左图 + 标题/导语/要点/影响)
+   ============================================================ */
+/* list */
+.news-card-list .pl-divider { display:none; }
+.news-card-list .nfc-rows { display:flex; flex-direction:column; gap:9px; width:100%; }
+.nfc-row { display:flex; align-items:center; gap:11px; width:100%; border-radius:10px;
+  transition:background .25s, box-shadow .25s, padding .25s; }
+.nfc-info { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.nfc-title { font-size:13.5px; font-weight:600; color:var(--t0); line-height:1.28; word-break:break-word;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.nfc-sum { font-size:12px; color:var(--t1); line-height:1.32;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.nfc-meta { font-size:11px; color:var(--t2); font-variant-numeric:tabular-nums;
+  display:flex; align-items:center; gap:7px; }
+.nfc-row.row-hl { background:rgba(255,180,84,.12); padding:6px 8px;
+  box-shadow:inset 0 0 0 1px rgba(255,180,84,.4); }
+
+/* 关键要点 bullets（聚焦态共用：编辑卡 / 气泡） */
+.nff-points { display:flex; flex-direction:column; gap:3px; width:100%; }
+.nff-pt { display:flex; gap:7px; align-items:flex-start; font-size:12.5px; color:var(--t1); line-height:1.34; }
+.nff-pt .nff-dot { flex:0 0 auto; width:5px; height:5px; margin-top:6px; border-radius:50%;
+  background:var(--amber-2); box-shadow:0 0 6px rgba(255,150,40,.6); }
+.nff-pt .nff-pt-tx { flex:1 1 0; min-width:0; }
+
+/* focus：横排高密度 —— 左图 + 右文 */
+.content-area .news-card-focus { width:min(548px,94%); }
+.news-card-focus .nff-dense { display:flex; gap:14px; align-items:stretch; width:100%; }
+.nff-media { position:relative; flex:0 0 184px; align-self:stretch; min-height:152px;
+  border-radius:13px; overflow:hidden; background:rgba(255,255,255,.06); }
+.nff-media img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.nff-badge { position:absolute; right:8px; top:8px; }
+.nff-text { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.nff-kicker { font-size:11px; color:var(--amber-1); letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+.nff-title { font-size:15.5px; font-weight:700; color:var(--t0); line-height:1.3; word-break:break-word;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.nff-lead { font-size:13px; color:var(--t1); line-height:1.5;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.nff-why { font-size:12px; color:var(--amber-1); line-height:1.4; margin-top:1px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.nff-why .lbl { color:var(--t3); }
+
+/* ============================================================
+   Form B · 对话气泡 (Conversational Bubble) —— bubble 皮肤
+   不是卡片：Loona 在「说」新闻，每条是一颗暖凝胶气泡（左下小尾）
+   ============================================================ */
+.nf-bubble-thread { width:min(390px,88%); display:flex; flex-direction:column; gap:6px; align-items:flex-start;
+  max-height:100%; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; padding-right:2px; }
+.nf-bubble-thread::-webkit-scrollbar { display:none; }   /* 气泡串：内部滚动但隐藏滚动条，保持“说话”的干净感（UI-SPEC §7 策略 a） */
+.nfb-tag { display:flex; align-items:baseline; gap:7px; font-size:12px; color:var(--amber-2); padding-left:3px; }
+.nfb-tag .nfb-dot { align-self:center; }
+.nfb-lead { color:var(--t2); font-size:11.5px; }
+.nfb-lead::before { content:"· "; color:var(--t3); }
+.nfb-dot { width:18px; height:18px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 40% 34%, #ffe2b0, #ff9c3f 58%, #e8801f);
+  box-shadow:0 0 10px rgba(255,150,40,.6); }
+.nfb-bubble { position:relative; max-width:100%; display:flex; gap:9px; align-items:center;
+  padding:8px 12px; border-radius:16px 16px 16px 5px;
+  background:
+    radial-gradient(130% 130% at 26% 18%, rgba(255,228,170,.22), rgba(255,170,70,.07) 50%, transparent 70%),
+    linear-gradient(180deg, rgba(48,33,19,.93), rgba(28,19,11,.96));
+  border:1px solid rgba(255,210,150,.36);
+  box-shadow:0 10px 26px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.4);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  animation:bubble-in .5s cubic-bezier(.22,1.2,.36,1) both; }
+.nfb-tx { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.nfb-line { font-size:13.5px; color:var(--t0); line-height:1.32; word-break:break-word;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.nfb-meta { font-size:11.5px; color:var(--t2); display:flex; align-items:center; gap:7px;
+  flex-wrap:wrap; font-variant-numeric:tabular-nums; }
+.nfb-thumb { width:42px; height:42px; border-radius:10px; }
+.nfb-sum { font-size:12px; color:var(--t1); line-height:1.32;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.nfb-intro { background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0 4px; animation:none; }
+.nfb-intro .nfb-line { color:var(--t1); font-size:13px; }
+.nfb-bubble.row-hl { border-color:rgba(255,190,110,.7);
+  box-shadow:0 8px 26px rgba(255,150,40,.3), inset 0 1px 1px rgba(255,255,255,.5), 0 0 0 1px rgba(255,180,84,.5); }
+/* focus：富气泡横排高密度（左图 + 右文：标题/导语/要点/引语/meta） */
+.nfb-thread-focus { width:min(448px,92%); }
+.nfb-rich { display:block; gap:0; padding:11px; border-radius:19px 19px 19px 6px; }
+.nfb-dense { display:flex; gap:11px; align-items:stretch; width:100%; }
+.nfb-media { position:relative; flex:0 0 122px; align-self:stretch; min-height:148px;
+  border-radius:12px; overflow:hidden; background:rgba(255,255,255,.06); }
+.nfb-media img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.nfb-mbadge { position:absolute; left:7px; top:7px; }
+.nfb-dtext { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.nfb-title { font-size:14.5px; font-weight:700; line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.nfb-summary { font-size:12.5px; color:var(--t1); line-height:1.42;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.nfb-why { font-size:12px; color:var(--amber-1); font-style:italic; line-height:1.36;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* ============================================================
+   Form C · 沉浸聚焦 (Immersive Spotlight) —— aura 皮肤
+   图片为主，文字压在底部 scrim 上；list=封面横向陈列，focus=全幅封面
+   ============================================================ */
+.nf-imm-list { width:100%; display:flex; justify-content:center; }
+.nf-imm-list .nfi-track { display:flex; gap:11px; overflow-x:auto; padding:3px 2px 6px;
+  max-width:100%; scrollbar-width:none; scroll-behavior:smooth; }
+.nf-imm-list .nfi-track::-webkit-scrollbar { display:none; }
+.nfi-cover { position:relative; flex:0 0 auto; width:158px; height:224px; border-radius:16px;
+  overflow:hidden; box-shadow:0 8px 26px rgba(0,0,0,.5);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, opacity .3s, filter .3s; }
+.nfi-cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.nfi-scrim { position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.88) 0%, rgba(0,0,0,.34) 44%, rgba(0,0,0,0) 72%); }
+.nfi-overlay { position:absolute; left:0; right:0; bottom:0; padding:11px 12px;
+  display:flex; flex-direction:column; gap:5px; align-items:flex-start; }
+.nfi-title { font-size:14px; font-weight:600; color:#fff; line-height:1.28;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  text-shadow:0 1px 6px rgba(0,0,0,.65); }
+.nfi-meta { font-size:11px; color:rgba(255,255,255,.84); font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 4px rgba(0,0,0,.6); }
+.nfi-badge { align-self:flex-start; }
+/* 讲到哪一张 = 聚光：高亮的那张抬起放大 + 暖光描边，其余整体压暗后退（一眼看出在讲哪张） */
+.nfi-cover.row-hl { transform:translateY(-5px) scale(1.07); z-index:2;
+  box-shadow:0 16px 42px rgba(255,150,40,.5), 0 0 0 2px rgba(255,205,125,.92); }
+.nfi-track:has(.nfi-cover.row-hl) .nfi-cover:not(.row-hl){ opacity:.4; filter:saturate(.65) brightness(.78); transform:scale(.95); }
+/* 高亮张轻呼吸（"正在讲"），仅播放时；非播放/弱动效关 */
+.loona-stage.is-playing .nfi-cover.row-hl{ animation:cover-spotlight 1.5s ease-in-out infinite; }
+@keyframes cover-spotlight{
+  0%,100%{ box-shadow:0 16px 42px rgba(255,150,40,.42), 0 0 0 2px rgba(255,205,125,.8); }
+  50%    { box-shadow:0 18px 50px rgba(255,150,40,.62), 0 0 0 2px rgba(255,215,150,1), 0 0 26px 6px rgba(255,160,50,.32); }
+}
+.loona-stage:not(.is-playing) .nfi-cover.row-hl{ animation:none; }
+@media (prefers-reduced-motion:reduce){ .nfi-cover.row-hl{ animation:none !important; } .nfi-track:has(.nfi-cover.row-hl) .nfi-cover:not(.row-hl){ transform:none; } }
+/* focus：单张全幅封面 */
+.nf-imm-focus-wrap { width:min(452px,94%); }
+.nf-imm-focus-wrap .nfi-focus { width:100%; height:254px; border-radius:18px;
+  box-shadow:0 16px 44px rgba(0,0,0,.55), 0 0 60px rgba(255,150,40,.18); }
+.nf-imm-focus-wrap .nfi-title { font-size:18px; -webkit-line-clamp:2; }
+.nf-imm-focus-wrap .nfi-summary { font-size:12.5px; color:rgba(255,255,255,.9); line-height:1.42;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  text-shadow:0 1px 5px rgba(0,0,0,.6); }
+.nf-imm-focus-wrap .nfi-overlay { padding:14px 16px; gap:5px; }
+/* 列表封面摘要(1 行) */
+.nfi-csum { font-size:11.5px; color:rgba(255,255,255,.82); line-height:1.3; text-shadow:0 1px 4px rgba(0,0,0,.6);
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+/* 聚焦：关键要点(2) 压在 scrim 上 */
+.nfi-points { display:flex; flex-direction:column; gap:3px; margin-top:1px; }
+.nfi-pt { display:flex; gap:6px; align-items:flex-start; font-size:11.5px; color:rgba(255,255,255,.92);
+  line-height:1.32; text-shadow:0 1px 4px rgba(0,0,0,.7); }
+.nfi-pt .nfi-pdot { flex:0 0 auto; width:4px; height:4px; margin-top:6px; border-radius:50%;
+  background:var(--amber); box-shadow:0 0 6px rgba(255,180,84,.85); }
+/* 聚焦文字更多 → scrim 加强，保证可读 */
+.nf-imm-focus-wrap .nfi-scrim {
+  background:linear-gradient(to top, rgba(0,0,0,.93) 0%, rgba(0,0,0,.66) 38%, rgba(0,0,0,.16) 70%, rgba(0,0,0,0) 90%); }
+.nf-imm-focus-wrap .nfi-summary { -webkit-line-clamp:2; }
+
+/* ============================================================
+   Form B · Bubble — 1) staggered entrance (live playback only)
+   Child 1 = .nfb-tag; bubbles are nth-child(2+). ~50ms stagger, 500ms ease.
+   ============================================================ */
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble {
+  animation:bubble-in .5s cubic-bezier(.22,1.2,.36,1) both; }
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble:nth-child(2)  { animation-delay:.08s; }
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble:nth-child(3)  { animation-delay:.13s; }
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble:nth-child(4)  { animation-delay:.18s; }
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble:nth-child(5)  { animation-delay:.23s; }
+.loona-stage.is-playing .content-area .nf-bubble-thread .nfb-bubble:nth-child(n+6){ animation-delay:.28s; }
+
+/* 2) Active-bubble speaking cue: soft amber glow breathes on .row-hl
+   Uses box-shadow only — no layout shift, no height change. */
+.nfb-bubble.row-hl {
+  animation:bubble-speaking 1.1s ease-in-out infinite !important; }
+@keyframes bubble-speaking {
+  0%,100% { border-color:rgba(255,190,110,.7);
+             box-shadow:0 8px 26px rgba(255,150,40,.3), inset 0 1px 1px rgba(255,255,255,.5),
+                        0 0 0 1px rgba(255,180,84,.5), 0 0 14px 2px rgba(255,160,50,.18); }
+  50%      { border-color:rgba(255,210,140,.9);
+             box-shadow:0 8px 26px rgba(255,150,40,.45), inset 0 1px 1px rgba(255,255,255,.6),
+                        0 0 0 2px rgba(255,190,100,.7), 0 0 26px 6px rgba(255,150,40,.34); }
+}
+
+/* 3) Loona dot soft pulse — only while is-playing */
+.loona-stage.is-playing .nfb-dot {
+  animation:dot-pulse 2.4s ease-in-out infinite; }
+@keyframes dot-pulse {
+  0%,100% { box-shadow:0 0 10px rgba(255,150,40,.6); }
+  50%      { box-shadow:0 0 18px rgba(255,160,50,.9), 0 0 28px rgba(255,140,30,.4); }
+}
+
+/* ============================================================
+   Form C · Immersive — scroll-snap + Ken Burns + drag affordance
+   ============================================================ */
+
+/* Scroll snap on track (proximity so it doesn't fight engine scrollIntoView) */
+.nf-imm-list .nfi-track {
+  scroll-snap-type:x proximity; }
+.nfi-cover {
+  scroll-snap-align:center; }
+
+/* Drag affordance */
+.nf-imm-list .nfi-track           { cursor:grab; }
+.nf-imm-list .nfi-track.dragging  { cursor:grabbing; }
+
+/* Ken Burns on FOCUS cover image only — scale 1.0→1.06, transform only.
+   Gate: only when is-playing; gate off otherwise and under reduced-motion. */
+.loona-stage.is-playing .nf-imm-focus-wrap .nfi-cover img {
+  animation:ken-burns 14s ease-in-out both; }
+@keyframes ken-burns {
+  0%   { transform:scale(1)    translateZ(0); }
+  100% { transform:scale(1.06) translateZ(0); }
+}
+
+/* ============================================================
+   Non-playing gate: news entrance + bubble stagger + dot pulse all off
+   (extends existing .loona-stage:not(.is-playing) gate)
+   ============================================================ */
+.loona-stage:not(.is-playing) .content-area .news-form,
+.loona-stage:not(.is-playing) .content-area .nfb-bubble { animation:none !important; }
+.loona-stage:not(.is-playing) .nfb-dot { animation:none !important; }
+.loona-stage:not(.is-playing) .nf-imm-focus-wrap .nfi-cover img { animation:none !important; }
+
+@media (prefers-reduced-motion:reduce){
+  .content-area .news-form,
+  .content-area .nfb-bubble,
+  .nfb-dot,
+  .nf-imm-focus-wrap .nfi-cover img { animation:none !important; }
+  .nfb-bubble.row-hl { animation:none !important; }
+}
