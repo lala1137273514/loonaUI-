@@ -88,6 +88,8 @@
         <div class="loona-stage web-stage" id="loonaStage">
           <!-- 内容遮罩（玻璃浮层出现时柔化背景） -->
           <div class="content-scrim"></div>
+          <!-- 叙事流：满屏「一图一刻」moment 层（独立于轮播） -->
+          <div class="story-layer" id="storyLayer"></div>
 
           <!-- web_ui 同款轮播（结果卡：trip/news/mail/event/weather…）：横向 rail + 居中聚焦缩放 -->
           <section class="carousel-panel hidden" id="carouselPanel" aria-label="结构化结果">
@@ -161,13 +163,27 @@
 <script src="cases/travel_chengdu_3d.js"></script>
 <script src="cases/travel_chengdu_5d.js"></script>
 <script src="cases/travel_chengdu_5d_2stage.js"></script>
+<script src="cases/travel_chengdu_story.js"></script>
+<script src="cases/travel_chengdu_film.js"></script>
 <!-- 三方案对比 mock（杭州）：A 封面卡钻取 / C 总览+亮点条 / B 种草灵感流 -->
 <script src="cases/travel_hangzhou_a.js"></script>
 <script src="cases/travel_hangzhou_c.js"></script>
 <script src="cases/travel_hangzhou_b.js"></script>
 <script src="cases/travel_card_ab.js"></script>
 <script src="cases/travel_uat_a1_a12.js"></script>
+<!-- 泛化：不同目的地×人群（同范式骨架 + 同款暖/种草 TTS） -->
+<script src="cases/travel_chongqing_couple.js"></script>
+<script src="cases/travel_xian_solo.js"></script>
+<script src="cases/travel_xiamen_family.js"></script>
+<script src="cases/travel_dali_friends.js"></script>
+<!-- 新形式：多目的地对比 / 主题玩法 / 交通·住宿·预算卡 -->
+<script src="cases/travel_compare_cities.js"></script>
+<script src="cases/travel_theme_chengdu.js"></script>
+<script src="cases/travel_logistics_demo.js"></script>
 <script src="cases/meeting_action.js"></script>
+<!-- 运行配置 + 评论同步层（Supabase 实时多人 / localStorage 单机兜底；file:// 可跑） -->
+<script src="js/config.js"></script>
+<script src="js/comment-sync.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/console.js"></script>
@@ -180,7 +196,8 @@
     subtitle: $('subtitle'), sideTrack: $('sideTrack'), timeline: $('timeline'),
     waitBanner: $('waitBanner'), nowStage: $('nowStage'), annLive: $('annLive'),
     stage: $('loonaStage'),
-    carouselPanel: $('carouselPanel'), carouselRail: $('carouselRail'), carouselTitle: $('carouselTitle'), carouselBack: $('backOverview')
+    carouselPanel: $('carouselPanel'), carouselRail: $('carouselRail'), carouselTitle: $('carouselTitle'), carouselBack: $('backOverview'),
+    storyLayer: $('storyLayer')
   };
 
   var engine = LoonaEngine.init(refs);
@@ -252,7 +269,7 @@
 
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_chengdu_5d', 'travel_chengdu_5d_2stage', 'travel_chengdu_3d', 'travel_hangzhou_a', 'travel_hangzhou_c', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
+  var ORDER = ['travel_chongqing_couple', 'travel_xian_solo', 'travel_xiamen_family', 'travel_dali_friends', 'travel_compare_cities', 'travel_theme_chengdu', 'travel_logistics_demo', 'travel_chengdu_film', 'travel_chengdu_story', 'travel_chengdu_5d', 'travel_chengdu_5d_2stage', 'travel_chengdu_3d', 'travel_hangzhou_a', 'travel_hangzhou_c', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
     'email_calendar_workflow', 'restaurant_quiet', 'travel_shanghai_3d', 'travel_card_ab',
     'uat_a1', 'uat_a2', 'uat_a3', 'uat_a4', 'uat_a5', 'uat_a6', 'uat_a7', 'uat_a8', 'uat_a9', 'uat_a10', 'uat_a11', 'uat_a12',
     'meeting_action'];

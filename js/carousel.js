@@ -73,7 +73,7 @@
 
     // 工作台新增：把当前聚焦卡的 hero 图打上 view-transition-name，封面↔详情切换时共享元素形变；待并回 web_ui
     function tagHero() {
-      const SEL = ".cover-photo,.trip-photo,.inspo-photo,.tov-photo";
+      const SEL = ".cover-photo,.trip-photo,.inspo-photo,.tov-photo,.dest-photo,.theme-photo";
       for (const h of railEl.querySelectorAll(SEL)) h.style.viewTransitionName = "";
       const act = railEl.querySelector(".result-card.active");
       if (!act) return;
@@ -158,6 +158,11 @@
   function buildCarouselCard(item) {
     if (item.kind === "travel-overview") return buildTravelOverviewCard(item);   // C 方案：城市总览 + 每日亮点行
     if (item.kind === "inspo-card") return buildInspoCard(item);                  // B 方案：种草灵感卡
+    if (item.kind === "dest-card") return buildDestCard(item);                    // 多目的地对比：候选城市封面（含对比数据）
+    if (item.kind === "theme-card") return buildThemeCard(item);                  // 主题玩法：主题封面（含玩法计数）
+    if (item.kind === "route") return buildRouteCard(item);                       // 交通路线卡
+    if (item.kind === "hotel") return buildHotelCard(item);                       // 酒店住宿卡
+    if (item.kind === "budget") return buildBudgetCard(item);                     // 预算花费卡
     if (item.kind === "trip-cover") {       // 工作台新增：旅行阶段封面卡（大图 + tag）
       return buildTripCoverCard(item);
     }
@@ -864,6 +869,126 @@
     if (tags.length) { const tr = document.createElement("div"); tr.className = "inspo-tags"; tags.forEach(function (t) { const s = createTextElement("span", t); s.className = "inspo-tag"; tr.appendChild(s); }); body.appendChild(tr); }
     if (item.hook) { const p = createTextElement("p", item.hook); p.className = "inspo-punch"; body.appendChild(p); }
     card.appendChild(body);
+    return card;
+  }
+
+  /* ===== 多目的地对比：候选城市封面卡（大图 + 城市名 + 对比数据条 + 一句为什么）。工作台新增 ===== */
+  function buildDestCard(item) {
+    const raw = item.raw || {};
+    const card = document.createElement("article");
+    card.className = "result-card dest-card";
+    card.dataset.itemIdx = item.item_idx;
+    if (item.photo) { const img = document.createElement("img"); img.className = "dest-photo"; img.src = item.photo; img.alt = item.title || ""; card.appendChild(img); }
+    else { const ph = document.createElement("div"); ph.className = "dest-photo cover-photo-ph"; card.appendChild(ph); }
+    const sh = document.createElement("div"); sh.className = "dest-shade"; card.appendChild(sh);
+    if (item.rec) { const rb = createTextElement("span", "⭐ 我偏这个"); rb.className = "dest-rec"; card.appendChild(rb); }
+    const body = document.createElement("div"); body.className = "dest-body";
+    body.appendChild(Object.assign(createTextElement("h3", item.title || "候选地"), { className: "dest-title" }));
+    const stats = Array.isArray(raw.stats) ? raw.stats : [];
+    if (stats.length) {
+      const sr = document.createElement("div"); sr.className = "dest-stats";
+      stats.forEach(function (s) {
+        const cell = document.createElement("div"); cell.className = "dest-stat";
+        cell.appendChild(Object.assign(createTextElement("span", s.v || ""), { className: "dest-stat-v" }));
+        cell.appendChild(Object.assign(createTextElement("span", s.k || ""), { className: "dest-stat-k" }));
+        sr.appendChild(cell);
+      });
+      body.appendChild(sr);
+    }
+    if (item.hook) { const p = createTextElement("p", item.hook); p.className = "dest-why"; body.appendChild(p); }
+    card.appendChild(body);
+    return card;
+  }
+
+  /* ===== 主题玩法：主题封面卡（大图 + 主题名 + 玩法计数 + tags + punchline）。工作台新增 ===== */
+  function buildThemeCard(item) {
+    const raw = item.raw || {};
+    const card = document.createElement("article");
+    card.className = "result-card theme-card";
+    card.dataset.itemIdx = item.item_idx;
+    if (item.photo) { const img = document.createElement("img"); img.className = "theme-photo"; img.src = item.photo; img.alt = item.title || ""; card.appendChild(img); }
+    else { const ph = document.createElement("div"); ph.className = "theme-photo cover-photo-ph"; card.appendChild(ph); }
+    const sh = document.createElement("div"); sh.className = "theme-shade"; card.appendChild(sh);
+    if (raw.count) { const cb = createTextElement("span", raw.count); cb.className = "theme-count"; card.appendChild(cb); }
+    if (item.rec) { const rb = createTextElement("span", "⭐ 我推这个"); rb.className = "theme-rec"; card.appendChild(rb); }
+    const body = document.createElement("div"); body.className = "theme-body";
+    const ht = createTextElement("h3", (raw.icon ? raw.icon + " " : "") + (item.title || "主题")); ht.className = "theme-title"; body.appendChild(ht);
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    if (tags.length) { const tr = document.createElement("div"); tr.className = "theme-tags"; tags.forEach(function (t) { const s = createTextElement("span", t); s.className = "theme-tag"; tr.appendChild(s); }); body.appendChild(tr); }
+    if (item.hook) { const p = createTextElement("p", item.hook); p.className = "theme-punch"; body.appendChild(p); }
+    card.appendChild(body);
+    return card;
+  }
+
+  /* ===== 交通路线卡：from→to + 交通方式/时长/换乘（复用黄线节点 motif）。工作台新增 ===== */
+  function buildRouteCard(item) {
+    const r = item.raw || {};
+    const card = document.createElement("article");
+    card.className = "result-card route-card";
+    card.dataset.itemIdx = item.item_idx;
+    if (r.scope) { const sc = createTextElement("span", r.scope); sc.className = "route-scope"; card.appendChild(sc); }   // 城际/市内
+    const row = document.createElement("div"); row.className = "route-row";
+    row.appendChild(Object.assign(createTextElement("span", r.from || ""), { className: "route-place" }));
+    const line = document.createElement("span"); line.className = "route-line";
+    const ic = createTextElement("span", r.modeIcon || "→"); ic.className = "route-ic"; line.appendChild(ic);
+    row.appendChild(line);
+    row.appendChild(Object.assign(createTextElement("span", r.to || ""), { className: "route-place route-place-end" }));
+    card.appendChild(row);
+    const band = [r.mode, r.dur, r.transfers].filter(Boolean).join(" · ");
+    if (band) card.appendChild(Object.assign(createTextElement("div", band), { className: "route-band" }));
+    const foot = [r.fare, r.note].filter(Boolean).join(" · ");
+    if (foot) card.appendChild(Object.assign(createTextElement("p", foot), { className: "route-note" }));
+    return card;
+  }
+
+  /* ===== 酒店住宿卡：照片 + 名称 + 价位 + 评分 + 区域 + 设施 tag。工作台新增 ===== */
+  function buildHotelCard(item) {
+    const h = item.raw || {};
+    const card = document.createElement("article");
+    card.className = "result-card hotel-card";
+    card.dataset.itemIdx = item.item_idx;
+    const head = document.createElement("div"); head.className = "hotel-head";
+    if (item.photo) { const img = document.createElement("img"); img.className = "hotel-photo"; img.src = item.photo; img.alt = item.title || ""; head.appendChild(img); }
+    else { const ph = document.createElement("div"); ph.className = "hotel-photo cover-photo-ph"; head.appendChild(ph); }
+    const sh = document.createElement("div"); sh.className = "hotel-shade"; head.appendChild(sh);
+    if (h.rec) { const rb = createTextElement("span", "⭐ 我订这家"); rb.className = "hotel-rec"; head.appendChild(rb); }
+    const ht = createTextElement("h3", item.title || "住宿"); ht.className = "hotel-name"; head.appendChild(ht);
+    card.appendChild(head);
+    const meta = document.createElement("div"); meta.className = "hotel-meta";
+    if (h.price) { const pr = document.createElement("span"); pr.className = "hotel-price"; pr.appendChild(Object.assign(createTextElement("strong", h.price), {})); if (h.priceUnit) pr.appendChild(createTextElement("span", h.priceUnit)); meta.appendChild(pr); }
+    if (h.rating) { const rt = createTextElement("span", "★ " + h.rating); rt.className = "hotel-rating"; meta.appendChild(rt); }
+    if (h.area) { const ar = createTextElement("span", h.area); ar.className = "hotel-area"; meta.appendChild(ar); }
+    card.appendChild(meta);
+    const tags = Array.isArray(h.tags) ? h.tags : [];
+    if (tags.length) { const tr = document.createElement("div"); tr.className = "hotel-tags"; tags.forEach(function (t) { const s = createTextElement("span", t); s.className = "hotel-tag"; tr.appendChild(s); }); card.appendChild(tr); }
+    if (h.note) card.appendChild(Object.assign(createTextElement("p", h.note), { className: "hotel-note" }));
+    return card;
+  }
+
+  /* ===== 预算花费卡：分项 CSS 条形 + 合计（无图表库）。工作台新增 ===== */
+  function buildBudgetCard(item) {
+    const b = item.raw || {};
+    const card = document.createElement("article");
+    card.className = "result-card budget-card";
+    card.dataset.itemIdx = item.item_idx;
+    const head = document.createElement("div"); head.className = "budget-head";
+    head.appendChild(Object.assign(createTextElement("span", b.title || "预算估算"), { className: "budget-title" }));
+    if (b.total) { const tot = document.createElement("span"); tot.className = "budget-total"; if (b.currency) tot.appendChild(createTextElement("span", b.currency)); tot.appendChild(createTextElement("strong", b.total)); head.appendChild(tot); }
+    card.appendChild(head);
+    const items = Array.isArray(b.items) ? b.items : [];
+    const max = items.reduce(function (m, x) { return Math.max(m, +x.pct || 0); }, 0) || 100;
+    const list = document.createElement("div"); list.className = "budget-rows";
+    items.forEach(function (x) {
+      const row = document.createElement("div"); row.className = "budget-brow";
+      row.appendChild(Object.assign(createTextElement("span", x.label || ""), { className: "budget-label" }));
+      const track = document.createElement("div"); track.className = "budget-track";
+      const bar = document.createElement("div"); bar.className = "budget-bar"; bar.style.width = Math.round((+x.pct || 0) / max * 100) + "%";
+      track.appendChild(bar); row.appendChild(track);
+      row.appendChild(Object.assign(createTextElement("span", x.amount || ""), { className: "budget-amount" }));
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    if (b.note) card.appendChild(Object.assign(createTextElement("p", b.note), { className: "budget-note" }));
     return card;
   }
 

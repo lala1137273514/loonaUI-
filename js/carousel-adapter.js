@@ -37,7 +37,9 @@
     ListCard: 1, SubjectCard: 1, SectionCard: 1, WeatherView: 1, TravelView: 1,
     TravelViewA: 1, TravelViewB: 1, TravelDayFocus: 1, TravelDayCard: 1,
     NewsList: 1, NewsFocus: 1, RestaurantView: 1, card: 1, TravelStages: 1,
-    TravelOverview: 1, InspoFlow: 1
+    TravelOverview: 1, InspoFlow: 1,
+    RouteView: 1, HotelView: 1, BudgetView: 1,   // 交通/住宿/预算 平铺结果卡
+    DestCompare: 1, ThemeFlow: 1                   // 多目的地对比 / 主题玩法 封面→钻取范式
   };
 
   /* ---- 旅行两阶段：stages（阶段，可含多天）→ ①封面 items ②按阶段分组的逐天详情 items ---- */
@@ -173,6 +175,26 @@
     return wrap('subject', c.title || '结果', [mkItem(1, '', { id: c.id, title: c.title, summary: detail, subtitle: c.badge && c.badge.text, raw: c })]);
   }
 
+  /* 交通路线：content.routes[] → 每条一张 route 卡（自定义字段塞 raw，卡构建器读 raw） */
+  function buildRoute(ev) {
+    var c = ev.content || {}, items = (c.routes || []).map(function (r, i) {
+      return mkItem(i + 1, 'route', { id: r.id, title: (r.from || '') + '→' + (r.to || ''), raw: r });
+    });
+    return wrap('route', c.title || '交通路线', items);
+  }
+  /* 酒店住宿：content.hotels[] → 每家一张 hotel 卡 */
+  function buildHotels(ev) {
+    var c = ev.content || {}, items = (c.hotels || []).map(function (h, i) {
+      return mkItem(i + 1, 'hotel', { id: h.id, title: h.name, photo: h.photo, raw: h });
+    });
+    return wrap('hotel', c.title || '住宿', items);
+  }
+  /* 预算花费：单张 budget 卡（分项 CSS 条形 + 合计） */
+  function buildBudget(ev) {
+    var c = ev.content || {};
+    return wrap('budget', c.title || '预算', [mkItem(1, 'budget', { id: c.id || 'budget', title: c.title, raw: c })]);
+  }
+
   function build(ev) {
     switch (ev.comp) {
       case 'NewsList': return buildNewsList(ev);
@@ -184,6 +206,9 @@
       case 'SubjectCard': return buildSubject(ev);
       case 'TravelView': case 'TravelViewA': case 'TravelViewB': case 'TravelDayCard': return buildTravel(ev);
       case 'TravelDayFocus': return buildTravelDaySingle(ev);
+      case 'RouteView': return buildRoute(ev);
+      case 'HotelView': return buildHotels(ev);
+      case 'BudgetView': return buildBudget(ev);
       default: return buildSubject(ev);   // 兜底：generic 单卡
     }
   }
@@ -243,6 +268,34 @@
         dayToStage[cd.id] = cd.id; coverIdxByStage[cd.id] = i + 1;
       });
       this.stages = { coverCarousel: { source_tool_name: 'trip', title: c.echo || '灵感', items: items, active_item_idx: null }, detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null };
+      this.mode = 'overview';
+      return this.stages.coverCarousel;
+    },
+    /* 多目的地对比：封面=候选城市(对比数据)，钻取=该城市样板日。复用 stages 结构 */
+    feedDestCompare: function (ev) {
+      var c = ev.content || {}, cands = c.cands || [];
+      var items = cands.map(function (cd, i) { return mkItem(i + 1, 'dest-card', { id: cd.id, title: cd.city, photo: cd.photo, hook: cd.why, rec: cd.rec, raw: { stats: cd.stats || [] } }); });
+      var detailByStage = {}, dayToStage = {}, coverIdxByStage = {};
+      cands.forEach(function (cd, i) {
+        var dt = cd.detail || {}, m = {}; m[cd.id] = 1;
+        detailByStage[cd.id] = { carousel: { source_tool_name: 'trip', title: cd.city || '行程', items: [dayToItem(1, { id: cd.id, label: dt.label || (cd.city + ' · 样板一天'), pace: dt.pace, photo: dt.photo || cd.photo, nodes: dt.nodes, footer: dt.footer })], active_item_idx: null }, dayIdx: m, title: cd.city };
+        dayToStage[cd.id] = cd.id; coverIdxByStage[cd.id] = i + 1;
+      });
+      this.stages = { coverCarousel: { source_tool_name: 'trip', title: c.echo || '去哪好', items: items, active_item_idx: null }, detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null };
+      this.mode = 'overview';
+      return this.stages.coverCarousel;
+    },
+    /* 主题玩法：封面=主题(玩法计数)，钻取=该主题过滤后的行程。复用 stages 结构 */
+    feedThemeFlow: function (ev) {
+      var c = ev.content || {}, themes = c.themes || [];
+      var items = themes.map(function (t, i) { return mkItem(i + 1, 'theme-card', { id: t.id, title: t.title, photo: t.photo, tags: t.tags || [], hook: t.punchline, rec: t.rec, raw: { icon: t.icon, count: t.count } }); });
+      var detailByStage = {}, dayToStage = {}, coverIdxByStage = {};
+      themes.forEach(function (t, i) {
+        var dt = t.detail || {}, m = {}; m[t.id] = 1;
+        detailByStage[t.id] = { carousel: { source_tool_name: 'trip', title: t.title || '玩法', items: [dayToItem(1, { id: t.id, label: dt.label || t.title, pace: dt.pace, photo: dt.photo || t.photo, nodes: dt.nodes, footer: dt.footer })], active_item_idx: null }, dayIdx: m, title: t.title };
+        dayToStage[t.id] = t.id; coverIdxByStage[t.id] = i + 1;
+      });
+      this.stages = { coverCarousel: { source_tool_name: 'trip', title: c.echo || '怎么玩', items: items, active_item_idx: null }, detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null };
       this.mode = 'overview';
       return this.stages.coverCarousel;
     },

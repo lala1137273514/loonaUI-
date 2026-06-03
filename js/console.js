@@ -224,8 +224,20 @@
       this.engine.load(live);
       this.engine.setTheme((base && base.default_skin) || 'glass');
       this.curVariant = 0;
+      this._bindComments(id);
       if (this.refs.tlCount) this.refs.tlCount.textContent = this.engine.events.length + ' 步';
       this.renderBar();
+    },
+    /* 评论同步：把当前 case 的 annotations 绑给 CommentSync（本地持久化 / Supabase 实时）。
+       远程/本地有变更时刷新左侧 💬 角标，且若没在输入框里打字就原地重渲评论串。 */
+    _bindComments: function (taskId) {
+      if (!global.LoonaCommentSync) return;
+      var self = this, anns = (this.engine.caseObj.annotations = this.engine.caseObj.annotations || []);
+      LoonaCommentSync.bind(taskId, anns, function () {
+        self.engine.refreshRowFlags();
+        var ae = document.activeElement;
+        if (global.LoonaEditor && LoonaEditor.refreshOpenThread && !(ae && /INPUT|TEXTAREA/.test(ae.tagName || ''))) LoonaEditor.refreshOpenThread();
+      });
     },
     _list: function () { return this.variants[this.curCaseId] || []; },
     _key: function (id) { return 'loona_variants_' + id; },
@@ -244,6 +256,7 @@
       this.engine.load(clone(v.caseObj));
       this.engine.setTheme((v.caseObj && v.caseObj.default_skin) || this.engine.theme || 'glass');
       this.curVariant = i;
+      this._bindComments(this.curCaseId);
       if (this.refs.tlCount) this.refs.tlCount.textContent = this.engine.events.length + ' 步';
       this.renderBar();
       if (global.LoonaEditor && LoonaEditor._renderEmpty) LoonaEditor._renderEmpty();

@@ -298,19 +298,27 @@
     _hasAnn: function (idx, type) { return this._anns().some(function (a) { return a.event_idx === idx && a.type === type; }); },
     _toggleAnn: function (idx, type) {
       var arr = this._anns(), i = arr.findIndex(function (a) { return a.event_idx === idx && a.type === type; });
-      if (i >= 0) arr.splice(i, 1); else arr.push({ event_idx: idx, type: type, text: '' });
+      if (i >= 0) { var removed = arr[i]; arr.splice(i, 1); if (global.LoonaCommentSync) LoonaCommentSync.notifyRemove(removed); }
+      else { var ann = { event_idx: idx, type: type, text: '', id: 'k' + Date.now().toString(36) }; arr.push(ann); if (global.LoonaCommentSync) LoonaCommentSync.notifyAdd(ann); }
       this.engine.refreshRowFlags();
     },
     _comments: function (idx) {
       return this._anns().filter(function (a) { return a.event_idx === idx && (a.type === 'comment' || a.type === 'note'); });
     },
     _addComment: function (idx, text, author) {
-      this._anns().push({ event_idx: idx, type: 'comment', text: text, author: author || this._author(), at: new Date().toISOString(), id: 'c' + Date.now().toString(36) });
+      var ann = { event_idx: idx, type: 'comment', text: text, author: author || this._author(), at: new Date().toISOString(), id: 'c' + Date.now().toString(36) };
+      this._anns().push(ann);
+      if (global.LoonaCommentSync) LoonaCommentSync.notifyAdd(ann);
       this.engine.refreshRowFlags(); this._flashApplied();
     },
     _deleteComment: function (ann) {
       var arr = this._anns(), i = arr.indexOf(ann); if (i >= 0) arr.splice(i, 1);
+      if (global.LoonaCommentSync) LoonaCommentSync.notifyRemove(ann);
       this.engine.refreshRowFlags(); this._flashApplied();
+    },
+    /* 远程评论变更后由 CommentSync 回调：当前若展开着某步且没在输入，则原地重渲评论串 */
+    refreshOpenThread: function () {
+      if (this.curIdx >= 0 && this.engine.events[this.curIdx]) this.select(this.curIdx);
     },
     _author: function () { try { return (global.localStorage && localStorage.getItem('loona_review_author')) || '我'; } catch (e) { return '我'; } },
     _setAuthor: function (v) { try { if (global.localStorage) localStorage.setItem('loona_review_author', v || '我'); } catch (e) {} },

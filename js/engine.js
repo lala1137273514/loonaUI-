@@ -63,7 +63,7 @@
         self._setBackBtn(true, d.stageTitle);
       }, opts.flip !== false);
     },
-    _backToOverview: function () {
+    _backToOverview: function (animate) {
       if (!this._travelStages || !this._carousel || !global.LoonaCarouselAdapter) return;
       var d = LoonaCarouselAdapter.backToOverview(); if (!d) return;
       var self = this;
@@ -71,7 +71,7 @@
         self._carousel.renderCarousel(d.carousel, { flip: useFlip });
         if (d.focusIdx) self._carousel.focusCarouselItem(d.focusIdx);
         self._setBackBtn(false);
-      }, true);
+      }, animate !== false);   // seek 即时回放传 false → 同步渲染（与 _drill 一致）
     },
     /* 编辑器即改即见：用编辑后的 stages content 重渲轮播（不走 TTS/flip），按 target 定位预览。
        target = {stage:'s1'}(看封面) | {day:'d2'}(看该天详情) | 空(看封面总览) */
@@ -119,8 +119,49 @@
     },
     _carouselShowing: function () { return !!(this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden')); },
     _showCarousel: function (on) {
+      if (on) this._hideStory();
       if (this.refs.carouselPanel) this.refs.carouselPanel.classList.toggle('hidden', !on);
       if (this.refs.stage) this.refs.stage.classList.toggle('has-carousel', !!on);
+    },
+    _hideStory: function () { var l = this.refs.storyLayer; if (l) { l.classList.remove('show'); l.innerHTML = ''; } },
+    /* 叙事流：满屏「一图一刻」moment 卡（独立 story 层，不走轮播）。
+       moment 模式 = 大图 + ≤8字标题 + tag + 进度点 ●○○；详情模式(content.nodes) = ← 标题 + 时段行 + 💡提醒；content.end = 屏回暗 */
+    _renderMoment: function (ev, instant) {
+      var c = ev.content || {}, layer = this.refs.storyLayer;
+      this._hideCarousel();
+      this._focusClear(instant);
+      this.refs.contentArea.classList.remove('single');
+      if (!layer) return;
+      if (c.end) { this._hideStory(); this._markContent(); return; }   // 屏回暗（情绪收尾）
+      layer.innerHTML = '';
+      var card = UI.el('div', 'moment-card' + (c.nodes ? ' moment-detail' : ''));
+      if (c.photo) { var img = UI.el('img', 'moment-photo'); img.src = c.photo; img.alt = ''; card.appendChild(img); }
+      else card.appendChild(UI.el('div', 'moment-photo cover-photo-ph'));
+      card.appendChild(UI.el('div', 'moment-shade'));
+      var body = UI.el('div', 'moment-body');
+      if (c.nodes) {
+        if (c.title) body.appendChild(UI.el('div', 'moment-back', '← ' + UI.esc(c.title)));
+        var rows = UI.el('div', 'moment-rows');
+        c.nodes.forEach(function (n) { var r = UI.el('div', 'mrow'); r.appendChild(UI.el('span', 'mr-time', UI.esc(n.time || ''))); r.appendChild(UI.el('span', 'mr-place', UI.esc(n.place || ''))); rows.appendChild(r); });
+        body.appendChild(rows);
+        if (c.tip) body.appendChild(UI.el('div', 'moment-tip', '💡 ' + UI.esc(c.tip)));
+      } else {
+        if (c.dots && c.dots.n) { var d = UI.el('div', 'moment-dots'); for (var k = 1; k <= c.dots.n; k++) d.appendChild(UI.el('span', 'dot' + (k === c.dots.i ? ' on' : ''))); body.appendChild(d); }
+        if (c.title) body.appendChild(UI.el('h2', 'moment-title', UI.esc(c.title)));
+        var metas = c.meta || [], tags = c.tags || (c.tag ? [c.tag] : []);
+        if (metas.length || tags.length) {
+          var tr = UI.el('div', 'moment-tags');
+          metas.forEach(function (m) { tr.appendChild(UI.el('span', 'moment-meta', UI.esc(m))); });   // 时间/预算等元信息（淡玻璃）
+          tags.forEach(function (t) { tr.appendChild(UI.el('span', 'moment-tag', UI.esc(t))); });      // 特色亮点（琥珀强调）
+          body.appendChild(tr);
+        }
+      }
+      card.appendChild(body);
+      layer.appendChild(card);
+      layer.classList.add('show');
+      if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 叙事字幕放 2 行
+      this._lastCardEv = ev;
+      this._markContent();
     },
     _hideCarousel: function () {
       if (this._carousel) this._carousel.hideCarousel();
@@ -133,9 +174,11 @@
       var A = LoonaCarouselAdapter;
       // 旅行首屏（三方案）→ 首屏轮播 + 下钻详情，复用同一套 _drill/_backToOverview
       //   A TravelStages=阶段封面 · C TravelOverview=城市总览+每日行 · B InspoFlow=种草灵感卡
-      if (ev.comp === 'TravelStages' || ev.comp === 'TravelOverview' || ev.comp === 'InspoFlow') {
+      if (ev.comp === 'TravelStages' || ev.comp === 'TravelOverview' || ev.comp === 'InspoFlow' || ev.comp === 'DestCompare' || ev.comp === 'ThemeFlow') {
         var cov = ev.comp === 'TravelOverview' ? A.feedOverview(ev)
-          : ev.comp === 'InspoFlow' ? A.feedInspo(ev) : A.feedStages(ev);
+          : ev.comp === 'InspoFlow' ? A.feedInspo(ev)
+          : ev.comp === 'DestCompare' ? A.feedDestCompare(ev)
+          : ev.comp === 'ThemeFlow' ? A.feedThemeFlow(ev) : A.feedStages(ev);
         if (!cov || !cov.items.length) return false;
         this._dismissToastsOn('card', instant);
         this._focusClear(instant);
@@ -327,6 +370,7 @@
       var comp = ev.comp;
       if (comp === 'agent_step') { this._renderAgentStep(ev, i); return; }      // 仅侧轨
       if (ev.internal) { this._renderAgentStep(ev, i); return; }
+      if (comp === 'MomentCard') { this._renderMoment(ev, instant); return; }   // 叙事流：满屏一图一刻
 
       // 结果卡 → web_ui 同款轮播（trip/news/mail/event/weather/...）；其余卡(澄清/失败/generic)走玻璃浮层
       if (global.LoonaCarouselAdapter && LoonaCarouselAdapter.isResult(ev)) {
@@ -357,7 +401,7 @@
           this._setSubtitle(ev.text, true, 'user');   // ASR = 对话，走底部，与 TTS 同位（先用户后 Loona）
           // 旅行两阶段：用户"说某一天"→下钻；"返回总览"→回封面（点封面卡走 onCardClick）
           if (this._travelStages && ev.drill_day) this._drill({ day: ev.drill_day, flip: !instant });
-          else if (this._travelStages && ev.travel_back) this._backToOverview();
+          else if (this._travelStages && ev.travel_back) this._backToOverview(!instant);
           break;
         case 'pop_small':
           this._pushPop(UI.popSmall({ role: ev.role || 'status', text: ev.text, state_visual: ev.state_visual }));
@@ -686,6 +730,7 @@
       this._travelStages = false;
       this._setBackBtn(false);
       this._hideCarousel();
+      this._hideStory();
       this._setSubtitle('', false);
       this._hideWait();
       this._cards = {}; this._toasts = []; this._lastConfirm = null; this._lastCardEv = null;

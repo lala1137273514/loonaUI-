@@ -1220,3 +1220,136 @@ a.news-pill:hover {
 }
 .carousel-back:hover { border-color: rgba(229, 195, 116, 0.62); color: #e5c374; }
 .carousel-back.hidden { display: none; }
+
+/* ===== 叙事流：「一图一刻」moment 卡（story 层居中，卡内满屏大图 + ≤8字 + tag + 进度点）。
+   尺寸对齐封面卡 468×360；满屏=图在卡片内铺满，非铺满舞台。 ===== */
+.story-layer { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; }
+.story-layer.show { display: flex; }
+.moment-card {
+  position: relative; flex: 0 0 468px; width: 468px; height: 360px; overflow: hidden;
+  border: 1px solid rgba(255, 180, 84, 0.5); border-radius: 24px; background: #222;
+  box-shadow: 0 0 64px rgba(255, 150, 40, 0.4);
+  animation: moment-in .5s cubic-bezier(.2,.8,.25,1) both;
+}
+@keyframes moment-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .moment-card { animation: none; } }
+.moment-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.moment-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.12) 0, rgba(0,0,0,0) 30%, rgba(0,0,0,.5) 60%, rgba(0,0,0,.92) 100%); }
+.moment-body { position: absolute; left: 18px; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
+.moment-dots { display: flex; gap: 7px; }
+.moment-dots .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.42); transition: width .3s, background .3s; }
+.moment-dots .dot.on { width: 20px; border-radius: 5px; background: #ffb454; box-shadow: 0 0 10px rgba(255,180,84,.7); }
+.moment-title { margin: 0; color: #fff; font-size: 27px; font-weight: 800; line-height: 1.12; letter-spacing: .01em; text-shadow: 0 2px 18px rgba(0,0,0,.62); }
+.moment-tags { display: flex; gap: 7px; flex-wrap: wrap; }
+.moment-tag { padding: 4px 11px; border-radius: 999px; background: rgba(255,180,84,.18); border: 1px solid rgba(255,180,84,.5); color: #ffd49a; font-size: 12px; font-weight: 600; }
+/* 元信息 pill（时间/预算等）：淡玻璃描边，弱于琥珀特色 tag，构成两档层次 */
+.moment-meta { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.32); color: rgba(255,255,255,.95); font-size: 11.5px; font-weight: 600; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+/* 详情模式：钻取一刻·完整一天（时段 + 提醒 + 返回），同卡尺寸内排版 */
+.moment-detail .moment-body { gap: 7px; }
+.moment-back { color: rgba(255,255,255,.9); font-size: 14px; font-weight: 700; margin-bottom: 2px; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+.moment-rows { display: flex; flex-direction: column; gap: 7px; }
+.moment-detail .mrow { display: flex; align-items: baseline; gap: 12px; }
+.mr-time { flex: 0 0 auto; width: 40px; color: #ffd49a; font-size: 13px; font-weight: 700; }
+.mr-place { color: #fff; font-size: 16px; font-weight: 600; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+.moment-tip { margin-top: 4px; color: rgba(255,255,255,.85); font-size: 12.5px; }
+
+/* ============================================================
+   工作台新增形式：多目的地对比(dest) / 主题玩法(theme) 封面卡，
+   交通路线(route) / 酒店住宿(hotel) / 预算花费(budget) 结果卡。待并回 web_ui。
+   ============================================================ */
+/* ---- 多目的地对比：候选城市封面（大图 + 城市 + 对比数据条 + why） 468×360 ---- */
+.carousel-panel .dest-card { flex: 0 0 468px; width: 468px; height: 360px; }
+.dest-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
+.dest-card.active { border-color: rgba(255,180,84,0.85); }
+.dest-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
+.dest-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 26%, rgba(0,0,0,.55) 56%, rgba(0,0,0,.93) 100%); }
+.dest-rec { position: absolute; left: 12px; top: 12px; padding: 4px 11px; border-radius: 999px; background: #ffaa00; color: #543d18; font-size: 12px; font-weight: 700; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.dest-body { position: absolute; left: 16px; right: 16px; bottom: 15px; display: flex; flex-direction: column; gap: 9px; }
+.dest-title { margin: 0; color: #fff; font-size: 26px; font-weight: 800; line-height: 1.12; text-shadow: 0 2px 16px rgba(0,0,0,.65); }
+.dest-stats { display: flex; gap: 18px; }
+.dest-stat { display: flex; flex-direction: column; gap: 1px; }
+.dest-stat-v { color: #ffd49a; font-size: 16px; font-weight: 800; line-height: 1.1; }
+.dest-stat-k { color: rgba(255,255,255,.78); font-size: 11px; line-height: 1.1; }
+.dest-why { margin: 0; color: #fff; font-size: 13.5px; line-height: 1.4; text-shadow: 0 1px 12px rgba(0,0,0,.75); }
+
+/* ---- 主题玩法：主题封面（大图 + 玩法计数 + 主题名 + tags + punchline） 468×360 ---- */
+.carousel-panel .theme-card { flex: 0 0 468px; width: 468px; height: 360px; }
+.theme-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
+.theme-card.active { border-color: rgba(255,180,84,0.85); }
+.theme-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
+.theme-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 28%, rgba(0,0,0,.58) 58%, rgba(0,0,0,.92) 100%); }
+.theme-count { position: absolute; right: 12px; top: 12px; padding: 4px 11px; border-radius: 999px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.3); color: #fff; font-size: 11.5px; font-weight: 700; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.theme-rec { position: absolute; left: 12px; top: 12px; padding: 4px 11px; border-radius: 999px; background: #ffaa00; color: #543d18; font-size: 12px; font-weight: 700; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.theme-body { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+.theme-title { margin: 0; color: #fff; font-size: 25px; font-weight: 800; line-height: 1.14; text-shadow: 0 2px 16px rgba(0,0,0,.6); }
+.theme-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.theme-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #ffd49a; background: rgba(255,180,84,.16); border: 1px solid rgba(255,180,84,.45); }
+.theme-punch { margin: 0; color: #fff; font-size: 13.5px; line-height: 1.42; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
+
+/* ---- 交通路线卡：from→to + 黄线 + 方式/时长/换乘 ---- */
+.carousel-panel .route-card { flex: 0 0 360px; width: 360px; align-self: center; height: auto; max-height: 100%; }
+.route-card {
+  position: relative; gap: 0; padding: 18px 18px 16px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
+  background: linear-gradient(0deg, rgba(255,255,255,.1), rgba(255,255,255,.1)), linear-gradient(0deg, rgba(0,0,0,.7), rgba(0,0,0,.7));
+  -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); color: #fff;
+}
+.route-card.active { border-color: rgba(255,180,84,0.85); }
+.route-scope { align-self: flex-start; padding: 3px 10px; margin-bottom: 12px; border-radius: 999px; background: #ffaa00; color: #543d18; font-size: 11px; font-weight: 700; }
+.route-row { display: flex; align-items: center; gap: 10px; }
+.route-row .route-place { flex: 0 0 auto; max-width: 38%; color: #fff; font-size: 17px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-row .route-place-end { text-align: right; margin-left: auto; }
+.route-line { position: relative; flex: 1 1 auto; height: 2px; background: #ffe500; border-radius: 2px; }
+.route-ic { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); padding: 2px 7px; border-radius: 999px; background: #1c1b1f; border: 1px solid rgba(255,229,0,.6); color: #ffe500; font-size: 13px; line-height: 1; white-space: nowrap; }
+.route-band { margin-top: 16px; color: #ffd49a; font-size: 13px; font-weight: 600; }
+.route-note { margin: 6px 0 0; color: #ccc; font-size: 12.5px; line-height: 1.45; }
+
+/* ---- 酒店住宿卡：照片头 + 名称 + 价位/评分/区域 + 设施 tag ---- */
+.carousel-panel .hotel-card { flex: 0 0 360px; width: 360px; align-self: start; height: auto; max-height: 100%; }
+.hotel-card {
+  gap: 0; padding: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
+  background: linear-gradient(0deg, rgba(255,255,255,.1), rgba(255,255,255,.1)), linear-gradient(0deg, rgba(0,0,0,.7), rgba(0,0,0,.7));
+  -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); color: #fff;
+}
+.hotel-card.active { border-color: rgba(255,180,84,0.85); }
+.hotel-head { position: relative; flex: 0 0 132px; height: 132px; overflow: hidden; border-radius: 16px; }
+.hotel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hotel-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.85) 100%); }
+.hotel-rec { position: absolute; left: 10px; top: 10px; padding: 3px 10px; border-radius: 999px; background: #ffaa00; color: #543d18; font-size: 11px; font-weight: 700; }
+.hotel-name { position: absolute; left: 12px; right: 12px; bottom: 9px; margin: 0; color: #fff; font-size: 18px; font-weight: 700; line-height: 1.2; text-shadow: 0 2px 12px rgba(0,0,0,.7); }
+.hotel-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; padding: 12px 6px 0; }
+.hotel-price strong { color: #ffd24a; font-size: 19px; font-weight: 800; }
+.hotel-price span { color: rgba(255,236,198,.7); font-size: 12px; margin-left: 2px; }
+.hotel-rating { color: #ffd49a; font-size: 13px; font-weight: 700; }
+.hotel-area { color: rgba(255,255,255,.7); font-size: 12.5px; }
+.hotel-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 6px 0; }
+.hotel-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; color: rgba(255,255,255,.92); background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); }
+.hotel-note { margin: 10px 6px 2px; color: #ccc; font-size: 12.5px; line-height: 1.45; }
+
+/* ---- 预算花费卡：分项 CSS 条形 + 合计 ---- */
+.carousel-panel .budget-card { flex: 0 0 360px; width: 360px; align-self: start; height: auto; max-height: 100%; }
+.budget-card {
+  gap: 0; padding: 16px 18px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
+  background: linear-gradient(0deg, rgba(255,255,255,.1), rgba(255,255,255,.1)), linear-gradient(0deg, rgba(0,0,0,.7), rgba(0,0,0,.7));
+  -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); color: #fff;
+}
+.budget-card.active { border-color: rgba(255,180,84,0.85); }
+.budget-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.budget-title { color: #fff; font-size: 16px; font-weight: 700; }
+.budget-total span { color: rgba(255,236,198,.7); font-size: 13px; margin-right: 1px; }
+.budget-total strong { color: #ffd24a; font-size: 22px; font-weight: 800; }
+.budget-rows { display: flex; flex-direction: column; gap: 11px; }
+.budget-brow { display: flex; align-items: center; gap: 10px; }
+.budget-label { flex: 0 0 56px; color: rgba(255,255,255,.86); font-size: 12.5px; }
+.budget-track { flex: 1 1 auto; height: 9px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+.budget-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffaa00, #ffd24a); min-width: 4px; }
+.budget-amount { flex: 0 0 auto; width: 64px; text-align: right; color: #fff; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.budget-note { margin: 13px 0 0; color: #ccc; font-size: 12.5px; line-height: 1.45; }
+
+@media (max-width: 920px) {
+  .carousel-panel .dest-card, .carousel-panel .theme-card { flex-basis: 300px; width: 300px; height: 300px; }
+  .carousel-panel .route-card, .carousel-panel .hotel-card, .carousel-panel .budget-card { flex-basis: 300px; width: 300px; }
+}
+@media (max-width: 920px) { .moment-card { flex-basis: 300px; width: 300px; height: 300px; } .moment-title { font-size: 23px; } }
