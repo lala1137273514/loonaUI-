@@ -1,0 +1,11 @@
+# Vercel 线上站点只服务网页 app，排除文档与内部材料（不影响 GitHub 仓库）
+*.md
+_review/
+_ref/
+_audit/
+.feishu_build/
+.gstack/
+tools/
+proto_a1.png
+proto_a2.png
+proto_a5.png
