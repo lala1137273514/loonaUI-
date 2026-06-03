@@ -1,0 +1,314 @@
+/* ============================================================
+   Loona 工作台 · 结果卡 → web_ui 轮播适配器
+   把工作台 case 事件链里的「结果卡」事件转换成 web_ui carousel 的 item 形态，
+   喂给原样搬来的 js/carousel.js（CortexCarousel）。只负责数据形态对齐，不改样式。
+   契约见 web_ui/app/carousel_normalizer.py：
+     carousel = { source_tool_name, title, items:[item], active_item_idx }
+     item     = { item_idx, kind, title, subtitle, meta, summary, link, priority, photo?, reminder?, nodes?, location?, raw }
+     kind ∈ trip | search(新闻) | mail | event | weather | ''(generic)
+   ============================================================ */
+(function (global) {
+  'use strict';
+
+  function strip(s) { return String(s == null ? '' : s).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); }
+  function isTime(s) { return /^\d{1,2}:\d{2}$/.test(String(s || '').trim()); }
+
+  function mkItem(idx, kind, o) {
+    o = o || {};
+    return {
+      item_idx: idx, kind: kind,
+      title: o.title || ('条目 ' + idx),
+      subtitle: o.subtitle || null, meta: o.meta || null, summary: o.summary || null,
+      link: o.link || null, priority: o.priority || null,
+      photo: o.photo || null, reminder: o.reminder || null,
+      nodes: o.nodes || null, location: o.location || null,
+      tags: o.tags || null, hook: o.hook || null, rows: o.rows || null, rec: o.rec || null,
+      raw: o.raw || {}, _id: o.id || null
+    };
+  }
+  function wrap(source_tool_name, title, items) {
+    var idMap = {};
+    items.forEach(function (it) { if (it._id) idMap[it._id] = it.item_idx; });
+    return { carousel: { source_tool_name: source_tool_name, title: title, items: items, active_item_idx: null }, idMap: idMap };
+  }
+
+  /* 哪些 comp 算「结果卡」（进轮播）。澄清/确认/失败/状态/字幕不在此列。 */
+  var RESULT_COMPS = {
+    ListCard: 1, SubjectCard: 1, SectionCard: 1, WeatherView: 1, TravelView: 1,
+    TravelViewA: 1, TravelViewB: 1, TravelDayFocus: 1, TravelDayCard: 1,
+    NewsList: 1, NewsFocus: 1, RestaurantView: 1, card: 1, TravelStages: 1,
+    TravelOverview: 1, InspoFlow: 1
+  };
+
+  /* ---- 旅行两阶段：stages（阶段，可含多天）→ ①封面 items ②按阶段分组的逐天详情 items ---- */
+  function dayToItem(idx, day) {
+    return mkItem(idx, 'trip', {
+      id: day.id, title: day.label, subtitle: day.pace, photo: day.photo,
+      nodes: Array.isArray(day.nodes) ? day.nodes : null, summary: strip(day.footer || day.card_footer), raw: day
+    });
+  }
+  var FOCUS_COMPS = { NewsFocus: 1, TravelDayFocus: 1 };
+
+  /* ---- 各 comp → items ---- */
+  function buildNewsList(ev) {
+    var c = ev.content || {}, items = (c.items || []).map(function (it, i) {
+      return mkItem(i + 1, 'search', {
+        id: it.id, title: it.title, photo: it.image,
+        summary: it.summary || it.lead, subtitle: it.source, meta: it.time, raw: it
+      });
+    });
+    return wrap('web_search', c.title || '搜索结果', items);
+  }
+  function buildNewsSingle(ev) {
+    var c = ev.content || {}, it = c.item || c;
+    return wrap('web_search', '搜索结果', [mkItem(1, 'search', {
+      id: it.id, title: it.title, photo: it.image, summary: it.lead || it.summary,
+      subtitle: it.source, meta: it.time, raw: it
+    })]);
+  }
+
+  function buildEmail(ev) {
+    var c = ev.content || {}, items = (c.rows || []).map(function (r, i) {
+      var sub = String(r.sub || ''), parts = sub.split(' · ');
+      var from = parts.length > 1 ? parts[0] : (r.sub || null);
+      var summary = parts.length > 1 ? parts.slice(1).join(' · ') : null;
+      return mkItem(i + 1, 'mail', {
+        id: r.id, title: r.title, subtitle: from, summary: summary,
+        priority: r.badge && /^P\d/.test(r.badge.text || '') ? r.badge.text : null,
+        meta: r.right, raw: r
+      });
+    });
+    return wrap('get_mail_list', c.title || '邮件', items);
+  }
+
+  function buildCalendar(ev) {
+    var c = ev.content || {}, items = (c.rows || []).map(function (r, i) {
+      return mkItem(i + 1, 'event', {
+        id: r.id, title: r.title, meta: r.lead, location: r.sub, subtitle: r.sub, raw: r
+      });
+    });
+    // source_tool_name 故意不用 'list_events'（那会触发按天分组、而 case 无日期）→ 用 calendar，逐条出 event 卡
+    return wrap('calendar', c.title || '日程', items);
+  }
+
+  function buildListCard(ev) {
+    var c = ev.content || {}, rows = c.rows || [];
+    if (rows.length && isTime(rows[0].lead)) return buildCalendar(ev);
+    var looksMail = /邮件/.test(c.title || '') || rows.some(function (r) { return r.right || (r.badge && /^P\d/.test(r.badge.text || '')); });
+    if (looksMail) return buildEmail(ev);
+    // 工作流/其它列表 → generic
+    var items = rows.map(function (r, i) {
+      return mkItem(i + 1, '', { id: r.id, title: r.title, summary: r.sub, subtitle: r.badge && r.badge.text, raw: r });
+    });
+    return wrap('list', c.title || '结果', items);
+  }
+
+  function buildMeeting(ev) {
+    var c = ev.content || {}, items = (c.sections || []).map(function (s, i) {
+      var summary = s.text || (s.rows || []).map(function (r) { return r.title; }).filter(Boolean).join('；');
+      return mkItem(i + 1, '', { id: s.id, title: s.label, summary: summary, subtitle: s.badge && s.badge.text, raw: s });
+    });
+    return wrap('meeting', c.title || '会议结论', items);
+  }
+
+  function tripItemsFromContent(c) {
+    // 契约形态 cards[] 优先；否则 legacy sections[]
+    if (Array.isArray(c.cards) && c.cards.length) {
+      return c.cards.map(function (card, i) {
+        return mkItem(i + 1, 'trip', {
+          id: card.id, title: card.label, subtitle: card.pace, photo: card.photo,
+          nodes: Array.isArray(card.nodes) ? card.nodes : null,
+          summary: strip(card.card_footer), raw: card
+        });
+      });
+    }
+    if (Array.isArray(c.sections) && c.sections.length) {
+      return c.sections.map(function (s, i) {
+        return mkItem(i + 1, 'trip', {
+          id: s.id, title: s.label, subtitle: s.badge && s.badge.text,
+          summary: strip(s.text), raw: s
+        });
+      });
+    }
+    return [];
+  }
+  function buildTravel(ev) {
+    var c = ev.content || {};
+    return wrap('trip', c.title || '旅行规划', tripItemsFromContent(c));
+  }
+  function buildTravelDaySingle(ev) {
+    var c = ev.content || {};
+    return wrap('trip', '旅行规划', [mkItem(1, 'trip', {
+      id: c.id, title: c.title, subtitle: c.badge && c.badge.text, photo: c.photo,
+      nodes: Array.isArray(c.nodes) ? c.nodes : null, summary: strip(c.footer), raw: c
+    })]);
+  }
+
+  function buildWeather(ev) {
+    var c = ev.content || {};
+    var title = String(c.title || '天气').split(' · ')[0];
+    var days = (c.rows || []).map(function (r) {
+      var m = String(r.title || '').match(/(-?\d+)\D+(-?\d+)/);   // "19~25°"
+      var day = {};
+      if (m) { day.mintempC = m[1]; day.maxtempC = m[2]; }
+      return { date: r.lead || '', day: day };
+    });
+    return wrap('get_weather', c.title || '天气', [mkItem(1, 'weather', {
+      title: title, summary: c.headline || null,
+      raw: { location: { name: title }, current: {}, forecast: { forecastday: days } }
+    })]);
+  }
+
+  function buildRestaurant(ev) {
+    var c = ev.content || {};
+    var detail = [c.headline, c.meta, (c.tags || []).join(' · ')].filter(Boolean).join(' · ');
+    return wrap('restaurant', c.title || '餐厅', [mkItem(1, '', {
+      id: c.id || c.title, title: c.title, summary: detail, subtitle: c.badge && c.badge.text, raw: c
+    })]);
+  }
+
+  function buildSubject(ev) {
+    var c = ev.content || {};
+    var detail = [c.headline, c.meta].filter(Boolean).join(' · ') || (c.rows || []).map(function (r) { return (r.lead ? r.lead + ' ' : '') + r.title; }).join('；');
+    return wrap('subject', c.title || '结果', [mkItem(1, '', { id: c.id, title: c.title, summary: detail, subtitle: c.badge && c.badge.text, raw: c })]);
+  }
+
+  function build(ev) {
+    switch (ev.comp) {
+      case 'NewsList': return buildNewsList(ev);
+      case 'NewsFocus': return buildNewsSingle(ev);
+      case 'ListCard': return buildListCard(ev);
+      case 'SectionCard': return buildMeeting(ev);
+      case 'WeatherView': return buildWeather(ev);
+      case 'RestaurantView': return buildRestaurant(ev);
+      case 'SubjectCard': return buildSubject(ev);
+      case 'TravelView': case 'TravelViewA': case 'TravelViewB': case 'TravelDayCard': return buildTravel(ev);
+      case 'TravelDayFocus': return buildTravelDaySingle(ev);
+      default: return buildSubject(ev);   // 兜底：generic 单卡
+    }
+  }
+
+  var Adapter = {
+    current: null,
+    stages: null,        // 两阶段态：{coverCarousel, detailByStage, dayToStage, coverIdxByStage, mode, curStage}
+    mode: null,          // 'overview' | 'detail'（仅 stages 模式有效）
+    reset: function () { this.current = null; this.stages = null; this.mode = null; },
+    isResult: function (ev) { return !!(ev && RESULT_COMPS[ev.comp]); },
+
+    /* TravelStages 事件 → 建封面轮播 + 各阶段详情轮播；返回封面轮播（一阶段总览） */
+    feedStages: function (ev) {
+      var c = ev.content || {}, stages = c.stages || [];
+      var coverItems = [], detailByStage = {}, dayToStage = {}, coverIdxByStage = {};
+      stages.forEach(function (s, si) {
+        var idx = si + 1;
+        coverItems.push(mkItem(idx, 'trip-cover', { id: s.id, title: s.title, photo: s.photo, tags: s.tags || [], hook: s.hook, raw: s }));
+        coverIdxByStage[s.id] = idx;
+        var dayItems = (s.days || []).map(function (d, di) { return dayToItem(di + 1, d); });
+        var dayIdx = {}; dayItems.forEach(function (it) { if (it._id) dayIdx[it._id] = it.item_idx; });
+        (s.days || []).forEach(function (d) { dayToStage[d.id] = s.id; });
+        detailByStage[s.id] = { carousel: { source_tool_name: 'trip', title: '旅行规划 · ' + (s.title || ''), items: dayItems, active_item_idx: null }, dayIdx: dayIdx, title: s.title };
+      });
+      this.stages = {
+        coverCarousel: { source_tool_name: 'trip', title: c.title || '旅行规划', items: coverItems, active_item_idx: null },
+        detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null
+      };
+      this.mode = 'overview';
+      return this.stages.coverCarousel;
+    },
+    /* C 方案：城市总览（单张总览卡 + 每日亮点行）；行下钻=按 day id，复用 stages 结构 */
+    feedOverview: function (ev) {
+      var c = ev.content || {}, days = c.days || [];
+      var overview = mkItem(1, 'travel-overview', {
+        title: (c.city || '行程') + (c.duration ? ' · ' + c.duration : ''), photo: c.photo, tags: c.tags || [],
+        rows: days.map(function (d) { return { id: d.id, day: d.day, place: d.place, tag: d.tag, thumb: d.thumb || d.photo }; })
+      });
+      var detailByStage = {}, dayToStage = {}, coverIdxByStage = {};
+      days.forEach(function (d) {
+        var m = {}; m[d.id] = 1;
+        detailByStage[d.id] = { carousel: { source_tool_name: 'trip', title: '行程 · ' + (d.day || ''), items: [dayToItem(1, d)], active_item_idx: null }, dayIdx: m, title: d.day };
+        dayToStage[d.id] = d.id; coverIdxByStage[d.id] = 1;
+      });
+      this.stages = { coverCarousel: { source_tool_name: 'trip', title: c.city || '行程总览', items: [overview], active_item_idx: null }, detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null };
+      this.mode = 'overview';
+      return this.stages.coverCarousel;
+    },
+    /* B 方案：种草灵感流（N 张亮点卡）；下钻=按 inspo id 进玩法详情，复用 stages 结构 */
+    feedInspo: function (ev) {
+      var c = ev.content || {}, cards = c.cards || [];
+      var items = cards.map(function (cd, i) { return mkItem(i + 1, 'inspo-card', { id: cd.id, title: cd.title, photo: cd.photo, tags: cd.tags || [], hook: cd.punchline, rec: cd.rec, raw: cd }); });
+      var detailByStage = {}, dayToStage = {}, coverIdxByStage = {};
+      cards.forEach(function (cd, i) {
+        var dt = cd.detail || {}, m = {}; m[cd.id] = 1;
+        detailByStage[cd.id] = { carousel: { source_tool_name: 'trip', title: cd.title || '亮点', items: [dayToItem(1, { id: cd.id, label: dt.label || cd.title, pace: dt.pace, photo: dt.photo || cd.photo, nodes: dt.nodes, footer: dt.footer })], active_item_idx: null }, dayIdx: m, title: cd.title };
+        dayToStage[cd.id] = cd.id; coverIdxByStage[cd.id] = i + 1;
+      });
+      this.stages = { coverCarousel: { source_tool_name: 'trip', title: c.echo || '灵感', items: items, active_item_idx: null }, detailByStage: detailByStage, dayToStage: dayToStage, coverIdxByStage: coverIdxByStage, curStage: null };
+      this.mode = 'overview';
+      return this.stages.coverCarousel;
+    },
+    drillByCoverIdx: function (coverIdx) {
+      if (!this.stages) return null;
+      var it = this.stages.coverCarousel.items[coverIdx - 1]; if (!it) return null;
+      return this._drillStage(it._id, 1);
+    },
+    drillByDay: function (dayId) {
+      if (!this.stages) return null;
+      var sid = this.stages.dayToStage[dayId]; if (!sid) return null;
+      return this._drillStage(sid, this.stages.detailByStage[sid].dayIdx[dayId] || 1);
+    },
+    _drillStage: function (stageId, focusIdx) {
+      var d = this.stages.detailByStage[stageId]; if (!d) return null;
+      this.stages.curStage = stageId; this.mode = 'detail';
+      return { carousel: d.carousel, focusIdx: focusIdx, stageId: stageId, stageTitle: d.title };
+    },
+    backToOverview: function () {
+      if (!this.stages) return null;
+      this.mode = 'overview';
+      return { carousel: this.stages.coverCarousel, focusIdx: this.stages.coverIdxByStage[this.stages.curStage] || null };
+    },
+
+    /* 返回 {action:'render'|'focus'|'none', carousel?, item_idx?, focus?} */
+    feed: function (ev) {
+      var comp = ev.comp, c = ev.content || {};
+      if (FOCUS_COMPS[comp]) {
+        var fid = (c.item && c.item.id) || c.id || null;
+        var ft = (c.item && c.item.title) || c.title || null;
+        if (this.current) { var i = this._match(fid, ft); if (i) return { action: 'focus', item_idx: i }; }
+        this.current = build(ev);
+        return { action: 'render', carousel: this.current.carousel };
+      }
+      var built = build(ev);
+      if (!built || !built.carousel.items.length) return { action: 'none' };
+      // 餐厅「换一个」：追加到当前餐厅轮播并聚焦新卡
+      if (comp === 'RestaurantView' && this.current && this.current.carousel.source_tool_name === 'restaurant') {
+        var it = built.carousel.items[0];
+        it.item_idx = this.current.carousel.items.length + 1;
+        this.current.carousel.items.push(it);
+        if (it._id) this.current.idMap[it._id] = it.item_idx;
+        return { action: 'render', carousel: this.current.carousel, focus: it.item_idx };
+      }
+      this.current = built;
+      return { action: 'render', carousel: built.carousel };
+    },
+    _match: function (id, title) {
+      if (!this.current) return null;
+      var m = this.current.idMap, items = this.current.carousel.items;
+      if (id && m[id]) return m[id];
+      if (title) for (var k = 0; k < items.length; k++) { var t = items[k].title || ''; if (t === title || t.indexOf(title) >= 0 || title.indexOf(t) >= 0) return items[k].item_idx; }
+      return items.length === 1 ? 1 : null;
+    },
+    /* TTS 高亮的 id → item_idx（念到哪张亮哪张）。两阶段态按 mode 路由：总览=阶段 id，详情=天 id */
+    highlightToIdx: function (id) {
+      if (!id) return null;
+      if (this.stages) {
+        if (this.mode === 'overview') return this.stages.coverIdxByStage[id] || null;
+        var d = this.stages.detailByStage[this.stages.curStage];
+        return (d && d.dayIdx[id]) || null;
+      }
+      if (!this.current) return null;
+      return this.current.idMap[id] || (this.current.carousel.items.length === 1 ? 1 : null);
+    }
+  };
+
+  global.LoonaCarouselAdapter = Adapter;
+})(window);

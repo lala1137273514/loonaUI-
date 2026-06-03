@@ -1,0 +1,1222 @@
+.carousel-panel {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  height: clamp(430px, 60vh, 600px);
+  max-width: 100%;
+  overflow: hidden;
+  background: transparent;     /* 透出 stage 的大眼睛背景 */
+  color: #f6f0e2;
+}
+
+.carousel-panel.hidden {
+  display: none;
+}
+
+.carousel-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 14px 18px 8px;
+}
+
+.carousel-head h2 {
+  min-width: 0;
+  overflow: hidden;
+  color: #f6f0e2;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.carousel-controls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 6px;
+  background: #1c1b1f;
+  color: #f6f0e2;
+  cursor: pointer;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.icon-button:hover {
+  border-color: rgba(229, 195, 116, 0.62);
+  color: #e5c374;
+}
+
+.carousel-rail {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  padding-inline: calc(50% - 162px);
+  padding-block: 0 10px;
+  scrollbar-width: none;
+}
+
+.carousel-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+/* 露边聚焦：固定尺寸；非聚焦缩小压暗，聚焦全亮 + 琥珀光晕（覆盖各卡型的 align-self/height） */
+.carousel-panel .result-card {
+  flex: 0 0 324px;
+  width: 324px;
+  height: 344px;
+  align-self: center;
+  scroll-snap-align: center;
+  transform: scale(0.84);
+  filter: brightness(0.46) saturate(0.85);
+  transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.25, 1), filter 0.36s ease, box-shadow 0.36s ease;
+}
+
+.carousel-panel .result-card.active {
+  transform: scale(1);
+  filter: none;
+  box-shadow: 0 0 0 1px rgba(255, 180, 84, 0.5), 0 0 64px rgba(255, 150, 40, 0.4);
+  z-index: 2;
+}
+
+.result-card img {
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.card-kicker {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.card-kicker span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-card h3 {
+  display: -webkit-box;
+  margin: 0 0 8px;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.28;
+  letter-spacing: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.result-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+.result-card .node-summary {
+  -webkit-line-clamp: 2;
+}
+
+.card-link {
+  display: inline-block;
+  margin-top: auto;
+  padding-top: 12px;
+  color: var(--teal);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+/* ===== 新闻卡（精确对齐 Figma 1104:6679 "card_news"） ===== */
+.search-card {
+  gap: 16px;
+  align-self: start;
+  height: auto;
+  max-height: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.search-card.active {
+  border-color: rgba(255, 180, 84, 0.85);
+}
+
+.news-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  height: 120px;
+  padding: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.news-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-photo-ph {
+  background: linear-gradient(160deg, #5a5f68 0%, #34373d 60%, #24262a 100%);
+}
+
+.news-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.92) 100%);
+}
+
+.news-badge {
+  position: relative;
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 23px;
+  background: #ffaa00;
+  color: #543d18;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.news-headline {
+  position: relative;
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.news-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.63;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: pre-wrap;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.news-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.news-pill {
+  padding: 4px 8px;
+  border-radius: 23px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cccccc;
+  font-size: 11px;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.news-pill:hover {
+  color: #ffffff;
+}
+
+.event-card {
+  padding: 0;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f7f1e4;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ===== 邮件卡（精确对齐 Figma 1202:6951 "mail-card"） ===== */
+.mail-card {
+  gap: 0;
+  align-self: start;
+  height: auto;
+  max-height: 100%;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.mail-badge {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 23px;
+  background: #ffaa00;
+  color: #543d18;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mail-prio-P0 {
+  background: #ff3911;
+}
+
+.mail-prio-P2 {
+  background: #8a8f99;
+  color: #1c1c1c;
+}
+
+.mail-subject {
+  margin: 12px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.mail-from {
+  margin-top: 8px;
+  overflow: hidden;
+  font-size: 12px;
+  color: rgba(255, 236, 198, 0.58);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mail-time {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.76);
+  font-variant-numeric: tabular-nums;
+}
+
+.mail-div {
+  height: 1px;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mail-sum-label {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #ffc400;
+}
+
+.mail-sum-text {
+  display: -webkit-box;
+  margin: 6px 0 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.76);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+}
+
+.event-card {
+  background:
+    linear-gradient(120deg, rgba(13, 117, 109, 0.24), transparent 40%, rgba(240, 188, 29, 0.08)),
+    linear-gradient(180deg, #23302d 0%, #1d211f 58%, #181817 100%);
+}
+
+.mail-card.active {
+  border-color: rgba(255, 180, 84, 0.7);
+  box-shadow: none;
+}
+
+.event-card.active {
+  border-color: rgba(84, 185, 171, 0.74);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
+}
+
+.mail-head,
+.event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 16px 0;
+}
+
+.result-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.result-label span,
+.result-label strong,
+.structured-meta,
+.event-time {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-label span {
+  flex: 0 0 auto;
+  color: rgba(247, 241, 228, 0.76);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.result-label strong {
+  max-width: 126px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #f0bc1d;
+  color: #1f1a0e;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.structured-meta,
+.event-time {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: rgba(247, 241, 228, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.result-card .structured-title {
+  display: -webkit-box;
+  margin: 16px 16px 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.42);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.mail-sender {
+  display: block;
+  min-width: 0;
+  margin: 10px 16px 0;
+  overflow: hidden;
+  color: rgba(247, 241, 228, 0.66);
+  font-size: 13px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.structured-summary {
+  display: -webkit-box;
+  margin: 18px 16px 0;
+  overflow: hidden;
+  color: rgba(247, 241, 228, 0.78);
+  font-size: 15px;
+  line-height: 1.52;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 14px 16px 0;
+  overflow: hidden;
+}
+
+.event-location,
+.event-organizer {
+  max-width: 100%;
+  padding: 7px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(247, 241, 228, 0.14);
+  border-radius: 999px;
+  color: rgba(247, 241, 228, 0.76);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-location {
+  background: rgba(13, 117, 109, 0.32);
+}
+
+.event-organizer {
+  background: rgba(247, 241, 228, 0.08);
+}
+
+.structured-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding: 14px 16px 15px;
+}
+
+.structured-footer a {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(247, 241, 228, 0.74);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 旅游卡（精确对齐 Figma 1104:6939 "card_itinerary"） ===== */
+.trip-card {
+  gap: 16px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  color: #ffffff;
+}
+
+.trip-card.active {
+  border-color: rgba(255, 180, 84, 0.85);
+}
+
+/* hero 照片头 */
+.trip-header {
+  position: relative;
+  flex: 0 0 100px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.trip-photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+.trip-photo-ph {
+  background: linear-gradient(160deg, #6a6f78 0%, #3a3d44 55%, #26282d 100%);
+}
+
+.trip-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.trip-titles {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trip-titletext {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-titletext h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-titletext p {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: #cccccc;
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-pace {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 23px;
+  background: #ffaa00;
+  color: #543d18;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 节点列表 */
+.trip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 4px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.trip-node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trip-node-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.trip-node-head strong {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-node-line {
+  flex: 1 1 auto;
+  min-width: 12px;
+  height: 1px;
+  background: #ffe500;
+}
+
+.trip-node-head span {
+  flex: 0 0 auto;
+  color: #ffe500;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.trip-node-note {
+  margin: 0;
+  min-width: 0;
+  color: #cccccc;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.trip-summary {
+  margin: 0;
+  color: #cccccc;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 920px) {
+  .carousel-panel {
+    height: clamp(400px, 64vh, 540px);
+  }
+
+  .carousel-rail {
+    padding-inline: calc(50% - 140px);
+  }
+
+  .carousel-panel .result-card {
+    flex-basis: 280px;
+    width: 280px;
+    height: 332px;
+  }
+
+  .trip-titles {
+    gap: 6px;
+  }
+}
+
+/* ===== 天气卡（精确对齐 Figma 1227:79 "city_forecast · 7day"） ===== */
+.wx-card {
+  gap: 10px;
+  align-self: start;        /* 贴合内容高度，像 Figma 紧凑卡，不被 rail 拉满 */
+  height: auto;
+  max-height: 100%;
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  color: #ffffff;
+}
+
+.wx-card.active {
+  border-color: rgba(255, 180, 84, 0.7);
+}
+
+/* 头部：国 · 城 内联 */
+.wx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.wx-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wx-country {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: #9e9e9e;
+}
+
+.wx-city {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wx-div {
+  height: 1px;
+  width: 100%;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 当前实况面板 */
+.wx-cur {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wx-cur-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d1d1d1;
+}
+
+.wx-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #f5c24d;
+}
+
+.wx-cur-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wx-cur-now {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.wx-cur-temp {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-cur-cond {
+  font-size: 14px;
+  color: #d1d1d1;
+  white-space: nowrap;
+}
+
+.wx-sun {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: #9e9e9e;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 逐日行 */
+.wx-days {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.wx-day {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wx-day-date {
+  flex: 0 0 auto;
+  width: 76px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-day-cond {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 12px;
+  color: #d1d1d1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wx-day-range {
+  flex: 0 0 auto;
+  width: 88px;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #d1d1d1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 彩色天气图标 */
+.wx-ic {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+}
+
+.wx-ic svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wx-ic-lg {
+  width: 26px;
+  height: 26px;
+}
+
+.wx-ic-sm {
+  width: 18px;
+  height: 18px;
+}
+
+.wx-fallback {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d1d1d1;
+}
+
+/* ===== 日程卡（精确对齐 Figma 1215:7240 "card_news"/calendar） ===== */
+.cal-card {
+  gap: 12px;
+  align-self: start;
+  height: auto;
+  max-height: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(25px);
+  color: #ffffff;
+}
+
+.cal-card.active {
+  border-color: rgba(255, 180, 84, 0.7);
+}
+
+.cal-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding: 2px 2px 0;
+}
+
+.cal-badge {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffaa00;
+  color: #543d18;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.cal-head h3 {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.cal-sub {
+  font-size: 12px;
+  color: rgba(255, 236, 198, 0.58);
+}
+
+.cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.cal-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding: 8px 12px 8px 16px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cal-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  border-radius: 3px;
+  background: #ffaa00;
+}
+
+.cal-prio-P0 .cal-bar {
+  background: #ff5a5a;
+}
+
+.cal-prio-P2 .cal-bar {
+  background: #8a8f99;
+}
+
+.cal-times {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  width: 42px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-times span {
+  font-size: 12px;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.cal-time-end {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.cal-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.cal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-title {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: #ffffff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cal-pbadge {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffaa00;
+  color: #543d18;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cal-prio-P0 .cal-pbadge {
+  background: #ff5a5a;
+}
+
+.cal-prio-P2 .cal-pbadge {
+  background: #8a8f99;
+  color: #1c1c1c;
+}
+
+.cal-meta {
+  overflow: hidden;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   工作台新增：旅行两阶段轮播（封面卡 trip-cover + 翻转过渡 + 返回总览）
+   一阶段=阶段封面（大图+tag）；二阶段=逐天详情卡（复用 .trip-card）。待并回 web_ui。
+   ============================================================ */
+/* 旅行卡横向加大、居中（封面 + 日详情都加宽；其它场景卡不受影响）。居中靠 centerCarouselCard。 */
+.carousel-panel .trip-cover { flex: 0 0 468px; width: 468px; height: 360px; }
+.carousel-panel .trip-card { flex: 0 0 424px; width: 424px; }
+.trip-cover {
+  position: relative; padding: 0; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 24px; background: #222; box-shadow: none;
+}
+.trip-cover.active { border-color: rgba(255, 180, 84, 0.85); }
+.trip-cover .cover-photo {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; display: block;
+}
+.trip-cover .cover-photo-ph { background: linear-gradient(160deg, #6a6f78 0%, #3a3d44 55%, #26282d 100%); }
+.trip-cover .cover-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 34%, rgba(0,0,0,0.55) 62%, rgba(0,0,0,0.92) 100%);
+}
+/* 左上海报徽标（节奏 tag） */
+.trip-cover .cover-badge {
+  position: absolute; left: 13px; top: 13px; padding: 5px 12px; border-radius: 999px;
+  background: #ffaa00; color: #543d18; font-size: 12px; font-weight: 700; line-height: 1;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.trip-cover .cover-body {
+  position: absolute; left: 18px; right: 18px; bottom: 16px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.trip-cover .cover-body h3 {
+  display: -webkit-box; margin: 0; overflow: hidden;
+  color: #fff; font-size: 26px; font-weight: 800; line-height: 1.14; letter-spacing: .01em;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.6);
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+/* 卖点钩子：标题下一句安利，让总览本身也 selling */
+.trip-cover .cover-hook {
+  display: -webkit-box; margin: 0; overflow: hidden;
+  color: rgba(255,255,255,0.92); font-size: 13.5px; line-height: 1.4;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.65);
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.trip-cover .cover-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+/* 底部次级 tag：描边玻璃（澄清关键词），收小让位给标题+钩子 */
+.trip-cover .cover-tag {
+  padding: 3px 10px; border-radius: 999px; line-height: 1; white-space: nowrap;
+  font-size: 10.5px; font-weight: 600;
+  background: rgba(255, 255, 255, 0.13); color: rgba(255,255,255,0.92); border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+/* View Transition：封面↔详情的 hero 图 morph 时长/缓动 */
+::view-transition-group(trip-hero){ animation-duration:.44s; animation-timing-function:cubic-bezier(.2,.8,.25,1); }
+::view-transition-old(trip-hero),::view-transition-new(trip-hero){ mix-blend-mode:normal; }
+
+/* 翻转过渡：封面↔详情切换时卡片淡入（纯透明度，避开与缩放 transition 打架） */
+.carousel-rail.flipping .result-card { animation: trip-flip-in 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) both; }
+@keyframes trip-flip-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .carousel-rail.flipping .result-card { animation: none; } }
+
+/* ===== C 方案：城市总览卡（hero + 元信息 tag + 每日亮点行） ===== */
+.carousel-panel .travel-overview { flex: 0 0 460px; width: 460px; height: auto; max-height: 100%; align-self: start; }
+.travel-overview {
+  display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: none; color: #fff;
+  border: 1px solid rgba(255,255,255,0.28); border-radius: 24px;
+  background: linear-gradient(0deg, rgba(255,255,255,.06), rgba(255,255,255,.06)), linear-gradient(0deg, rgba(0,0,0,.74), rgba(0,0,0,.74));
+  -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+}
+.travel-overview.active { border-color: rgba(255,180,84,0.85); }
+.tov-hero { position: relative; flex: 0 0 132px; height: 132px; overflow: hidden; }
+.tov-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tov-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.85) 100%); }
+.tov-title { position: absolute; left: 16px; bottom: 11px; margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+.tov-metatags { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 2px; }
+.tov-metatag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #ffd49a; background: rgba(255,180,84,.14); border: 1px solid rgba(255,180,84,.4); }
+.tov-rows { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px 14px; overflow-y: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; }
+.tov-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 9px; border-radius: 12px; cursor: pointer; font-family: inherit;
+  border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: #fff; transition: background .15s, border-color .15s; }
+.tov-row:hover { background: rgba(255,180,84,.1); border-color: rgba(255,180,84,.45); }
+.tov-thumb { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 9px; object-fit: cover; }
+.tov-row-day { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: rgba(255,236,198,.66); }
+.tov-row-place { flex: 1 1 0; min-width: 0; font-size: 14px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tov-row-tag { flex: 0 0 auto; font-size: 11px; color: #ffd49a; background: rgba(255,180,84,.14); border: 1px solid rgba(255,180,84,.4); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.tov-row-arr { flex: 0 0 auto; color: rgba(255,255,255,.5); font-size: 18px; line-height: 1; }
+
+/* ===== B/方案选择：灵感卡（大图 + 主题 + tags + 强 punchline）。尺寸统一到 TravelStages 封面同款 ===== */
+.carousel-panel .inspo-card { flex: 0 0 468px; width: 468px; height: 360px; }
+.inspo-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
+.inspo-card.active { border-color: rgba(255,180,84,0.85); }
+.inspo-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
+.inspo-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.62) 58%, rgba(0,0,0,.92) 100%); }
+.inspo-rec { position: absolute; left: 12px; top: 12px; padding: 4px 11px; border-radius: 999px; background: #ffaa00; color: #543d18; font-size: 12px; font-weight: 700; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.inspo-body { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+.inspo-title { margin: 0; color: #fff; font-size: 24px; font-weight: 800; line-height: 1.14; text-shadow: 0 2px 16px rgba(0,0,0,.6); }
+.inspo-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.inspo-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #ffd49a; background: rgba(255,180,84,.16); border: 1px solid rgba(255,180,84,.45); }
+.inspo-punch { margin: 0; color: #fff; font-size: 14px; line-height: 1.45; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
+
+/* 返回总览（二阶段时显示在 carousel-head 左侧，复用 icon-button 风格） */
+.carousel-back {
+  display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+  height: 32px; padding: 0 12px; margin-right: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13); border-radius: 6px;
+  background: #1c1b1f; color: #f6f0e2; cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.carousel-back:hover { border-color: rgba(229, 195, 116, 0.62); color: #e5c374; }
+.carousel-back.hidden { display: none; }

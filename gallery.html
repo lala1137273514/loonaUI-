@@ -3,120 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loona UI 组件库 · Gallery（对齐 Figma Slack 4.30）</title>
+<title>Loona 组件库 · Gallery（对齐 web_ui 卡片 + Figma 浮层卡）</title>
 <link rel="stylesheet" href="css/loona.css">
+<link rel="stylesheet" href="css/carousel.css">
+<style>
+  /* gallery 内把 web_ui 轮播卡当静态展示：去掉压暗缩放，原大原亮 */
+  .gcell .carousel-panel{position:static;display:block;height:auto;overflow:visible;background:transparent;color:#f6f0e2}
+  .gcell .carousel-panel .result-card{transform:none!important;filter:none!important;flex:0 0 auto}
+  .gcell .carousel-panel .result-card.glow{box-shadow:0 0 0 1px rgba(255,180,84,.5),0 0 48px rgba(255,150,40,.35)}
+  .sec-title{grid-column:1/-1;color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;margin:8px 0 -8px;display:flex;align-items:center;gap:8px}
+  .sec-title .src{font-size:11px;color:var(--wb-text-dim);font-weight:400}
+  .sec-title::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber-2);box-shadow:0 0 10px var(--amber-2)}
+</style>
 </head>
 <body>
 <div class="gallery" id="gallery">
   <div class="gallery-head">
-    <h1><span class="dot"></span>Loona UI 组件库 · Gallery</h1>
-    <p>对齐 Figma「Slack 4.30 专项」真实组件 · 双层玻璃 · token 见 DESIGN_SYSTEM.md ·
+    <h1><span class="dot"></span>Loona 组件库 · Gallery</h1>
+    <p>暂时对齐 <b>web_ui 轮播卡</b>（trip 封面/详情 · news · mail · event · weather）+ <b>Figma 浮层卡</b>（pop_small · 澄清 · 确认 · btn-fill · toast）·
        <a class="glink" href="index.html">← 回工作台</a></p>
   </div>
 </div>
 
 <script src="js/components.js"></script>
+<script src="js/carousel.js"></script>
 <script>
 (function () {
   var UI = window.LoonaUI, el = UI.el;
+  var build = window.CortexCarousel.buildCarouselCard;   // 真实 web_ui 卡 builder
   var root = document.getElementById('gallery');
 
+  function secTitle(text, src) {
+    var t = el('div', 'sec-title'); t.appendChild(el('span', null, text));
+    if (src) t.appendChild(el('span', 'src', src));
+    root.appendChild(t);
+  }
   function cell(title, src, opts) {
     opts = opts || {};
     var c = el('div', 'gcell' + (opts.span2 ? ' span2' : ''));
-    var t = el('div', 'gtitle'); t.appendChild(el('span', null, title));
-    t.appendChild(el('span', 'src', src || ''));
+    var t = el('div', 'gtitle'); t.appendChild(el('span', null, title)); t.appendChild(el('span', 'src', src || ''));
     c.appendChild(t);
     var stage = el('div', 'gstage');
     if (opts.bg) stage.style.background = opts.bg;
     if (opts.col) { stage.style.flexDirection = 'column'; stage.style.alignItems = opts.align || 'flex-start'; }
     c.appendChild(stage);
-    if (opts.note) { var n = el('div', 'tag-row'); opts.note.forEach(function (x) { n.appendChild(el('span', 'mini-tag', x)); }); c.appendChild(n); }
     root.appendChild(c);
     return stage;
   }
+  // web_ui 卡：套 .carousel-panel 作用域（解析 web_ui token + 卡尺寸），加 .glow 高亮
+  function webCard(title, src, item, span2) {
+    var stage = cell(title, src, { bg: '#0b0d12', span2: span2 });
+    var panel = el('div', 'carousel-panel');
+    var card = build(item); card.classList.add('glow');
+    panel.appendChild(card); stage.appendChild(panel);
+  }
 
-  /* 1. 双眼脸（真实 Figma 资产） */
-  var s = cell('loona-face · 真实双眼（静态）', 'Figma face 1:161', { span2: true, bg: '#000', note: ['assets/loona_face.png', '812×375 横版'] });
-  s.appendChild(UI.loonaFace(560));
+  /* ============ A 区 · web_ui 轮播卡 ============ */
+  secTitle('A · web_ui 轮播卡', 'web_ui/carousel.js + carousel.css');
 
-  /* 2. pop_small（状态 / 用户 ASR 输入 / 澄清 / done+btn） */
-  s = cell('pop_small · 状态 / ASR输入 / 澄清', '58:5098', { col: true });
-  s.appendChild(UI.popSmall({ role: 'status', state_visual: 'searching', html: '正在搜索消息 <span class="kw">Loona 2.0</span>' }));
-  s.appendChild(UI.popSmall({ role: 'query', who: '我（语音）', text: '我想去上海旅行三天' }));
-  s.appendChild(UI.popSmall({ role: 'clarify', text: '要补 日期 / 人数 / 预算 吗？不补按中等预算走。' }));
-  s.appendChild(UI.popSmall({ role: 'status', state_visual: 'sending', text: '发送成功～', btn: { label: '查看' } }));
+  // 旅行·阶段封面（一阶段·新 UI）
+  webCard('trip-cover · 阶段封面（大图 + tag）', '工作台新增·两阶段一阶段', {
+    item_idx: 1, kind: 'trip-cover', title: '市区 × 人文', photo: 'assets/travel/bund.jpg', tags: ['轻松→适中', '2 天']
+  });
+  // 旅行·单日详情（二阶段）
+  webCard('trip · 单日详情（hero + 节点）', 'Figma 1104:6939', {
+    item_idx: 1, kind: 'trip', title: 'Day 2 · 人文慢看', subtitle: 'normal', photo: 'assets/travel/westbund.jpg',
+    nodes: [{ time: '上午', place: '武侯祠', note: '三国人文，上午先看' }, { time: '中午', place: '锦里', note: '边吃边逛不折返' }, { time: '下午', place: '杜甫草堂', note: '园林安静，放慢' }]
+  });
+  // 新闻
+  webCard('search · 新闻卡（hero + 摘要 + 来源）', 'Figma 1104:6679', {
+    item_idx: 1, kind: 'search', title: '主流大模型发布新版：上下文翻倍至 200 万 token',
+    photo: 'assets/news/news_model.jpg', summary: '上下文从 100 万提升到 200 万 token，长文档基本能一次喂进去。',
+    subtitle: '机器之心', meta: '09:20'
+  });
+  // 邮件
+  webCard('mail · 邮件卡（P 级 + 主题 + 摘要）', 'Figma 1202:6951', {
+    item_idx: 1, kind: 'mail', title: '项目评审确认', subtitle: '程楠', summary: '等你点头，4 点前要回。',
+    priority: 'P1', meta: '10:20'
+  });
+  // 日程
+  webCard('event · 日程卡（时间 + 地点 + 组织者）', 'Figma 1215:7240', {
+    item_idx: 1, kind: 'event', title: '项目评审', meta: '14:00 - 15:00', location: '会议室 A', subtitle: '程楠'
+  });
+  // 天气
+  webCard('weather · 天气卡（实况 + 逐日）', 'Figma 1227:79', {
+    item_idx: 1, kind: 'weather', title: '成都',
+    raw: { location: { name: '成都', country: '中国' }, current: { tempC: 22, condition: { text: 'Partly cloudy', code: 1003 } },
+      forecast: { forecastday: [
+        { date: '2026-06-04', day: { maxtempC: 25, mintempC: 19, condition: { code: 1003 } }, astro: { sunrise: '06:12 AM', sunset: '07:48 PM' } },
+        { date: '2026-06-05', day: { maxtempC: 23, mintempC: 18, condition: { code: 1183 } } },
+        { date: '2026-06-06', day: { maxtempC: 27, mintempC: 20, condition: { code: 1000 } } }
+      ] } }
+  });
 
-  /* 3. 状态图标（真实 .riv 渲染图） */
-  s = cell('状态图标 · 真实 .riv', 'globe/loading/paperplane/check/xmark', {});
+  /* ============ B 区 · Figma 浮层卡（澄清/确认/状态，工作台浮层层用） ============ */
+  secTitle('B · Figma 浮层卡', '工作台浮层（澄清/确认/状态/字幕）');
+
+  // pop_small 三态
+  var s = cell('pop_small · 状态 / ASR输入 / 澄清', 'Figma 58:5098', { col: true });
+  s.appendChild(UI.popSmall({ role: 'status', state_visual: 'searching', html: '正在搜索 <span class="kw">成都 近期活动</span>' }));
+  s.appendChild(UI.popSmall({ role: 'query', who: '我（语音）', text: '成都三日游' }));
+  s.appendChild(UI.popSmall({ role: 'clarify', text: '日期 / 出发地 / 预算 补不补都行，不补按轻松城市漫步排。' }));
+
+  // 澄清卡（槽位）
+  var sc = cell('ClarifyCard · 澄清槽位（必填✓ + 选填待补）', 'Figma 1224:123', { span2: true });
+  sc.appendChild(UI.clarifyCard({
+    title: '确认几个槽位', question: '必填已给；选填补不补都行，不补我按默认/你平时的来。',
+    slots: { required: [{ label: '目的地', value: '成都' }, { label: '周期', value: '3 天' }], optional: ['确切日期', '出发地', '同行人', '预算', '节奏'] },
+    options: [{ label: '确认' }, { label: '取消' }]
+  }));
+
+  // 确认门
+  var cc = cell('confirm · 确认门（双按钮 · 无 X · 无倒计时）', 'Figma btn-fill 组合', { span2: true });
+  cc.appendChild(UI.confirmCard({
+    action: '保存到长期知识库', target: '成都 3 天攻略', impact: '以后旅行默认参考',
+    content_summary: '成都 · 3 天 · 中等 · 轻松城市漫步', reversible: true, confirm_label: '保存', cancel_label: '先不用'
+  }, {}));
+
+  // btn-fill
+  var bf = cell('btn-fill · primary / ghost / disabled', '#ffb200 + 玻璃内阴影', {});
+  bf.appendChild(UI.btnFill('确认', 'primary')); bf.appendChild(UI.btnFill('取消', 'ghost')); bf.appendChild(UI.btnFill('确认', 'disabled'));
+
+  // toast 状态机
+  var tt = cell('toast · 任务状态机', 'pop_small 变体', { col: true });
+  [['searching', null], ['reading', null], ['sending', null], ['done', '已发送'], ['fail', '没成功']].forEach(function (x) {
+    tt.appendChild(UI.toast({ state: x[0], text: x[1] }));
+  });
+
+  // 状态图标
+  var iv = cell('状态图标 · 真实 .riv 渲染图', 'globe/loading/paperplane/check/xmark', {});
   ['searching', 'loading', 'sending', 'done', 'fail'].forEach(function (k) {
     var box = el('div'); box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:11px';
-    box.appendChild(UI.statusVis(k)); box.appendChild(el('span', null, k));
-    s.appendChild(box);
+    box.appendChild(UI.statusVis(k)); box.appendChild(el('span', null, k)); iv.appendChild(box);
   });
-
-  /* 4. pop_large · 消息结果卡（头部+divider+list 行+脚注） */
-  s = cell('pop_large · 结果卡（header + divider + list + 脚注）', '172:49237', { span2: true });
-  var body = el('div'); body.style.cssText = 'display:flex;flex-direction:column;gap:20px;width:100%';
-  [['Event Reminder', '#events', 'eventmanager', 'Tomorrow at 1:30 PM'],
-   ['Bug Report', '#dev', 'coder123', 'Today at 11:15 AM'],
-   ['Meeting Notes', '#work', 'teamlead', 'Today at 9:00 AM']].forEach(function (r) {
-    body.appendChild(UI.listItem({ variant: 'message', title: r[0], sub: r[1], sub2: r[2], time: r[3] }));
-  });
-  var plc = UI.popLargeCard({ icon: 'done', title: '搜索近一周含 Loona 2.0 的消息', body: body, footer: '# 频道A 或者 @username　·　2026/03/04 16:33' });
-  plc.style.maxWidth = '400px'; s.appendChild(plc);
-
-  /* 5. TravelDayCard × 状态 */
-  s = cell('TravelDayCard · pop_large 派生（active/highlight/dim）', '系统派生', { span2: true, col: true, align: 'stretch' });
-  var d = { day: 1, theme: '城市漫步', nodes: ['外滩', '南京路步行街', '豫园'], transport_notes: '地铁 2/10 号线', weather_notes: '留意小雨', pace: 'light', modifiable_nodes: ['豫园'] };
-  var c1 = UI.travelDayCard(Object.assign({}, d, { state: 'active' }));
-  var c2 = UI.travelDayCard(Object.assign({}, d, { day: 2, theme: '艺术与江畔', nodes: ['西岸美术馆', '龙美术馆'], pace: 'normal', modifiable_nodes: ['龙美术馆'] }));
-  c2.classList.add('card-highlight');
-  var c3 = UI.travelDayCard(Object.assign({}, d, { day: 3, theme: '市井与离开', nodes: ['田子坊', '新天地'], pace: 'intense', state: 'dim' }));
-  [c1, c2, c3].forEach(function (n) { n.style.maxWidth = '360px'; s.appendChild(n); });
-
-  /* 5b. 展示类型（按类型分，9 场景共用；见 CARD_TAXONOMY.md） */
-  [
-    ['ListCard · 邮件/日程/新闻/步骤', 'listCard', { title: '今日邮件 · 3 封', status: { text: '1 封要紧', kind: 'p1' }, rows: [
-      { title: '项目评审确认', sub: '程楠', badge: { text: 'P1', kind: 'p1' }, right: '10:20' },
-      { title: '本月账单已生成', sub: '财务系统', badge: { text: 'P2', kind: 'p2' }, right: '09:00' },
-      { title: '限时优惠 6 折', sub: '营销推送', badge: { text: 'P3', kind: 'p3' }, right: '昨天', dim: true }
-    ], footer: '<span class="lbl">建议</span> 先回程楠那封，4 点前给结果' }],
-    ['SubjectCard · 天气/餐厅', 'subjectCard', { title: '上海 · 未来 5 天', badge: { text: '高可信', kind: 'high' }, headline: '周三最适合出门，周五带伞。', rows: [
-      { lead: '周三', title: '19~25°', badge: { text: '最适合', kind: 'free' } },
-      { lead: '周五', title: '15~20°', badge: { text: '带伞日', kind: 'warn' } }
-    ], footer: '<span class="lbl">更新</span> 今天 08:00' }],
-    ['SectionCard · 旅行/会议', 'sectionCard', { title: '会议结论', sections: [
-      { label: '决策', badge: { text: '高可信', kind: 'high' }, text: 'Companion 做主体验，Workbench 调试入口。' },
-      { label: '行动项', badge: { text: '负责人待确认', kind: 'pending' }, rows: [{ lead: 'dot', title: '入口切换 / 评估 / 回退，拆三件事' }] },
-      { label: '未定', badge: { text: '待确认', kind: 'pending' }, text: '迁移节奏、谁收尾还没定。' }
-    ], footer: '<span class="lbl">依据</span> 转录 12:30 段' }],
-    ['ClarifyCard · 澄清', 'clarifyCard', { question: '三天可直接排，要补 日期 / 人数 / 预算 吗？不补按中等预算城市漫步。', options: [{ label: '直接排' }, { label: '我补一下' }] }],
-    ['FailureCard · 失败', 'failureCard', { completed: ['邮件已发送'], failed: ['日历未改成'], reason: '日历写入超时。', next_options: ['重试', '只保留草稿'] }]
-  ].forEach(function (spec) { var st = cell(spec[0], '展示类型'); var n = UI[spec[1]](spec[2]); n.style.maxWidth = '360px'; st.appendChild(n); });
-
-  /* 6. list_item（message + user 带单选） */
-  s = cell('list_item · message / user', 'list_slack_*', { col: true, align: 'stretch' });
-  s.appendChild(UI.listItem({ variant: 'message', title: 'Image Attachment', sub: '#media', sub2: 'photoguru', time: 'Yesterday at 3:45 PM' }));
-  s.appendChild(UI.listItem({ variant: 'user', name: 'name', email: 'email~zhaopeng@keyirobot.com', selected: true }));
-  s.appendChild(UI.listItem({ variant: 'user', name: '李强', email: 'liqiang789@keyirobot.com', selected: false }));
-
-  /* 7. btn-fill（primary / ghost / disabled） */
-  s = cell('btn-fill · primary / ghost / disabled', '#ffb200 + 玻璃内阴影', {});
-  s.appendChild(UI.btnFill('确认', 'primary'));
-  s.appendChild(UI.btnFill('取消', 'ghost'));
-  s.appendChild(UI.btnFill('确认', 'disabled'));
-
-  /* 8. confirm-card */
-  s = cell('confirm-card · pop_large + 摘要 + btn + 倒计时', '候选确认卡风', { span2: true });
-  var cc = UI.confirmCard({ action: '保存到长期知识库', target: '上海 3 天攻略', impact: '以后旅行默认参考', content_summary: '上海·3天·中等预算·城市漫步', reversible: true, countdown: 30, confirm_label: '保存', cancel_label: '先不用' }, {});
-  cc.style.maxWidth = '380px'; s.appendChild(cc);
-
-  /* 9. tts-subtitle */
-  s = cell('tts-subtitle · 底部字幕', '工作台新增', { span2: true });
-  var sub = el('div', 'subtitle show'); sub.style.cssText += ';position:static;opacity:1;max-width:440px;transform:none';
-  sub.innerHTML = '第一天轻松点，外滩一路逛到豫园，一条线不折腾。<span class="caret"></span>';
-  s.appendChild(sub);
 })();
 </script>
 </body>

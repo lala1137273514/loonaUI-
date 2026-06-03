@@ -182,3 +182,83 @@
   .tv-imm-wrap .nfi-cover,
   .rst-imm-wrap .nfi-cover { transition: none !important; transform: none !important; }
 }
+
+/* ============================================================
+   TravelView 富日卡轮播 · 方案A(照片banner+时段行) / 方案B(信息优先)
+   每张卡=一天完整行程，达到单卡信息量。共用 .tv-rich-node 时段行。
+   ============================================================ */
+.tvA-rail, .tvB-rail { display:flex; gap:12px; overflow-x:auto; width:100%; padding:2px 2px 8px; scrollbar-width:none; align-self:stretch; }
+.tvA-rail::-webkit-scrollbar, .tvB-rail::-webkit-scrollbar { display:none; }
+.tvA-rail .badge, .tvB-rail .badge { font-size:10.5px; padding:2px 8px; }
+
+/* 方案A：照片 banner 顶 + 时段行 + footer */
+.tvA-card { flex:0 0 224px; border-radius:16px; overflow:hidden; background:rgba(255,255,255,.045);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.35); display:flex; flex-direction:column; }
+.tvA-ban { position:relative; height:104px; flex:0 0 104px; }
+.tvA-ban img { width:100%; height:100%; object-fit:cover; display:block; }
+.tvA-ban .nfi-scrim { position:absolute; inset:0; background:linear-gradient(to top,rgba(10,9,14,.95),transparent 62%); }
+.tvA-head { position:absolute; left:12px; right:12px; bottom:8px; display:flex; align-items:center; gap:7px; }
+.tvA-lbl { font-size:13.5px; font-weight:700; text-shadow:0 1px 6px rgba(0,0,0,.8); }
+.tvA-body { padding:11px 12px 12px; display:flex; flex-direction:column; gap:8px; }
+.tvA-foot { margin-top:1px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08); font-size:11px; color:rgba(255,255,255,.55); }
+.tvA-foot .lbl { color:rgba(255,220,150,.75); }
+
+/* 方案B：小角标图 + 时段行铺满 */
+.tvB-card { flex:0 0 220px; border-radius:16px; background:rgba(255,255,255,.045);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.35); padding:12px 13px; display:flex; flex-direction:column; gap:9px; }
+.tvB-top { display:flex; gap:9px; align-items:center; }
+.tvB-thumb { flex:0 0 42px; height:42px; border-radius:10px; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); }
+.tvB-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.tvB-lbl { font-size:13.5px; font-weight:700; }
+.tvB-foot { padding-top:8px; border-top:1px solid rgba(255,255,255,.08); font-size:11px; color:rgba(255,255,255,.55); }
+.tvB-foot .lbl { color:rgba(255,220,150,.75); }
+
+/* 共用：时段行(上午/下午 · 地点 · 一句) */
+.tv-rich-node { display:flex; gap:8px; align-items:baseline; }
+.tv-rich-node .t { flex:0 0 28px; color:var(--amber-1,#ffb454); font-weight:600; font-size:12px; }
+.tv-rich-node .pn { min-width:0; }
+.tv-rich-node .p { font-size:12.5px; font-weight:600; color:#fff; }
+.tv-rich-node .n { font-size:11px; color:rgba(255,255,255,.52); line-height:1.32; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* 契约驱动版：卡背景调实(防底层琥珀眼睛透上来) + 总览卡 */
+.tvA-card, .tvB-card { background:rgba(22,20,28,.9); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.tv-ov-card { flex:0 0 196px; border-radius:16px; background:rgba(22,20,28,.9); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.35); padding:13px 13px 12px; display:flex; flex-direction:column; gap:10px; }
+.tv-ov-title { font-size:15px; font-weight:700; }
+.tv-ov-rows { display:flex; flex-direction:column; gap:9px; }
+.tv-ov-row { display:flex; gap:8px; align-items:flex-start; }
+.tv-ov-row .badge { flex:0 0 auto; margin-top:1px; font-size:10.5px; padding:2px 8px; }
+.tv-ov-tx { min-width:0; }
+.tv-ov-tx .lbl { font-size:12.5px; font-weight:600; color:#fff; }
+.tv-ov-tx .sum { font-size:11px; color:rgba(255,255,255,.5); line-height:1.3; }
+.tv-ov-foot { margin-top:1px; padding-top:9px; border-top:1px solid rgba(255,255,255,.08); font-size:11px; color:rgba(255,255,255,.55); }
+.tv-ov-foot .lbl { color:rgba(255,220,150,.75); }
+
+/* 聚光：TTS 高亮当前卡放大+琥珀发光（rail 已 scrollIntoView 滚到中间），替代独立钻取 */
+.tvA-card, .tvB-card, .tv-ov-card { transition: transform .26s, box-shadow .26s; }
+.tvA-card.row-hl, .tvB-card.row-hl, .tv-ov-card.row-hl {
+  box-shadow: 0 0 0 1.5px rgba(255,180,84,.72), 0 12px 30px rgba(255,130,30,.3), inset 0 0 0 1px rgba(255,180,84,.28) !important;
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* T1 简卡正文：一行摘要(点位串联) */
+.tv-card-summary { font-size:12.5px; color:rgba(255,255,255,.82); line-height:1.4; }
+
+/* 去总览卡、去 trip_footer：轮播 = 纯逐日/逐段卡，整趟评价由口播承载 */
+.tv-wrap { display:flex; flex-direction:column; gap:8px; width:100%; align-self:stretch; }
+
+/* 多日段卡的逐日行：日号(Day N)不折、与地点同行；一句在下 clamp 1。
+   区别于单天卡的时段行(.tv-rich-node 用窄列放 上午/下午)。 */
+.tv-day-node { display:flex; gap:8px; align-items:baseline; }
+.tv-day-node .d { flex:0 0 auto; color:var(--amber-1,#ffb454); font-weight:700; font-size:12px; white-space:nowrap; }
+.tv-day-node .pn { min-width:0; flex:1 1 auto; }
+.tv-day-node .p { font-size:12.5px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tv-day-node .n { font-size:11px; color:rgba(255,255,255,.52); line-height:1.3; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* 字段防破版（对齐 §5-A 长度预算 + A11「单行不折，超长省略号」）：
+   label / place / card_footer 单行截断；note 已 line-clamp:1。 */
+.tvA-head { min-width:0; }
+.tvA-lbl, .tvB-lbl { flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tv-rich-node .p { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tv-rich-node .n { text-overflow:ellipsis; }
+.tvA-foot, .tvB-foot { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

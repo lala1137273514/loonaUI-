@@ -32,7 +32,141 @@
       this.onSelect = null;             // (idx, ev) 钩子，editor 用
       this.onState = null;              // (stateObj) 钩子，控制条用
       this._initSynth();
+      // web_ui 同款轮播控制器（原样搬来的 CortexCarousel）：结果卡走它，澄清/确认仍走玻璃浮层
+      if (global.CortexCarousel && refs.carouselPanel && refs.carouselRail && refs.carouselTitle) {
+        this._carousel = global.CortexCarousel.createCarouselController({ panelEl: refs.carouselPanel, titleEl: refs.carouselTitle, railEl: refs.carouselRail });
+        var self = this;
+        if (this._carousel.setOnCardClick) this._carousel.setOnCardClick(function (idx) {
+          if (self._travelStages && global.LoonaCarouselAdapter && LoonaCarouselAdapter.mode === 'overview') self._drill({ coverIdx: +idx });
+        });
+        if (refs.carouselBack) refs.carouselBack.addEventListener('click', function () { self._backToOverview(); });
+      }
       return this;
+    },
+    carouselNav: function (dir) { if (this._carousel) this._carousel.scrollCarousel(dir); },
+    travelBack: function () { this._backToOverview(); },
+    /* 两阶段下钻：opts = {day:'d2'} | {coverIdx:1}；flip 默认开（seek 时关）
+       封面↔详情切换走 View Transition 共享元素形变（hero 图 morph），不支持则 opacity 兜底 */
+    _drill: function (opts) {
+      if (!this._travelStages || !this._carousel || !global.LoonaCarouselAdapter) return;
+      var A = LoonaCarouselAdapter, st = A.stages, self = this;
+      // 同阶段内左右切天：只滑动聚焦，不重渲（更顺）
+      if (opts.day && st && A.mode === 'detail' && st.dayToStage[opts.day] === st.curStage) {
+        var di = st.detailByStage[st.curStage].dayIdx[opts.day];
+        if (di) { this._carousel.focusCarouselItem(di); return; }
+      }
+      var d = opts.day ? A.drillByDay(opts.day) : A.drillByCoverIdx(opts.coverIdx);
+      if (!d) return;
+      this._vtSwitch(function (useFlip) {
+        self._carousel.renderCarousel(d.carousel, { flip: useFlip });
+        if (d.focusIdx) self._carousel.focusCarouselItem(d.focusIdx);
+        self._setBackBtn(true, d.stageTitle);
+      }, opts.flip !== false);
+    },
+    _backToOverview: function () {
+      if (!this._travelStages || !this._carousel || !global.LoonaCarouselAdapter) return;
+      var d = LoonaCarouselAdapter.backToOverview(); if (!d) return;
+      var self = this;
+      this._vtSwitch(function (useFlip) {
+        self._carousel.renderCarousel(d.carousel, { flip: useFlip });
+        if (d.focusIdx) self._carousel.focusCarouselItem(d.focusIdx);
+        self._setBackBtn(false);
+      }, true);
+    },
+    /* 编辑器即改即见：用编辑后的 stages content 重渲轮播（不走 TTS/flip），按 target 定位预览。
+       target = {stage:'s1'}(看封面) | {day:'d2'}(看该天详情) | 空(看封面总览) */
+    previewStages: function (ev, target) {
+      if (!this._carousel || !global.LoonaCarouselAdapter || !ev || ev.comp !== 'TravelStages') return;
+      var cov = LoonaCarouselAdapter.feedStages(ev);
+      if (!cov || !cov.items.length) { this._hideCarousel(); return; }
+      this._travelStages = true;
+      this._dismissToastsOn('card', true);
+      this._focusClear(true);
+      this.refs.contentArea.classList.remove('single');
+      this._carousel.renderCarousel(cov);
+      this._setBackBtn(false);
+      this._showCarousel(true);
+      if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 轮播在场字幕放 2 行（长口播多显）
+      if (target && target.day) this._drill({ day: target.day, flip: false });
+      else if (target && target.stage && LoonaCarouselAdapter.stages) {
+        var ci = LoonaCarouselAdapter.stages.coverIdxByStage[target.stage]; if (ci) this._carousel.focusCarouselItem(ci);
+      }
+      this._markContent();
+    },
+    /* 有 View Transition 用形变；否则用 carousel 的 opacity flip 兜底。
+       吞掉 transition 的 ready/finished rejection（连切时会相互中断 abort，DOM 更新照常执行） */
+    _vtSwitch: function (run, animate) {
+      if (animate && document.startViewTransition) {
+        try {
+          var vt = document.startViewTransition(function () { run(false); });
+          if (vt) { if (vt.ready && vt.ready.catch) vt.ready.catch(function () {}); if (vt.finished && vt.finished.catch) vt.finished.catch(function () {}); }
+          return;
+        } catch (e) {}
+      }
+      run(animate);
+    },
+    /* C 方案：给总览卡的每日亮点行挂点击 → 下钻该天详情 */
+    _wireOverviewRows: function () {
+      var self = this, rail = this.refs.carouselRail; if (!rail) return;
+      var rows = rail.querySelectorAll('.tov-row');
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].addEventListener('click', function (e) { e.stopPropagation(); self._drill({ day: this.dataset.id }); });
+      }
+    },
+    _setBackBtn: function (on, label) {
+      if (this.refs.carouselBack) this.refs.carouselBack.classList.toggle('hidden', !on);
+      if (this.refs.carouselTitle) this.refs.carouselTitle.textContent = on ? ('旅行规划 · ' + (label || '')) : '旅行规划';
+    },
+    _carouselShowing: function () { return !!(this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden')); },
+    _showCarousel: function (on) {
+      if (this.refs.carouselPanel) this.refs.carouselPanel.classList.toggle('hidden', !on);
+      if (this.refs.stage) this.refs.stage.classList.toggle('has-carousel', !!on);
+    },
+    _hideCarousel: function () {
+      if (this._carousel) this._carousel.hideCarousel();
+      if (this.refs.carouselPanel) this.refs.carouselPanel.classList.add('hidden');
+      if (this.refs.stage) this.refs.stage.classList.remove('has-carousel');
+    },
+    /* 结果卡 → 轮播（适配器映射）。list 类整张渲染，focus 类只重定位聚焦。 */
+    _renderCarousel: function (ev, instant) {
+      if (!this._carousel || !global.LoonaCarouselAdapter) return false;
+      var A = LoonaCarouselAdapter;
+      // 旅行首屏（三方案）→ 首屏轮播 + 下钻详情，复用同一套 _drill/_backToOverview
+      //   A TravelStages=阶段封面 · C TravelOverview=城市总览+每日行 · B InspoFlow=种草灵感卡
+      if (ev.comp === 'TravelStages' || ev.comp === 'TravelOverview' || ev.comp === 'InspoFlow') {
+        var cov = ev.comp === 'TravelOverview' ? A.feedOverview(ev)
+          : ev.comp === 'InspoFlow' ? A.feedInspo(ev) : A.feedStages(ev);
+        if (!cov || !cov.items.length) return false;
+        this._dismissToastsOn('card', instant);
+        this._focusClear(instant);
+        this.refs.contentArea.classList.remove('single');
+        this._travelStages = true;
+        this._carousel.renderCarousel(cov);
+        this._setBackBtn(false);
+        this._showCarousel(true);
+        if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 轮播在场字幕放 2 行（长口播多显）
+        if (ev.comp === 'TravelOverview') this._wireOverviewRows();   // 总览卡每日亮点行 → 点击下钻
+        this._lastCardEv = ev; this._markContent();
+        return true;
+      }
+      var res = A.feed(ev);
+      if (res.action === 'none') return false;
+      this._travelStages = false;
+      this._dismissToastsOn('card', instant);
+      this._focusClear(instant);                       // 清掉浮层里残留的玻璃单卡（澄清/确认）
+      this.refs.contentArea.classList.remove('single');
+      if (res.action === 'render') {
+        this._carousel.renderCarousel(res.carousel);
+        if (res.focus) this._carousel.focusCarouselItem(res.focus);
+      } else if (res.action === 'focus') {
+        this._carousel.focusCarouselItem(res.item_idx);
+      }
+      this._setBackBtn(false);
+      this._showCarousel(true);
+      if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 轮播在场字幕放 2 行（长口播多显）   // 结果在场 → 字幕 1 行
+      this._lastCardEv = ev;
+      this._markContent();
+      return true;
     },
     _initSynth: function () {
       var self = this;
@@ -194,8 +328,14 @@
       if (comp === 'agent_step') { this._renderAgentStep(ev, i); return; }      // 仅侧轨
       if (ev.internal) { this._renderAgentStep(ev, i); return; }
 
+      // 结果卡 → web_ui 同款轮播（trip/news/mail/event/weather/...）；其余卡(澄清/失败/generic)走玻璃浮层
+      if (global.LoonaCarouselAdapter && LoonaCarouselAdapter.isResult(ev)) {
+        if (this._renderCarousel(ev, instant)) return;
+      }
+
       // 卡片(聚焦一张)：任何已注册的 builder 都走这里 —— 新增「展现形式」无需改引擎
       if (comp === 'card' || (UI.CARD_BUILDERS && UI.CARD_BUILDERS[comp])) {
+        this._hideCarousel();                   // 澄清/失败等决策浮层出现 → 收起轮播
         this._dismissToastsOn('card', instant);
         this._focusClear(instant);              // 聚焦一张：上一张淡出
         this.refs.contentArea.classList.remove('single');
@@ -215,6 +355,9 @@
       switch (comp) {
         case 'user_query':
           this._setSubtitle(ev.text, true, 'user');   // ASR = 对话，走底部，与 TTS 同位（先用户后 Loona）
+          // 旅行两阶段：用户"说某一天"→下钻；"返回总览"→回封面（点封面卡走 onCardClick）
+          if (this._travelStages && ev.drill_day) this._drill({ day: ev.drill_day, flip: !instant });
+          else if (this._travelStages && ev.travel_back) this._backToOverview();
           break;
         case 'pop_small':
           this._pushPop(UI.popSmall({ role: ev.role || 'status', text: ev.text, state_visual: ev.state_visual }));
@@ -227,6 +370,7 @@
           break;
         }
         case 'confirm': case 'ConfirmationCard': {
+          this._hideCarousel();                       // 确认门聚焦 → 收起轮播
           this._dismissToastsOn('card', instant);
           this._clearHighlights();
           this._focusClear(instant);                 // 确认门聚焦：清前面结果卡
@@ -270,10 +414,37 @@
       if (ev.tts && ev.tts.text) return { text: ev.tts.text, pace: ev.tts.pace, highlight: ev.highlight };
       return null;
     },
+    /* 文案 → 稳定 id（djb2，与离线生成脚本 tools/gen_tts.mjs 同算法）→ 命中预渲染百炼 mp3 */
+    _ttsId: function (s) { var h = 5381, i = (s || '').length; while (i) h = (h * 33) ^ s.charCodeAt(--i); return (h >>> 0).toString(16); },
+    _ttsFile: function (text) { var m = global.LOONA_TTS; return (m && text) ? (m[this._ttsId(text)] || null) : null; },
     _speak: function (text, opts) {
-      var self = this;
       this._setSubtitle(text, true);
-
+      // 预渲染百炼 mp3（assets/tts/manifest.js → window.LOONA_TTS）优先；缺则回落浏览器合成/估时
+      if (this.ttsEnabled && text) { var url = this._ttsFile(text); if (url) return this._speakAudio(text, opts, url); }
+      return this._speakSynth(text, opts);
+    },
+    /* 播放预渲染百炼音频：可暂停/续/取消/调速；加载或解码失败 → 回落 _speakSynth */
+    _speakAudio: function (text, opts, url) {
+      var self = this;
+      return new Promise(function (resolve) {
+        var done = false, audio;
+        function clean() { self._off('cancel', onCancel); self._off('pause', onPause); self._off('resume', onResume); }
+        function fin(r) { if (done) return; done = true; clean(); self._subtitleSpeaking(false); try { audio && audio.pause(); } catch (e) {} resolve(r || 'ok'); }
+        function fallback() { if (done) return; done = true; clean(); try { audio && audio.pause(); } catch (e) {} self._speakSynth(text, opts).then(function (r) { resolve(r); }); }
+        function onCancel() { fin('cancel'); }
+        function onPause() { try { audio && audio.pause(); } catch (e) {} }
+        function onResume() { if (!done && audio) try { audio.play(); } catch (e) {} }
+        try { audio = new Audio(url); } catch (e) { fallback(); return; }
+        audio.playbackRate = Math.min(2.5, Math.max(0.6, self.speed));
+        audio.onended = function () { fin('ok'); };
+        audio.onerror = function () { fallback(); };
+        self._on('cancel', onCancel); self._on('pause', onPause); self._on('resume', onResume);
+        if (self._paused) return;                 // 暂停态：等 resume 再播
+        var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {});   // 自动播放被拦截：等手势/resume
+      });
+    },
+    _speakSynth: function (text, opts) {
+      var self = this;
       // 无 TTS / 无 synth / 空文本：估时兜底，节奏完全交给 pause-aware 的 _sleep（暂停即冻结、继续即续，原生支持）
       if (!this.ttsEnabled || !this._synth || !text) {
         return this._sleep(Math.max(650, text ? text.length * 145 : 0)).then(function (r) { self._subtitleSpeaking(false); return r; });
@@ -332,21 +503,7 @@
           var btns = card.querySelectorAll('.btn-fill');
           if (btns[0]) btns[0].addEventListener('click', function () { finish('confirm'); });
           if (btns[1]) btns[1].addEventListener('click', function () { finish('cancel'); });
-          // 倒计时环
-          var ring = card._ring;
-          if (ring) {
-            var C = ring._C, total = (ev.content && ev.content.countdown) || 30, t0 = performance.now();
-            var fg = ring.querySelector('.ring-fg'), num = ring.querySelector('.ring-num');
-            (function tick() {
-              if (done) return;
-              var elapsed = (performance.now() - t0) / 1000 * self.speed;
-              var frac = Math.min(1, elapsed / total);
-              if (fg) fg.style.strokeDashoffset = (C * frac).toFixed(1);
-              if (num) num.textContent = Math.max(0, Math.ceil(total - elapsed));
-              if (frac >= 1) { finish('cancel'); return; }
-              raf = requestAnimationFrame(tick);
-            })();
-          }
+          // 确认门无倒计时（UI-SPEC §14.4：显式二选一，不施压、不自动过期）
           self._showWait(isConfirm, { onConfirm: function () { finish('confirm'); }, onCancel: function () { finish('cancel'); } });
         } else {
           self._showWait(false, { onContinue: function () { finish('continue'); } });
@@ -456,6 +613,11 @@
 
     /* ---------- 高亮 / toast / 字幕 ---------- */
     _highlightCard: function (id) {
+      // 轮播在场：TTS 念到哪条 → 居中聚焦对应卡（web_ui focusCarouselItem）
+      if (this._carouselShowing() && global.LoonaCarouselAdapter) {
+        var hidx = LoonaCarouselAdapter.highlightToIdx(id);
+        if (hidx) { this._carousel.focusCarouselItem(hidx); return; }
+      }
       this._clearHighlights();
       var ca = this.refs.contentArea;
       var node = ca.querySelector('[data-row-id="' + id + '"]') || this._cards[id] || ca.querySelector('[data-card-id="' + id + '"]');
@@ -519,6 +681,11 @@
       if (this.refs.contentArea) this.refs.contentArea.classList.remove('single');
       if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');
       if (this.refs.sideTrack) this.refs.sideTrack.appendChild(UI.el('div', 'empty', 'agent 内部决策记录将在播放时出现…'));
+      if (this.refs.annLive) { this.refs.annLive.hidden = true; this.refs.annLive.onclick = null; }
+      if (global.LoonaCarouselAdapter) LoonaCarouselAdapter.reset();
+      this._travelStages = false;
+      this._setBackBtn(false);
+      this._hideCarousel();
       this._setSubtitle('', false);
       this._hideWait();
       this._cards = {}; this._toasts = []; this._lastConfirm = null; this._lastCardEv = null;
@@ -539,11 +706,21 @@
       tl.innerHTML = '';
       var self = this;
       this.events.forEach(function (ev, i) { tl.appendChild(self._timelineRow(ev, i)); });
+      if (this.onTimelineBuilt) this.onTimelineBuilt();   // 视图层（搜索/筛选）重应用
+    },
+    _rowGroup: function (ev) {
+      if (ev.comp === 'user_query') return 'user';
+      if (ev.comp === 'agent_step' || ev.internal) return 'agent';
+      if (ev.comp === 'confirm' || ev.comp === 'ConfirmationCard') return 'confirm';
+      if (ev.comp === 'card' || (UI.CARD_BUILDERS && UI.CARD_BUILDERS[ev.comp])) return 'card';
+      return 'other';
     },
     _timelineRow: function (ev, i) {
       var self = this;
-      var row = UI.el('div', 'tl-event');
+      var row = UI.el('div', 'tl-event grp-' + this._rowGroup(ev) + (ev.internal ? ' tl-internal' : ''));
       row.dataset.idx = i;
+      row.dataset.comp = ev.comp;
+      row.dataset.group = this._rowGroup(ev);
       row.appendChild(UI.el('span', 'tl-idx', (i + 1)));
       var main = UI.el('div', 'tl-main');
       var comp = ev.comp;
@@ -559,6 +736,8 @@
       meta.push('gap ' + (ev.gap_ms != null ? ev.gap_ms : '—') + 'ms');
       main.appendChild(UI.el('div', 'tl-meta', meta.map(function (m) { return UI.esc(m); }).join('　')));
       row.appendChild(main);
+      // 搜索索引（类型标签 + 正文 + 决策字段）
+      row.dataset.search = (this._compLabel(ev) + ' ' + comp + ' ' + snippet + ' ' + ((ev.fields || []).join(' '))).toLowerCase();
       // 卡点/批注标记
       this._applyRowFlag(row, i);
       row.addEventListener('click', function () { self.seekTo(i); });
@@ -573,9 +752,15 @@
       var ann = (this.caseObj && this.caseObj.annotations) || [];
       var hit = ann.filter(function (a) { return a.event_idx === i; });
       var old = row.querySelector('.tl-flag'); if (old) old.remove();
+      var hasBlock = hit.some(function (a) { return a.type === '卡点'; });
+      var nComments = hit.filter(function (a) { return a.type === 'comment' || a.type === 'note'; }).length;
+      row.classList.toggle('has-ann', hit.length > 0);
+      row.dataset.flagged = hit.length ? '1' : '';
       if (hit.length) {
-        var hasBlock = hit.some(function (a) { return a.type === '卡点'; });
-        row.appendChild(UI.el('span', 'tl-flag', hasBlock ? '🚩' : '📝'));
+        var flag = UI.el('div', 'tl-flag');
+        if (hasBlock) flag.appendChild(UI.el('span', 'tl-flag-block', '🚩'));
+        if (nComments) flag.appendChild(UI.el('span', 'tl-flag-cmt', '💬' + nComments));
+        row.appendChild(flag);
       }
     },
     refreshRowFlags: function () { var rows = this.refs.timeline.querySelectorAll('.tl-event'); for (var i = 0; i < rows.length; i++) this._applyRowFlag(rows[i], +rows[i].dataset.idx); },
@@ -584,6 +769,23 @@
       for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('current', +rows[i].dataset.idx === idx);
       var cur = this.refs.timeline.querySelector('.tl-event.current');
       if (cur) cur.scrollIntoView({ block: 'nearest' });
+      this._reflectAnnLive(idx);
+    },
+    /* 播放/跳转时在设备外提示「本步有标注」——强可见性，不碰产品 UI */
+    _reflectAnnLive: function (idx) {
+      var live = this.refs.annLive; if (!live) return;
+      var ann = (this.caseObj && this.caseObj.annotations) || [];
+      var hit = ann.filter(function (a) { return a.event_idx === idx; });
+      if (!hit.length) { live.hidden = true; live.onclick = null; return; }
+      var hasBlock = hit.some(function (a) { return a.type === '卡点'; });
+      var nC = hit.filter(function (a) { return a.type === 'comment' || a.type === 'note'; }).length;
+      var parts = [];
+      if (hasBlock) parts.push('🚩 卡点');
+      if (nC) parts.push('💬 ' + nC + ' 条评论');
+      live.innerHTML = '<span class="al-dot"></span>本步有标注 · ' + parts.join(' · ');
+      live.hidden = false;
+      var self = this;
+      live.onclick = function () { self.pause(); self.seekTo(idx); };
     },
     _refreshTimelineDoneState: function () {
       var rows = this.refs.timeline.querySelectorAll('.tl-event'), self = this;

@@ -19,7 +19,8 @@
 
   /* ---- 状态图标：直接用从 Figma 拉的真实 .riv 渲染图（assets/icons/*.png） ----
      globe_looking / loading_spin_ccw / paperplane_fly_once / circle_checkmark / ciecle_xmark */
-  var ICON_FILE = { searching: 'globe', loading: 'loading', sending: 'paperplane', done: 'check', fail: 'xmark', mail: 'globe' };
+  /* 6 态对齐 02_FIGMA §4 .riv（assets/icons/*.png）。mail 暂无独立资产，回落到中性 loading（读信=处理态），不借用 globe(=搜索) 误导语义 */
+  var ICON_FILE = { searching: 'globe', loading: 'loading', sending: 'paperplane', done: 'check', fail: 'xmark', mail: 'loading' };
   function statusVis(kind, size) {
     var k = ICON_FILE[kind] || 'loading';
     var wrap = el('span', 'status-vis');

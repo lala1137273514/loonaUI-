@@ -83,7 +83,10 @@
     var evs = (caseObj && caseObj.events) || [];
     return ((caseObj && caseObj.annotations) || []).map(function (a) {
       var ev = evs[a.event_idx] || {};
-      return { event_idx: a.event_idx, type: a.type, text: a.text || '', event_comp: ev.comp || null, event_text: textOf(ev) };
+      var out = { event_idx: a.event_idx, type: a.type, text: a.text || '', event_comp: ev.comp || null, event_text: textOf(ev) };
+      if (a.author) out.author = a.author;
+      if (a.at) out.at = a.at;
+      return out;
     });
   }
   /* 链路契约“体检表”：最高风险 / 确认门数 / 低证据步 / 工具调用 / 步数（对比择优用） */

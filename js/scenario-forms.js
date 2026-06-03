@@ -102,18 +102,9 @@
     'assets/travel/tianzifang.jpg'
   ];
 
-  function travelView(c) {
-    c = c || {};
-    var skin = currentSkin();
-    var ui = U();
-    if (skin === 'aura') {
-      return travelImmersive(c, ui);
-    } else {
-      var n = ui.sectionCard(c);
-      n.classList.add('scenario-form');
-      return n;
-    }
-  }
+  /* 官方 TravelView（T1）= 富日卡轮播：总览卡 + 逐日卡(banner + 时段行 nodes + 一句评价 footer)。
+     砍的是单独钻取卡(TravelDayFocus)+TTS联动+evidence，不是时段行。 */
+  function travelView(c) { return travelRichRail('A', c || {}, true); }
 
   function travelImmersive(c, ui) {
     var el = ui.el, esc = ui.esc, badge = ui.badge;
@@ -271,6 +262,94 @@
   }
 
   /* ============================================================
+     TravelViewA / TravelViewB —— 富日卡轮播（每张卡=一天完整行程）
+     content.sections[]：{id,label,badge{text,kind},photo,nodes:[{time,place,note}],footer}
+     A=照片 banner 顶 + 时段行；B=小角标图 + 时段行铺满。
+     ============================================================ */
+  /* 契约驱动：读 TravelPayload(cards/pace/card_footer；无 trip_footer)，pace 派生徽章；兼容 legacy sections */
+  var PACE_BADGE = { light: ['轻松', 'free'], normal: ['适中', 'amber'], intense: ['紧凑', 'medium'] };
+  function cardBadge(ui, cd) {
+    if (cd.pace) { var m = PACE_BADGE[cd.pace] || [cd.pace, 'amber']; return ui.badge(m[0], m[1]); }
+    if (cd.badge) return ui.badge(cd.badge.text, cd.badge.kind);
+    return null;
+  }
+  /* 统一成 cards[]：优先 c.cards；legacy c.sections(text/badge/无nodes) 适配过来 */
+  function normCards(c) {
+    if (c.cards) return c.cards;
+    return (c.sections || []).map(function (s) {
+      return { id: s.id, label: s.label, badge: s.badge, pace: s.pace,
+               summary: s.text || s.summary, photo: s.photo, nodes: s.nodes || [],
+               card_footer: s.footer || s.card_footer };
+    });
+  }
+  /* 行布局按 span 切换：
+       dayMode=false(单天卡) → 时段行：窄列(上午/下午/晚上) + 地点/一句
+       dayMode=true (多日段卡) → 逐日行：日号(Day N)不折、与地点同行 + 一句在下 */
+  function travelRichNode(ui, n, dayMode) {
+    var el = ui.el, esc = ui.esc;
+    var row = el('div', dayMode ? 'tv-day-node' : 'tv-rich-node');
+    row.appendChild(el('span', dayMode ? 'd' : 't', esc(n.time || '')));
+    var pn = el('div', 'pn');
+    pn.appendChild(el('div', 'p', esc(n.place || '')));
+    if (n.note) pn.appendChild(el('div', 'n', esc(n.note)));
+    row.appendChild(pn);
+    return row;
+  }
+  /* 总览卡(travelOverviewCard)已废弃删除：本期无总览卡、无 trip_footer，轮播=纯逐日/逐段卡。 */
+  /* rich=true → 渲染行 nodes(span=1时段行/span>1逐日行)；rich=false → 渲染 summary 一行 */
+  function travelDayCardA(ui, cd, i, rich) {
+    var el = ui.el, esc = ui.esc;
+    var card = el('div', 'tvA-card'); if (cd.id) card.dataset.rowId = cd.id;
+    var ban = el('div', 'tvA-ban');
+    var img = el('img'); img.src = cd.photo || TRAVEL_IMAGES[i] || TRAVEL_IMAGES[0]; img.draggable = false;
+    ban.appendChild(img); ban.appendChild(el('div', 'nfi-scrim'));
+    var head = el('div', 'tvA-head');
+    var b = cardBadge(ui, cd); if (b) head.appendChild(b);
+    head.appendChild(el('div', 'tvA-lbl', esc(cd.label || '')));
+    ban.appendChild(head);
+    var body = el('div', 'tvA-body');
+    var dayMode = (cd.span || 1) > 1;   // 多日段→逐日行；单天→时段行
+    if (rich) { (cd.nodes || []).forEach(function (n) { body.appendChild(travelRichNode(ui, n, dayMode)); }); }
+    else if (cd.summary) { body.appendChild(el('div', 'tv-card-summary', esc(cd.summary))); }
+    if (cd.card_footer) body.appendChild(el('div', 'tvA-foot', cd.card_footer)); // T1=一句短评价
+    card.appendChild(ban); card.appendChild(body);
+    return card;
+  }
+  function travelDayCardB(ui, cd, i, rich) {
+    var el = ui.el, esc = ui.esc;
+    var card = el('div', 'tvB-card'); if (cd.id) card.dataset.rowId = cd.id;
+    var top = el('div', 'tvB-top');
+    var thumb = el('div', 'tvB-thumb');
+    var img = el('img'); img.src = cd.photo || TRAVEL_IMAGES[i] || TRAVEL_IMAGES[0]; img.draggable = false;
+    thumb.appendChild(img); top.appendChild(thumb);
+    var tw = el('div');
+    tw.appendChild(el('div', 'tvB-lbl', esc(cd.label || '')));
+    var b = cardBadge(ui, cd); if (b) tw.appendChild(b);
+    top.appendChild(tw); card.appendChild(top);
+    if (rich) {
+      var dayMode = (cd.span || 1) > 1;
+      var nodes = el('div'); nodes.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+      (cd.nodes || []).forEach(function (n) { nodes.appendChild(travelRichNode(ui, n, dayMode)); });
+      card.appendChild(nodes);
+    } else if (cd.summary) { card.appendChild(el('div', 'tv-card-summary', esc(cd.summary))); }
+    if (cd.card_footer) card.appendChild(el('div', 'tvB-foot', cd.card_footer));
+    return card;
+  }
+  /* 富日卡轮播：总览卡 + 逐日卡。variant A=照片banner / B=信息优先；rich=是否渲染时段行(v2) */
+  function travelRichRail(variant, c, rich) {
+    var ui = U(), el = ui.el, esc = ui.esc;
+    var cards = normCards(c);
+    var wrap = el('div', 'scenario-form tv-wrap');
+    var rail = el('div', variant === 'B' ? 'tvB-rail' : 'tvA-rail');
+    cards.forEach(function (cd, i) { rail.appendChild(variant === 'B' ? travelDayCardB(ui, cd, i, rich) : travelDayCardA(ui, cd, i, rich)); });
+    wrap.appendChild(rail);
+    // 无总览卡、无 trip_footer：轮播 = 纯逐日/逐段卡。整趟评价由口播承载，不再渲染底部 caption。
+    return wrap;
+  }
+  function travelViewA(c) { return travelRichRail('A', c || {}, true); }   // v2 富日卡预览(带时段行)
+  function travelViewB(c) { return travelRichRail('B', c || {}, true); }
+
+  /* ============================================================
      Register builders into the global dispatch
      ============================================================ */
   if (global.LoonaUI) {
@@ -279,6 +358,8 @@
     _U.CARD_BUILDERS.TravelView = travelView;
     _U.CARD_BUILDERS.TravelDayFocus = travelDayFocus;
     _U.CARD_BUILDERS.RestaurantView = restaurantView;
+    _U.CARD_BUILDERS.TravelViewA = travelViewA;
+    _U.CARD_BUILDERS.TravelViewB = travelViewB;
   }
 
 })(window);

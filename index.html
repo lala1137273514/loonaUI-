@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/skins.css">
 <link rel="stylesheet" href="css/news-forms.css">
 <link rel="stylesheet" href="css/scenario-forms.css">
+<link rel="stylesheet" href="css/carousel.css">
 <link rel="stylesheet" href="css/console.css">
 </head>
 <body>
@@ -58,49 +59,80 @@
     <!-- 左：事件时间线 -->
     <section class="wb-col left">
       <div class="col-title"><span>事件时间线 · 理想链路</span><span id="tlCount"></span></div>
+      <div class="tl-toolbar">
+        <div class="tl-search">
+          <span class="tl-search-ico">⌕</span>
+          <input id="tlSearch" type="text" placeholder="搜索文字 / 类型…" autocomplete="off">
+          <button class="tl-search-x" id="tlSearchX" title="清除" hidden>✕</button>
+        </div>
+        <div class="tl-filters" id="tlFilters">
+          <button class="tl-fchip active" data-filter="all">全部</button>
+          <button class="tl-fchip" data-filter="user">用户</button>
+          <button class="tl-fchip" data-filter="agent">agent</button>
+          <button class="tl-fchip" data-filter="card">卡</button>
+          <button class="tl-fchip" data-filter="confirm">确认门</button>
+          <button class="tl-fchip" data-filter="flagged">已标注</button>
+        </div>
+      </div>
       <div class="timeline" id="timeline"></div>
+      <div class="tl-empty-hint" id="tlEmptyHint" hidden>没有匹配的事件</div>
     </section>
 
     <!-- 中：横版设备（Loona 产品 UI 地基，对齐 Figma Frame 26/27 · 812×375） -->
     <section class="wb-col center">
       <div class="now-stage" id="nowStage">IDLE · 待命</div>
+      <!-- 播放时「本步有标注」提示（设备外，不碰产品 UI） -->
+      <button class="ann-live" id="annLive" hidden></button>
       <div class="stage-wrap">
-        <div class="device">
-          <div class="loona-stage" id="loonaStage">
-            <!-- 真实 Figma 双眼（静态，assets/loona_face.png） -->
-            <div class="loona-eyes-bg"></div>
-            <!-- 内容遮罩（出卡时柔化背景） -->
-            <div class="content-scrim"></div>
+        <!-- web_ui 同款舞台：深色大眼睛底图，结果走轮播，澄清/确认/状态/字幕走玻璃浮层 -->
+        <div class="loona-stage web-stage" id="loonaStage">
+          <!-- 内容遮罩（玻璃浮层出现时柔化背景） -->
+          <div class="content-scrim"></div>
 
-            <!-- 右上菜单（vg_menu） -->
-            <button class="vg-menu" title="菜单"></button>
-            <!-- pop_small 槽（右上 44/44） -->
-            <div class="pop-slot" id="popSlot"></div>
+          <!-- web_ui 同款轮播（结果卡：trip/news/mail/event/weather…）：横向 rail + 居中聚焦缩放 -->
+          <section class="carousel-panel hidden" id="carouselPanel" aria-label="结构化结果">
+            <div class="carousel-head">
+              <button id="backOverview" class="carousel-back hidden" type="button">‹ 返回总览</button>
+              <h2 id="carouselTitle">旅行规划</h2>
+              <div class="carousel-controls">
+                <button id="prevItem" class="icon-button" type="button" title="上一项/上一天">‹</button>
+                <button id="nextItem" class="icon-button" type="button" title="下一项/下一天">›</button>
+              </div>
+            </div>
+            <div id="carouselRail" class="carousel-rail"></div>
+          </section>
 
-            <!-- 内容区（卡片浮层） -->
-            <div class="content-area" id="contentArea"></div>
-            <!-- toast 槽 -->
-            <div class="toast-slot" id="toastSlot"></div>
-            <!-- 底部 TTS 字幕 -->
-            <div class="subtitle" id="subtitle"></div>
-          </div>
+          <!-- 右上菜单（vg_menu） -->
+          <button class="vg-menu" title="菜单"></button>
+          <!-- pop_small 槽（右上） -->
+          <div class="pop-slot" id="popSlot"></div>
+          <!-- 浮层内容区（澄清/确认/失败/回执 玻璃卡） -->
+          <div class="content-area" id="contentArea"></div>
+          <!-- toast 槽 -->
+          <div class="toast-slot" id="toastSlot"></div>
+          <!-- 底部 TTS 字幕 -->
+          <div class="subtitle" id="subtitle"></div>
         </div>
       </div>
       <!-- 停等横幅（澄清/确认门） -->
       <div class="wait-banner" id="waitBanner"></div>
     </section>
 
-    <!-- 右：agent 侧轨 + 编辑器 -->
+    <!-- 右：agent 侧轨 + 编辑器（可拖拽分隔 + 侧轨可折叠） -->
     <section class="wb-col right">
-      <div class="right-split">
-        <div>
-          <div class="col-title">agent 处理 · 内部决策侧轨</div>
+      <div class="right-split" id="rightSplit">
+        <section class="rs-pane rs-sidetrack" id="paneSidetrack">
+          <div class="col-title rs-head" id="sidetrackHead">
+            <span><span class="rs-caret">▾</span> agent 处理 · 内部决策侧轨</span>
+            <span class="rs-count" id="sidetrackCount"></span>
+          </div>
           <div class="sidetrack" id="sideTrack"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;min-height:0;flex:1">
+        </section>
+        <div class="rs-divider" id="rsDivider" title="拖动调整上下高度 · 双击复位"></div>
+        <section class="rs-pane rs-editor">
           <div class="col-title">批注 / 编辑（点事件改 4 面）</div>
           <div class="editor" id="editor"></div>
-        </div>
+        </section>
       </div>
     </section>
 
@@ -113,6 +145,11 @@
 <!-- 组件库 → case 数据(多个) → 引擎 → 编辑器 → 控制台（经典 script，file:// 直接可跑） -->
 <script src="js/components.js"></script>
 <script src="js/scenario-forms.js"></script>
+<!-- web_ui 原样搬来的轮播渲染器 + 工作台结果卡适配器 -->
+<script src="js/carousel.js"></script>
+<script src="js/carousel-adapter.js"></script>
+<!-- 预渲染百炼 TTS 清单（node tools/gen_tts.mjs 生成；缺则引擎回落浏览器合成） -->
+<script src="assets/tts/manifest.js"></script>
 <script src="cases/companion_chat.js"></script>
 <script src="cases/weather_5d.js"></script>
 <script src="cases/news_briefing.js"></script>
@@ -121,6 +158,15 @@
 <script src="cases/email_calendar_workflow.js"></script>
 <script src="cases/restaurant_quiet.js"></script>
 <script src="cases/travel_shanghai_3d.js"></script>
+<script src="cases/travel_chengdu_3d.js"></script>
+<script src="cases/travel_chengdu_5d.js"></script>
+<script src="cases/travel_chengdu_5d_2stage.js"></script>
+<!-- 三方案对比 mock（杭州）：A 封面卡钻取 / C 总览+亮点条 / B 种草灵感流 -->
+<script src="cases/travel_hangzhou_a.js"></script>
+<script src="cases/travel_hangzhou_c.js"></script>
+<script src="cases/travel_hangzhou_b.js"></script>
+<script src="cases/travel_card_ab.js"></script>
+<script src="cases/travel_uat_a1_a12.js"></script>
 <script src="cases/meeting_action.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/editor.js"></script>
@@ -132,37 +178,84 @@
   var refs = {
     popSlot: $('popSlot'), toastSlot: $('toastSlot'), contentArea: $('contentArea'),
     subtitle: $('subtitle'), sideTrack: $('sideTrack'), timeline: $('timeline'),
-    waitBanner: $('waitBanner'), nowStage: $('nowStage'),
-    stage: $('loonaStage'), device: document.querySelector('.device')
+    waitBanner: $('waitBanner'), nowStage: $('nowStage'), annLive: $('annLive'),
+    stage: $('loonaStage'),
+    carouselPanel: $('carouselPanel'), carouselRail: $('carouselRail'), carouselTitle: $('carouselTitle'), carouselBack: $('backOverview')
   };
 
   var engine = LoonaEngine.init(refs);
   LoonaEditor.init(engine, { editor: $('editor') });
   LoonaConsole.init(engine, { variantBar: $('variantBar'), btnCompare: $('btnCompare'), cmpOverlay: $('cmpOverlay'), tlCount: $('tlCount') });
 
-  /* ---- 整机缩放适配：设备内部固定 812×375，按中栏可用空间整体 scale，
-         卡片永远按 375 高渲染，不再被压扁裁切 ---- */
-  function fitDevice() {
-    var wrap = document.querySelector('.stage-wrap');
-    var device = refs.device;
-    if (!wrap || !device) return;
-    var center = wrap.parentElement;                 // .wb-col.center
-    var availW = wrap.clientWidth - 18;              // 两侧呼吸 + 机身描边
-    var availH = center.clientHeight - 104;          // 顶部 now-stage + 底部 wait-banner 预留
-    var s = Math.min(availW / 812, availH / 375);
-    if (!isFinite(s) || s <= 0) s = 1;
-    s = Math.min(s, 1.18);                           // 大屏不过度放大
-    device.style.setProperty('--device-scale', s.toFixed(4));
+  /* ===== 左栏时间线：搜索 + 类型筛选（纯视图层，链路重建后自动重应用） ===== */
+  var tlSearch = $('tlSearch'), tlSearchX = $('tlSearchX'), tlFilters = $('tlFilters'), tlEmptyHint = $('tlEmptyHint'), sidetrackCount = $('sidetrackCount');
+  var curFilter = 'all', curQuery = '';
+  function updateSidetrackCount() {
+    var n = 0, evs = engine.events || [];
+    for (var i = 0; i < evs.length; i++) if (evs[i].internal || evs[i].comp === 'agent_step') n++;
+    if (sidetrackCount) sidetrackCount.textContent = n ? (n + ' 步') : '';
   }
-  window.addEventListener('resize', fitDevice);
-  fitDevice();
-  requestAnimationFrame(fitDevice);
-  setTimeout(fitDevice, 80);
+  function applyTimelineFilter() {
+    var rows = refs.timeline.querySelectorAll('.tl-event'), shown = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var okF = curFilter === 'all'
+        || (curFilter === 'flagged' ? r.dataset.flagged === '1' : r.dataset.group === curFilter);
+      var okQ = !curQuery || (r.dataset.search || '').indexOf(curQuery) >= 0;
+      var vis = okF && okQ;
+      r.classList.toggle('tl-hidden', !vis);
+      if (vis) shown++;
+    }
+    if (tlEmptyHint) tlEmptyHint.hidden = shown > 0 || (rows.length === 0);
+    updateSidetrackCount();
+  }
+  engine.onTimelineBuilt = applyTimelineFilter;
+  tlSearch.addEventListener('input', function () {
+    curQuery = this.value.trim().toLowerCase();
+    tlSearchX.hidden = !curQuery;
+    applyTimelineFilter();
+  });
+  tlSearchX.addEventListener('click', function () { tlSearch.value = ''; curQuery = ''; tlSearchX.hidden = true; tlSearch.focus(); applyTimelineFilter(); });
+  tlFilters.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.tl-fchip') : null; if (!b) return;
+    curFilter = b.dataset.filter;
+    var chips = tlFilters.querySelectorAll('.tl-fchip');
+    for (var i = 0; i < chips.length; i++) chips[i].classList.toggle('active', chips[i] === b);
+    applyTimelineFilter();
+  });
 
-  /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES） */
+  /* ===== 右栏：侧轨 ↔ 编辑器 可拖拽分隔 + 侧轨可折叠（高度持久化） ===== */
+  (function () {
+    var split = $('rightSplit'), pane = $('paneSidetrack'), divider = $('rsDivider'), head = $('sidetrackHead');
+    if (!split || !pane || !divider) return;
+    var KEY = 'loona_sidetrack_h', CKEY = 'loona_sidetrack_collapsed';
+    function clamp(h) { var max = split.clientHeight - 140; return Math.max(72, Math.min(h, Math.max(120, max))); }
+    function setH(h) { var v = clamp(h); pane.style.flex = '0 0 ' + v + 'px'; try { localStorage.setItem(KEY, v); } catch (e) {} }
+    function setCollapsed(on) { pane.classList.toggle('collapsed', on); try { localStorage.setItem(CKEY, on ? '1' : '0'); } catch (e) {} }
+    var saved = null; try { saved = +localStorage.getItem(KEY); } catch (e) {}
+    pane.style.flex = (saved && saved > 72) ? ('0 0 ' + saved + 'px') : '0 0 38%';
+    try { if (localStorage.getItem(CKEY) === '1') pane.classList.add('collapsed'); } catch (e) {}
+    head.addEventListener('click', function () { setCollapsed(!pane.classList.contains('collapsed')); });
+    var dragging = false;
+    divider.addEventListener('mousedown', function (e) {
+      if (pane.classList.contains('collapsed')) setCollapsed(false);
+      dragging = true; document.body.style.cursor = 'row-resize'; e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) { if (dragging) setH(e.clientY - split.getBoundingClientRect().top); });
+    window.addEventListener('mouseup', function () { if (dragging) { dragging = false; document.body.style.cursor = ''; } });
+    divider.addEventListener('dblclick', function () { pane.style.flex = '0 0 38%'; try { localStorage.removeItem(KEY); } catch (e) {} });
+  })();
+
+  /* ---- 轮播左右切卡（web_ui 同款 prev/next）---- */
+  if ($('prevItem')) $('prevItem').addEventListener('click', function () { engine.carouselNav(-1); });
+  if ($('nextItem')) $('nextItem').addEventListener('click', function () { engine.carouselNav(1); });
+
+  /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
-    'email_calendar_workflow', 'restaurant_quiet', 'travel_shanghai_3d', 'meeting_action'];
+  var ORDER = ['travel_chengdu_5d', 'travel_chengdu_5d_2stage', 'travel_chengdu_3d', 'travel_hangzhou_a', 'travel_hangzhou_c', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
+    'email_calendar_workflow', 'restaurant_quiet', 'travel_shanghai_3d', 'travel_card_ab',
+    'uat_a1', 'uat_a2', 'uat_a3', 'uat_a4', 'uat_a5', 'uat_a6', 'uat_a7', 'uat_a8', 'uat_a9', 'uat_a10', 'uat_a11', 'uat_a12',
+    'meeting_action'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
   var sel = $('caseSel');

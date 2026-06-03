@@ -89,6 +89,7 @@
 
       /* ③ 卡内容 */
       if (ev.comp === 'TravelDayCard' || ev.comp === 'card') this._cardEditor(box, ev);
+      if (ev.comp === 'TravelStages') this._stagesEditor(box, ev);   // 两阶段：阶段/日卡 即改即在轮播预览
       if (ev.comp === 'confirm' || ev.comp === 'ConfirmationCard') this._confirmEditor(box, ev);
       if (ev.comp === 'pop_small') {
         var s3p = this._section('③ 气泡角色 / 状态');
@@ -112,12 +113,13 @@
         box.appendChild(s4);
       }
 
-      /* 标卡点 + 批注 */
-      var sa = this._section('卡点 / 批注');
+      /* 标卡点 + 评论讨论（多条，作者 + 时间） */
+      var nC = this._comments(idx).length;
+      var sa = this._section('卡点 / 评论讨论' + (nC ? '（💬 ' + nC + '）' : ''));
       var flagBtn = el('button', 'ed-flag-btn' + (this._hasAnn(idx, '卡点') ? ' on' : ''), (this._hasAnn(idx, '卡点') ? '🚩 已标卡点（点击取消）' : '🚩 标记为卡点'));
       flagBtn.addEventListener('click', function () { self._toggleAnn(idx, '卡点'); flagBtn.classList.toggle('on'); flagBtn.textContent = self._hasAnn(idx, '卡点') ? '🚩 已标卡点（点击取消）' : '🚩 标记为卡点'; });
       var flagWrap = el('div', 'ed-actions'); flagWrap.appendChild(flagBtn); sa.appendChild(flagWrap);
-      sa.appendChild(this._field('批注（设计意见 / 待改）', this._annText(idx, 'note'), function (v) { self._setNote(idx, v); }, true));
+      sa.appendChild(this._commentThread(idx));
       box.appendChild(sa);
 
       /* 操作 */
@@ -183,6 +185,69 @@
       box.appendChild(s);
     },
 
+    /* ---------- ③ TravelStages 编辑（阶段含多天）：改任一字段即在轮播实时预览 ---------- */
+    _stagesEditor: function (box, ev) {
+      var self = this, c = ev.content = ev.content || {};
+      var stages = c.stages = c.stages || [];
+      var prev = function (target) { if (self.engine.previewStages) self.engine.previewStages(ev, target); };
+      var sec = this._section('③ 卡内容 · 阶段 / 日卡（即改即在中间轮播预览）');
+      stages.forEach(function (s, si) {
+        var sb = el('div', 'ed-stage');
+        var hd = el('div', 'ed-stage-hd');
+        hd.appendChild(el('span', 'ed-stage-lb', '阶段 ' + (si + 1)));
+        var look = el('button', 'ed-mini-btn', '👁 看封面');
+        look.addEventListener('click', function () { prev({ stage: s.id }); });
+        hd.appendChild(look); sb.appendChild(hd);
+        sb.appendChild(self._field('阶段标题', s.title || '', function (v) { s.title = v; prev({ stage: s.id }); }));
+        sb.appendChild(self._field('卖点钩子 hook（标题下一句安利）', s.hook || '', function (v) { s.hook = v; prev({ stage: s.id }); }));
+        sb.appendChild(self._field('封面图 photo', s.photo || '', function (v) { s.photo = v; prev({ stage: s.id }); }));
+        sb.appendChild(self._field('tag（逗号分隔，建议用澄清关键词）', (s.tags || []).join('，'), function (v) {
+          s.tags = v.split(/[,，]/).map(function (x) { return x.trim(); }).filter(Boolean); prev({ stage: s.id });
+        }));
+        (s.days = s.days || []).forEach(function (d, di) {
+          var db = el('div', 'ed-day');
+          var dh = el('div', 'ed-stage-hd');
+          dh.appendChild(el('span', 'ed-day-lb', d.label || ('Day ' + (di + 1))));
+          var dlook = el('button', 'ed-mini-btn', '👁 看这天');
+          dlook.addEventListener('click', function () { prev({ day: d.id }); });
+          dh.appendChild(dlook); db.appendChild(dh);
+          db.appendChild(self._field('日卡标题 label', d.label || '', function (v) { d.label = v; prev({ day: d.id }); }));
+          var pw = el('div'); pw.style.marginBottom = '8px'; pw.appendChild(el('span', 'mini-label', 'pace 节奏'));
+          pw.appendChild(self._rawSelect(['light', 'normal', 'intense'], d.pace || 'normal', function (v) { d.pace = v; prev({ day: d.id }); }));
+          db.appendChild(pw);
+          db.appendChild(self._field('封面图 photo', d.photo || '', function (v) { d.photo = v; prev({ day: d.id }); }));
+          db.appendChild(self._field('一句脚注 footer', d.footer || '', function (v) { d.footer = v; prev({ day: d.id }); }));
+          var nl = el('div'); nl.appendChild(el('span', 'mini-label', '节点（时段 / 地点 / note）'));
+          self._dayNodesEditor(nl, d, function () { prev({ day: d.id }); });
+          db.appendChild(nl);
+          sb.appendChild(db);
+        });
+        sec.appendChild(sb);
+      });
+      box.appendChild(sec);
+    },
+    _dayNodesEditor: function (container, day, onChange) {
+      var nodes = day.nodes = day.nodes || [];
+      var list = el('div', 'ed-nodes');
+      function redraw() {
+        list.innerHTML = '';
+        nodes.forEach(function (nd, ni) {
+          var row = el('div', 'ed-node-row3');
+          function inp(cls, key, ph) { var i = el('input', 'ed-input ' + cls); i.value = nd[key] || ''; i.placeholder = ph; i.addEventListener('input', function () { nd[key] = i.value; onChange(); }); return i; }
+          row.appendChild(inp('ed-node-t', 'time', '上午'));
+          row.appendChild(inp('ed-node-p', 'place', '地点'));
+          row.appendChild(inp('ed-node-n', 'note', 'note'));
+          var x = el('button', 'x', '✕'); x.addEventListener('click', function () { nodes.splice(ni, 1); redraw(); onChange(); });
+          row.appendChild(x); list.appendChild(row);
+        });
+      }
+      redraw();
+      container.appendChild(list);
+      var add = el('button', 'ed-add', '+ 加一个节点');
+      add.addEventListener('click', function () { nodes.push({ time: '上午', place: '新地点', note: '' }); redraw(); onChange(); });
+      container.appendChild(add);
+    },
+
     /* ---------- ③ ConfirmationCard 编辑 ---------- */
     _confirmEditor: function (box, ev) {
       var c = ev.content = ev.content || {};
@@ -228,20 +293,79 @@
       this._flashApplied();
     },
 
-    /* ---------- 批注模型 ---------- */
+    /* ---------- 批注模型（卡点 = 标记；评论 = 多条讨论，向后兼容旧 note） ---------- */
     _anns: function () { var c = this.engine.caseObj; return (c.annotations = c.annotations || []); },
     _hasAnn: function (idx, type) { return this._anns().some(function (a) { return a.event_idx === idx && a.type === type; }); },
-    _annText: function (idx, type) { var a = this._anns().filter(function (a) { return a.event_idx === idx && a.type === type; })[0]; return a ? a.text : ''; },
     _toggleAnn: function (idx, type) {
       var arr = this._anns(), i = arr.findIndex(function (a) { return a.event_idx === idx && a.type === type; });
       if (i >= 0) arr.splice(i, 1); else arr.push({ event_idx: idx, type: type, text: '' });
       this.engine.refreshRowFlags();
     },
-    _setNote: function (idx, text) {
-      var arr = this._anns(), i = arr.findIndex(function (a) { return a.event_idx === idx && a.type === 'note'; });
-      if (!text) { if (i >= 0) arr.splice(i, 1); }
-      else if (i >= 0) arr[i].text = text; else arr.push({ event_idx: idx, type: 'note', text: text });
-      this.engine.refreshRowFlags();
+    _comments: function (idx) {
+      return this._anns().filter(function (a) { return a.event_idx === idx && (a.type === 'comment' || a.type === 'note'); });
+    },
+    _addComment: function (idx, text, author) {
+      this._anns().push({ event_idx: idx, type: 'comment', text: text, author: author || this._author(), at: new Date().toISOString(), id: 'c' + Date.now().toString(36) });
+      this.engine.refreshRowFlags(); this._flashApplied();
+    },
+    _deleteComment: function (ann) {
+      var arr = this._anns(), i = arr.indexOf(ann); if (i >= 0) arr.splice(i, 1);
+      this.engine.refreshRowFlags(); this._flashApplied();
+    },
+    _author: function () { try { return (global.localStorage && localStorage.getItem('loona_review_author')) || '我'; } catch (e) { return '我'; } },
+    _setAuthor: function (v) { try { if (global.localStorage) localStorage.setItem('loona_review_author', v || '我'); } catch (e) {} },
+    _relTime: function (iso) {
+      if (!iso) return '';
+      var t = Date.parse(iso); if (isNaN(t)) return '';
+      var s = Math.floor((Date.now() - t) / 1000);
+      if (s < 60) return '刚刚';
+      if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+      if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+      var d = new Date(t);
+      return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    },
+    /* 评论讨论串：已有评论列表（作者/时间/删除）+ 署名 + 发表框（⌘/Ctrl+Enter） */
+    _commentThread: function (idx) {
+      var self = this;
+      var wrap = el('div', 'ed-thread');
+      var list = el('div', 'cmt-list'); wrap.appendChild(list);
+      function redraw() {
+        list.innerHTML = '';
+        var cs = self._comments(idx);
+        if (!cs.length) { list.appendChild(el('div', 'cmt-empty', '还没有评论。写下设计意见 / 待改 / 讨论…')); }
+        cs.forEach(function (a) {
+          var item = el('div', 'cmt-item');
+          var head = el('div', 'cmt-head');
+          head.appendChild(el('span', 'cmt-author', esc(a.author || '匿名')));
+          head.appendChild(el('span', 'cmt-time', esc(self._relTime(a.at))));
+          var del = el('button', 'cmt-del', '✕'); del.title = '删除这条评论';
+          del.addEventListener('click', function () { self._deleteComment(a); self.select(idx); });
+          head.appendChild(del);
+          item.appendChild(head);
+          item.appendChild(el('div', 'cmt-text', esc(a.text)));
+          list.appendChild(item);
+        });
+      }
+      redraw();
+      var authorRow = el('div', 'cmt-author-row');
+      authorRow.appendChild(el('span', 'mini-label', '署名'));
+      var who = el('input', 'ed-input cmt-who'); who.value = self._author(); who.placeholder = '你的名字';
+      who.addEventListener('change', function () { self._setAuthor(who.value.trim()); });
+      authorRow.appendChild(who);
+      wrap.appendChild(authorRow);
+      var ta = el('textarea', 'ed-textarea cmt-input'); ta.placeholder = '写一条评论…（⌘/Ctrl+Enter 发表）';
+      wrap.appendChild(ta);
+      var send = el('button', 'ctrl-btn primary cmt-send', '发表评论');
+      send.addEventListener('click', function () {
+        var t = ta.value.trim(); if (!t) return;
+        self._addComment(idx, t, who.value.trim() || '匿名');
+        ta.value = ''; redraw();
+        var sec = wrap.closest ? wrap.closest('.ed-section') : null;
+        if (sec) { var lbl = sec.querySelector('label'); if (lbl) lbl.textContent = '卡点 / 评论讨论（💬 ' + self._comments(idx).length + '）'; }
+      });
+      ta.addEventListener('keydown', function (e) { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); send.click(); } });
+      wrap.appendChild(send);
+      return wrap;
     },
 
     /* ---------- 表单零件 ---------- */
