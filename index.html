@@ -172,9 +172,9 @@
 <script src="assets/tts/manifest.js"></script>
 <script src="cases/companion_chat.js"></script>
 <script src="cases/weather_5d.js"></script>
-<script src="cases/news_briefing.js"></script>
-<script src="cases/email_briefing.js"></script>
-<script src="cases/calendar_today.js"></script>
+<script src="cases/cortex_news_hot.js"></script>
+<script src="cases/cortex_mail_priority.js"></script>
+<script src="cases/cortex_calendar_week.js"></script>
 <script src="cases/email_calendar_workflow.js"></script>
 <script src="cases/restaurant_quiet.js"></script>
 <!-- 旅行规划保留 4 个代表 case（其余下线，文件留存可恢复） -->
@@ -275,18 +275,25 @@
 
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_chengdu_5d', 'travel_xian_solo', 'travel_dali_friends', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
+  var ORDER = ['travel_chengdu_5d', 'travel_xian_solo', 'travel_dali_friends', 'travel_hangzhou_b', 'cortex_mail_priority', 'cortex_news_hot', 'cortex_calendar_week', 'companion_chat', 'weather_5d',
     'email_calendar_workflow', 'restaurant_quiet',
     'meeting_action'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
   /* case 选择器：分组(旅游规划/其他场景) + 搜索 的弹层，替代长下拉，一眼可选 */
   var curCase = ids[0];
-  function isTravel(id) { return /^travel/.test(id) || (CASES[id] && CASES[id].scene === 'travel'); }
+  function sceneOf(id) { return CASES[id] && CASES[id].scene; }
+  function isTravel(id) { return /^travel/.test(id) || sceneOf(id) === 'travel'; }
   function caseTitle(id) { return (CASES[id] && CASES[id].title) || id; }
   function renderPickList(q) {
     var list = $('cpList'); if (!list) return; list.innerHTML = ''; q = (q || '').toLowerCase();
-    [['旅游规划', ids.filter(isTravel)], ['其他场景', ids.filter(function (k) { return !isTravel(k); })]].forEach(function (g) {
+    [
+      ['旅游规划', ids.filter(isTravel)],
+      ['邮件', ids.filter(function (k) { return sceneOf(k) === 'email'; })],
+      ['新闻', ids.filter(function (k) { return sceneOf(k) === 'news'; })],
+      ['日程', ids.filter(function (k) { return sceneOf(k) === 'calendar'; })],
+      ['其他场景', ids.filter(function (k) { var s = sceneOf(k); return !isTravel(k) && s !== 'email' && s !== 'news' && s !== 'calendar'; })]
+    ].forEach(function (g) {
       var items = g[1].filter(function (id) { return !q || caseTitle(id).toLowerCase().indexOf(q) >= 0; });
       if (!items.length) return;
       var gl = document.createElement('div'); gl.className = 'cp-group'; gl.textContent = g[0] + ' · ' + items.length; list.appendChild(gl);
