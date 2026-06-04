@@ -21,12 +21,6 @@
     <div class="variant-bar" id="variantBar"></div>
     <span class="spacer"></span>
 
-    <div class="seg" id="themeSeg" title="展现形式：同一份内容，换一种「形态」(不只是换色)">
-      <button class="seg-btn active" data-theme="glass">卡片</button>
-      <button class="seg-btn" data-theme="bubble">气泡</button>
-      <button class="seg-btn" data-theme="aura">沉浸</button>
-    </div>
-
     <div class="ctrl-group">
       <button class="ctrl-btn primary" id="btnPlay"><span class="ico">▶</span><span id="playLbl">播放</span></button>
       <button class="ctrl-btn" id="btnStep"><span class="ico">⏭</span>单步</button>
@@ -46,7 +40,6 @@
     </div>
 
     <div class="ctrl-group">
-      <button class="ctrl-btn" id="btnCompare" title="同场景多链路变体并排对比 (C)">⇄ 对比</button>
       <a class="ctrl-btn" href="gallery.html" target="_blank">🧩 组件库</a>
       <button class="ctrl-btn" id="btnShare" title="复制理想链路 JSON 到剪贴板">⧉ 分享</button>
       <button class="ctrl-btn" id="btnExport">⬇ 导出 JSON</button>
@@ -159,7 +152,6 @@
 <script src="cases/calendar_today.js"></script>
 <script src="cases/email_calendar_workflow.js"></script>
 <script src="cases/restaurant_quiet.js"></script>
-<script src="cases/travel_shanghai_3d.js"></script>
 <script src="cases/travel_chengdu_3d.js"></script>
 <script src="cases/travel_chengdu_5d.js"></script>
 <script src="cases/travel_chengdu_5d_2stage.js"></script>
@@ -169,8 +161,6 @@
 <script src="cases/travel_hangzhou_a.js"></script>
 <script src="cases/travel_hangzhou_c.js"></script>
 <script src="cases/travel_hangzhou_b.js"></script>
-<script src="cases/travel_card_ab.js"></script>
-<script src="cases/travel_uat_a1_a12.js"></script>
 <!-- 泛化：不同目的地×人群（同范式骨架 + 同款暖/种草 TTS） -->
 <script src="cases/travel_chongqing_couple.js"></script>
 <script src="cases/travel_xian_solo.js"></script>
@@ -270,8 +260,7 @@
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
   var ORDER = ['travel_chongqing_couple', 'travel_xian_solo', 'travel_xiamen_family', 'travel_dali_friends', 'travel_compare_cities', 'travel_theme_chengdu', 'travel_logistics_demo', 'travel_chengdu_film', 'travel_chengdu_story', 'travel_chengdu_5d', 'travel_chengdu_5d_2stage', 'travel_chengdu_3d', 'travel_hangzhou_a', 'travel_hangzhou_c', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
-    'email_calendar_workflow', 'restaurant_quiet', 'travel_shanghai_3d', 'travel_card_ab',
-    'uat_a1', 'uat_a2', 'uat_a3', 'uat_a4', 'uat_a5', 'uat_a6', 'uat_a7', 'uat_a8', 'uat_a9', 'uat_a10', 'uat_a11', 'uat_a12',
+    'email_calendar_workflow', 'restaurant_quiet',
     'meeting_action'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
@@ -284,20 +273,11 @@
   loadCase(ids[0]); sel.value = ids[0];
   sel.addEventListener('change', function () { loadCase(sel.value); });
 
-  /* 风格切换（Glass / Stack / Spatial） */
-  var seg = $('themeSeg');
-  seg.addEventListener('click', function (e) {
-    var b = e.target.closest ? e.target.closest('.seg-btn') : null;
-    if (b && b.dataset.theme) engine.setTheme(b.dataset.theme);
-  });
-
   /* 控制条联动 */
   engine.onState = function (st) {
     var playing = st.playing && !st.paused;
     $('playLbl').textContent = playing ? '暂停' : (st.atEnd ? '重播' : (st.paused ? '继续' : '播放'));
     $('btnPlay').querySelector('.ico').textContent = playing ? '⏸' : '▶';
-    var btns = seg.querySelectorAll('.seg-btn');
-    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].dataset.theme === st.theme);
   };
 
   $('btnPlay').addEventListener('click', function () {

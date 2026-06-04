@@ -4,7 +4,7 @@
 (function (g) {
   g.LOONA_CASES = g.LOONA_CASES || {};
   g.LOONA_CASES['travel_hangzhou_b'] = {
-    task_id: 'travel_hangzhou_b', title: '方案B · 杭州·种草灵感流', scene: 'travel', default_skin: 'glass',
+    task_id: 'travel_hangzhou_b', title: '种草灵感流 · 杭州3天（方案B）', scene: 'travel', default_skin: 'glass',
     decision_record: { request_type: 'task', primary_need: '杭州玩什么', granularity: 'highlights', evidence_level: 'E1', action_risk: 'R0', output_mode: 'document', tool_plan: 'query', confirmation_required: false },
     events: [
       { t: 0, gap_ms: 0, comp: 'user_query', text: '杭州玩三天' },
@@ -25,17 +25,17 @@
               detail: { label: '龙井村茶园', photo: 'assets/travel/bund.jpg', nodes: [{ time: '上午', place: '龙井村', note: '茶园采茶，喝口头春' }], footer: '春茶季限定' } }
           ]
         } },
-      { t: 3000, gap_ms: 500, comp: 'tts', text: '杭州先别急着排表，我挑了四个最值得的点，种给你看。', pace: 'mid' },
-      { t: 3500, gap_ms: 360, comp: 'tts', highlight: 'i1', text: '第一张：西湖骑行追日落，苏堤那段机位最出片。', pace: 'mid' },
-      { t: 3900, gap_ms: 360, comp: 'tts', highlight: 'i2', text: '想吃地道的，本地人钻的那家片儿川，人均三十封神。', pace: 'mid' },
-      { t: 4300, gap_ms: 360, comp: 'tts', highlight: 'i3', text: '怕人挤就去灵隐飞来峰，我翻半天挑的清净角落。', pace: 'mid' },
-      { t: 4700, gap_ms: 360, comp: 'tts', highlight: 'i4', text: '还有龙井茶园，这季的茶山绿错过得等明年。', pace: 'mid' },
+      { t: 3000, gap_ms: 500, comp: 'tts', text: '杭州三天我不给你塞一张密密麻麻的表，先挑了四个我自己最想再去的点，你看哪个动心。', pace: 'mid' },
+      { t: 3500, gap_ms: 360, comp: 'tts', highlight: 'i1', text: '先看这张——傍晚踩着单车冲上苏堤，左手一整片湖，右手太阳正一点点掉进山里，整条堤被染成橘红。这个机位是我特意算着光给你挑的，骑过去刚好赶上，别人随手拍真出不来这味儿。', pace: 'mid' },
+      { t: 3900, gap_ms: 360, comp: 'tts', highlight: 'i2', text: '吃的不用愁，奎元馆那碗片儿川，一口下去就懂了，人均三十，本地人自己天天排。', pace: 'mid' },
+      { t: 4300, gap_ms: 360, comp: 'tts', highlight: 'i3', text: '人挤怕了就早起去灵隐的飞来峰，赶在旅行团之前，石窟造像就你一个人看，安静得能听见自己脚步。', pace: 'mid' },
+      { t: 4700, gap_ms: 360, comp: 'tts', highlight: 'i4', text: '压轴这个最不能错过——龙井村满山头春茶刚冒新绿，喝口现采的头春，这绿就这阵子有，过了你今年就赶不上了。', pace: 'mid' },
       { t: 5100, gap_ms: 800, comp: 'user_query', text: '第一个细讲', drill_day: 'i1' },
-      { t: 5400, gap_ms: 420, comp: 'tts', highlight: 'i1', text: '日落这张，下午骑到苏堤，压着光追落日最稳。', pace: 'mid' },
-      { t: 5750, gap_ms: 340, comp: 'tts', highlight: 'i1', text: '天黑了别走，湖滨灯一亮再逛一圈才完整。', pace: 'mid' },
+      { t: 5400, gap_ms: 420, comp: 'tts', highlight: 'i1', text: '这条玩法的命门就两个字：踩点。下午就把车骑到苏堤这头，别急，慢慢往前蹬，让太阳追着你掉，光最软那十几分钟，整条堤就归你了。', pace: 'mid' },
+      { t: 5750, gap_ms: 340, comp: 'tts', highlight: 'i1', text: '太阳下去你也先别急着走，等湖滨那排灯一盏盏亮起来，再绕回去逛一圈，白天和夜里两个西湖一次看够，这趟才算值。', pace: 'mid' },
       { t: 6100, gap_ms: 800, comp: 'user_query', text: '那帮我排个完整三天', travel_back: true },
       { t: 6400, gap_ms: 500, comp: 'toast', text: '完整三天行程已整理，发到你手机了', state_visual: 'done' },
-      { t: 6700, gap_ms: 400, comp: 'tts', text: '完整三天我整理好发你手机了，这种重活交给它，我陪你挑好玩的就行。', pace: 'mid' }
+      { t: 6700, gap_ms: 400, comp: 'tts', text: '完整三天的表我都给你排好发手机上了，路线时间这种细活我替你算，你只管负责到了哪个点心动一下。', pace: 'mid' }
     ], annotations: []
   };
 })(window);

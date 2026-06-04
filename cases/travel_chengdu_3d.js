@@ -9,7 +9,7 @@
   global.LOONA_CASES = global.LOONA_CASES || {};
   global.LOONA_CASES['travel_chengdu_3d'] = {
     task_id: 'travel_chengdu_3d',
-    title: '成都三日游（修订稿链路）',
+    title: '阶段轮播 · 成都3天（封面+钻取）',
     scene: 'travel',
     source_case: '旅行规划_交付版_v1_修订稿 §4.1 / §7.2',
     default_skin: 'glass',          // glass=分段卡(3段清楚)；可切 aura 看沉浸轮播
@@ -29,7 +29,7 @@
 
       /* 2. 澄清（必填齐 → 列必填✓+选填待补，给"确认/取消"，停等） */
       { t: 600, gap_ms: 320, comp: 'ClarifyCard', card_id: 'clarify', wait_for_user: true,
-        tts: { text: '成都三天记下了。日期、出发地、同行、预算、节奏补不补都行，不补我按轻松城市漫步排。', pace: 'mid' },
+        tts: { text: '成都三天记下了。日期、出发地、几个人、预算、想松想赶，你愿意说我就照着调；不说也没事，我先按最舒服的那种城里慢逛给你铺。', pace: 'mid' },
         content: {
           title: '确认几个槽位',
           question: '必填已给；选填补不补都行，不补我按默认/你平时的来。',
@@ -82,27 +82,27 @@
 
       /* 7. 总览口播：贴人(你定的轻松/城市漫步/中等预算)+ 挑过的 + 天序自然；逐阶段封面聚焦
          文案规则对齐 cortex config/llm_tasks/compose_trip.yaml(summary §87-103) + persona.yaml */
-      { t: 4400, gap_ms: 500, comp: 'tts', text: '成都这三天我替你挑过，闲归闲，每天都埋了个非去不可的点。', pace: 'mid' },
-      { t: 5000, gap_ms: 380, comp: 'tts', highlight: 's1', text: '头两天扎进老城区，把成都的闲味儿一次尝透。', pace: 'mid' },
-      { t: 5400, gap_ms: 380, comp: 'tts', highlight: 's2', text: '压轴那天留给滚滚，这才是来成都的招牌。', pace: 'mid' },
+      { t: 4400, gap_ms: 500, comp: 'tts', text: '别看叫三天慢逛，我可没真让你瞎晃——每天都给你藏了个我笃定你会记一辈子的点，到了你就懂了。', pace: 'mid' },
+      { t: 5000, gap_ms: 380, comp: 'tts', highlight: 's1', text: '前头这两天，我把你按在老城区里哪也不许去，就泡着——成都那股子懒洋洋的味儿，得这么慢慢咂才出得来。', pace: 'mid' },
+      { t: 5400, gap_ms: 380, comp: 'tts', highlight: 's2', text: '最后这天我特意空出来给滚滚——大老远来成都不去看它一眼，回去你得后悔，这事儿我替你拍板了。', pace: 'mid' },
 
       /* 8. 二阶段·下钻：说「看第二天」(也可点封面卡) → View Transition 形变进该阶段逐天详情，定位 Day 2 */
       { t: 5900, gap_ms: 800, comp: 'user_query', text: '看看第二天具体怎么走', drill_day: 'd2' },
-      { t: 6200, gap_ms: 420, comp: 'tts', highlight: 'd2', text: '这天走人文，武侯祠先去，三国迷来成都这是头一站。', pace: 'mid' },
-      { t: 6500, gap_ms: 320, comp: 'tts', highlight: 'd2', text: '出来就是锦里，红灯笼一条街，小吃边走边扫。', pace: 'mid' },
-      { t: 6800, gap_ms: 360, comp: 'tts', highlight: 'd2', text: '下午杜甫草堂，诗圣住过的院子，安静还出片。', pace: 'mid' },
+      { t: 6200, gap_ms: 420, comp: 'tts', highlight: 'd2', text: '这天头一脚我让你迈进武侯祠——你想想，诸葛亮就埋在这院子里，红墙夹道的那条小路一走，三国那些人一下就活过来了，趁早上人少进去最有感觉。', pace: 'mid' },
+      { t: 6500, gap_ms: 320, comp: 'tts', highlight: 'd2', text: '一出门就是锦里，门挨着门，正好饿了——红灯笼底下边走边吃，一路扫过去当午饭，省得你再找馆子。', pace: 'mid' },
+      { t: 6800, gap_ms: 360, comp: 'tts', highlight: 'd2', text: '吃饱了拐去杜甫草堂歇腿，就是写「茅屋为秋风所破歌」那位的院子，竹影一片特别静，随手一拍都好看，下午正好缓一缓。', pace: 'mid' },
 
       /* 9. 同阶段左右切天：切到 Day 1（仍在二阶段，只滑动聚焦不形变） */
       { t: 7200, gap_ms: 700, comp: 'user_query', text: '那第一天呢', drill_day: 'd1' },
-      { t: 7500, gap_ms: 380, comp: 'tts', highlight: 'd1', text: '头一天宽窄巷子热身，老成都的院子加地道小吃管够。', pace: 'mid' },
-      { t: 7800, gap_ms: 340, comp: 'tts', highlight: 'd1', text: '下午鹤鸣茶社一碗盖碗茶配采耳，巴适得板。', pace: 'mid' },
+      { t: 7500, gap_ms: 380, comp: 'tts', highlight: 'd1', text: '落地这天不折腾你，先溜达进宽窄巷子热个身——老成都的青砖院子一进一出，街边小吃也管够，逛累了就吃，吃饱了再逛。', pace: 'mid' },
+      { t: 7800, gap_ms: 340, comp: 'tts', highlight: 'd1', text: '压轴是下午的鹤鸣茶社——竹椅往树荫底下一靠，盖碗茶续着，喊个师傅采耳，那根长铜钎在耳朵里轻轻一颤，酥麻得你直眯眼往下出溜，啥旅途的累一下全没了，这味儿别的城市真给不了。', pace: 'mid' },
 
       /* 10. 返回总览 → 再跨阶段下钻熊猫那天 */
       { t: 8200, gap_ms: 800, comp: 'user_query', text: '回到整体看看', travel_back: true },
-      { t: 8600, gap_ms: 500, comp: 'tts', text: '行，退回来看整体。', pace: 'mid' },
+      { t: 8600, gap_ms: 500, comp: 'tts', text: '行，往后退一步，咱整体再瞅瞅。', pace: 'mid' },
       { t: 9000, gap_ms: 800, comp: 'user_query', text: '熊猫那天看什么', drill_day: 'd3' },
-      { t: 9300, gap_ms: 420, comp: 'tts', highlight: 'd3', text: '熊猫得赶早去，早上滚滚最闹，抱树啃笋全在这会儿。', pace: 'mid' },
-      { t: 9600, gap_ms: 320, comp: 'tts', highlight: 'd3', text: '看完太古里收尾，那块熊猫爬墙的裸眼3D大屏顺手出片。', pace: 'mid' }
+      { t: 9300, gap_ms: 420, comp: 'tts', highlight: 'd3', text: '看熊猫这事我把闹钟都替你拨早了——就早上那一阵滚滚最来劲，抱着树往上爬、瘫在地上啃笋，蠢萌得人想笑；太阳一晒它们全躺平睡死，去晚了只能看一坨白团子，所以这天必须赶早，记得提前把预约确认好。', pace: 'mid' },
+      { t: 9600, gap_ms: 320, comp: 'tts', highlight: 'd3', text: '看够了就溜达去太古里收尾，逛吃顺便离车站近、好返程；那块熊猫爬墙的裸眼3D大屏别错过，站底下随手一拍，这趟成都的封面照就有了。', pace: 'mid' }
       /* 两阶段：阶段封面总览 → 说某天/点封面 翻转进逐天详情 → 同阶段左右切天 / 返回总览 / 跨阶段再下钻 */
     ],
     annotations: []

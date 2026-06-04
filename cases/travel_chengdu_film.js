@@ -5,7 +5,7 @@
 (function (g) {
   g.LOONA_CASES = g.LOONA_CASES || {};
   g.LOONA_CASES['travel_chengdu_film'] = {
-    task_id: 'travel_chengdu_film', title: '成都5天 · 完整叙事短片（一口气看完）', scene: 'travel', default_skin: 'glass',
+    task_id: 'travel_chengdu_film', title: '完整叙事短片 · 成都5天（无交互·一口气看完）', scene: 'travel', default_skin: 'glass',
     decision_record: { request_type: 'task', primary_need: '带爸妈玩成都5天', granularity: 'narrative', evidence_level: 'E1', action_risk: 'R0', output_mode: 'document', tool_plan: 'query', confirmation_required: false },
     events: [
       { t: 0, gap_ms: 0, comp: 'user_query', text: '成都5天，带爸妈' },

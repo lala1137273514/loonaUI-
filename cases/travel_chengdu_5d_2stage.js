@@ -4,7 +4,7 @@
 (function (g) {
   g.LOONA_CASES = g.LOONA_CASES || {};
   g.LOONA_CASES['travel_chengdu_5d_2stage'] = {
-    task_id: 'travel_chengdu_5d_2stage', title: '成都五日游 · 两阶段（无选方案）', scene: 'travel', default_skin: 'glass',
+    task_id: 'travel_chengdu_5d_2stage', title: '两阶段 · 成都5天（无选方案·确认即排）', scene: 'travel', default_skin: 'glass',
     decision_record: { request_type: 'task', primary_need: '排成都五天', granularity: 'by_segment', evidence_level: 'E1', action_risk: 'R0', output_mode: 'document', tool_plan: 'query', confirmation_required: false },
     events: [
       /* ===== 阶段① 澄清确认（不给方案选择，确认即开排） ===== */
@@ -50,8 +50,8 @@
       /* TTS-2 四段式（与三阶段版同文案，音频复用）：beat 跟段落轮播聚焦 采耳=茶馆(s2)/吃=市井(s1)/周边(s3)/收尾引导 */
       { t: 2500, gap_ms: 500, comp: 'tts', highlight: 's2', text: '这趟我最想让你爸妈尝的，是成都那股巴适劲儿——挑个有太阳的下午，泡进人民公园的竹椅里，喝盖碗茶、嗑瓜子，让师傅拿那根长铜钎给你采个耳，酥麻得人直眯眼、能笑出声。周围全是摆龙门阵的本地大爷，那股松弛别的城市真学不来，我特意搁在中间一天，让你们走累了彻底松一下。', pace: 'mid' },
       { t: 3000, gap_ms: 420, comp: 'tts', highlight: 's1', text: '吃就更不用操心，玉林路那几家苍蝇馆子是我翻出来本地人排队的、不是网红店，傍晚越坐越热闹，陪二老点几个家常菜、喝口小酒，巴适得很。', pace: 'mid' },
-      { t: 3400, gap_ms: 420, comp: 'tts', highlight: 's3', text: '逛够了市区，后头带他们往周边透气——都江堰看看两千年还在淌的水，熊猫基地撞上滚滚啃竹子，不爬高、不赶路，随手一拍都好看。', pace: 'mid' },
-      { t: 3800, gap_ms: 0, comp: 'tts', text: '光第一天我就给你塞了三个地道去处，还掐着点排好了先去哪、晌午在哪歇脚——想看我咋给爸妈安排的，说声“第一天”，我一处一处讲给你听。', pace: 'mid' },
+      { t: 3400, gap_ms: 420, comp: 'tts', highlight: 's3', text: '市区泡够了，我特意留两天带他们往周边透口气。最值的是都江堰那湾水，两千年了还在哗哗淌，全程平路、一级台阶都不用爬，叔叔阿姨腿脚再不利索也走得动。熊猫基地再撞上滚滚啃竹子，胖墩墩的，随手一拍都好看。', pace: 'mid' },
+      { t: 3800, gap_ms: 0, comp: 'tts', text: '别看光头一天，我就给你爸妈藏了仨地道去处，压轴那个最得意，是我特意留到最后揭的。想知道我咋给二老安排的，喊我一声“第一天”，我一处一处摆给你听。', pace: 'mid' },
 
       /* 钻取（同段滑动·跨段翻转）+ 返回 + 保存确认门 */
       { t: 0, gap_ms: 900, comp: 'user_query', text: '第一天怎么安排', drill_day: 'd1' },

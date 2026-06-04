@@ -5,7 +5,7 @@
 (function (g) {
   g.LOONA_CASES = g.LOONA_CASES || {};
   g.LOONA_CASES['travel_chengdu_5d'] = {
-    task_id: 'travel_chengdu_5d', title: '成都五日游 · 三阶段', scene: 'travel', default_skin: 'glass',
+    task_id: 'travel_chengdu_5d', title: '三阶段 · 成都5天（澄清→选方案→钻取）', scene: 'travel', default_skin: 'glass',
     decision_record: { request_type: 'task', primary_need: '排成都五天', granularity: 'by_segment', evidence_level: 'E1', action_risk: 'R0', output_mode: 'document', tool_plan: 'query', confirmation_required: false },
     events: [
       /* ===== 阶段① 澄清 ===== */
@@ -78,7 +78,7 @@
       { t: 0, gap_ms: 900, comp: 'user_query', text: '第二天呢', drill_day: 'd2' },
       { t: 300, gap_ms: 400, comp: 'tts', highlight: 'd2', text: '这天接着逛吃，王牌是太古里里头藏的大慈寺——千年古寺的红墙挨着一线潮牌店，香火味混着咖啡香，这反差全成都最出片，给爸妈拍照绝了。上午先去东郊记忆，老厂房改的文艺街区慢逛不累；晚上钻香香巷，钵钵鸡、蛋烘糕一条街扫过去，当宵夜正好。', pace: 'mid' },
       { t: 0, gap_ms: 900, comp: 'user_query', text: '茶馆那天看看', drill_day: 'd3' },
-      { t: 300, gap_ms: 400, comp: 'tts', highlight: 'd3', text: '这一天是我整趟最想让你爸妈过的——啥也不安排，专门留来歇。下午钻进人民公园的鹤鸣茶社，挑张竹椅往树荫下一坐，几块钱续一下午盖碗茶，嗑着瓜子看一园子老茶客摆龙门阵。重头是采耳：师傅那套长铜钎、小刷子、音叉，在耳朵里轻轻一颤，酥麻得人直眯眼、忍不住笑出声，这手艺别的城市真偷不走，爸妈准念叨一路。晌午就近吃顿家常，傍晚茶喝舒坦了，溜达去锦里看红灯笼一盏盏亮起来——这天就图一个不赶不慌。', pace: 'mid' },
+      { t: 300, gap_ms: 400, comp: 'tts', highlight: 'd3', text: '说说这天到底咋个歇法——我故意一个景点都没塞。中午公园边随便扒拉口家常，下午就泡死在鹤鸣茶社那张竹椅上：盖碗茶几块钱能续一下午，师傅拎着铜壶满场转，谁的水浅了远远一扬手就给你冲满，瓜子嗑着、太阳晒着，一整园子大爷的龙门阵当背景音。采耳就在这当口给你们安排上，舒坦得能眯着打个盹。等茶喝透了天也擦黑，再溜达去锦里看红灯笼一盏盏亮——一天就干这么点事，要的就是这份不赶不慌。', pace: 'mid' },
       { t: 0, gap_ms: 900, comp: 'user_query', text: '周边那两天怎么走', drill_day: 'd4' },
       { t: 300, gap_ms: 400, comp: 'tts', highlight: 'd4', text: '周边这两天带爸妈彻底放松。头一天去都江堰，看两千年还在哗哗淌的岷江水，全程平路、一级台阶都不用爬，逛累了钻灌县古城吃顿便饭、南桥上吹吹风就回。隔天压轴交给熊猫基地，赶早去最闹热，正撞上滚滚抱着竹子啃、从树坡上骨碌下来，胖墩墩的样子爸妈能看一上午，这趟下来准说没白来。', pace: 'mid' },
       { t: 0, gap_ms: 900, comp: 'user_query', text: '行，回到整体', travel_back: true },
