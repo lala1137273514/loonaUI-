@@ -118,7 +118,7 @@
     },
     _setBackBtn: function (on, label) {
       if (this.refs.carouselBack) this.refs.carouselBack.classList.toggle('hidden', !on);
-      if (this.refs.carouselTitle) this.refs.carouselTitle.textContent = on ? ('旅行规划 · ' + (label || '')) : '旅行规划';
+      if (this.refs.carouselTitle) this.refs.carouselTitle.textContent = on ? ('旅行规划 · ' + (label || '')) : (label || '旅行规划');
     },
     _carouselShowing: function () { return !!(this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden')); },
     _showCarousel: function (on) {
@@ -207,7 +207,7 @@
       } else if (res.action === 'focus') {
         this._carousel.focusCarouselItem(res.item_idx);
       }
-      this._setBackBtn(false);
+      this._setBackBtn(false, res.carousel && res.carousel.title);
       this._showCarousel(true);
       if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 轮播在场字幕放 2 行（长口播多显）   // 结果在场 → 字幕 1 行
       this._lastCardEv = ev;

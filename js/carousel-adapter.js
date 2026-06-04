@@ -23,6 +23,7 @@
       photo: o.photo || null, reminder: o.reminder || null,
       nodes: o.nodes || null, location: o.location || null,
       tags: o.tags || null, hook: o.hook || null, rows: o.rows || null, rec: o.rec || null,
+      event_date: o.event_date || null, event_start_sort: o.event_start_sort == null ? null : o.event_start_sort,
       raw: o.raw || {}, _id: o.id || null
     };
   }
@@ -56,7 +57,8 @@
     var c = ev.content || {}, items = (c.items || []).map(function (it, i) {
       return mkItem(i + 1, 'search', {
         id: it.id, title: it.title, photo: it.image,
-        summary: it.summary || it.lead, subtitle: it.source, meta: it.time, raw: it
+        summary: it.summary || it.lead, subtitle: it.source, meta: it.time,
+        link: it.link || it.url, priority: it.priority, raw: it
       });
     });
     return wrap('web_search', c.title || '搜索结果', items);
@@ -65,7 +67,7 @@
     var c = ev.content || {}, it = c.item || c;
     return wrap('web_search', '搜索结果', [mkItem(1, 'search', {
       id: it.id, title: it.title, photo: it.image, summary: it.lead || it.summary,
-      subtitle: it.source, meta: it.time, raw: it
+      subtitle: it.source, meta: it.time, link: it.link || it.url, priority: it.priority, raw: it
     })]);
   }
 
@@ -85,12 +87,19 @@
 
   function buildCalendar(ev) {
     var c = ev.content || {}, items = (c.rows || []).map(function (r, i) {
+      var meta = r.meta || r.time || r.lead;
+      if (c.source_tool_name === 'list_events' && (r.raw_start || r.raw_end)) meta = [r.raw_start, r.raw_end].filter(Boolean).join(' - ');
       return mkItem(i + 1, 'event', {
-        id: r.id, title: r.title, meta: r.lead, location: r.sub, subtitle: r.sub, raw: r
+        id: r.id, title: r.title, meta: meta, location: r.location || r.sub,
+        subtitle: r.organizer || r.subtitle || null,
+        priority: r.priority || (r.badge && r.badge.text),
+        event_date: r.event_date,
+        event_start_sort: r.event_start_sort,
+        raw: { start: r.raw_start ? { dateTime: r.raw_start } : null, end: r.raw_end ? { dateTime: r.raw_end } : null, location: r.location || r.sub, row: r }
       });
     });
-    // source_tool_name 故意不用 'list_events'（那会触发按天分组、而 case 无日期）→ 用 calendar，逐条出 event 卡
-    return wrap('calendar', c.title || '日程', items);
+    // 旧日程 case 无日期，继续逐条出 event 卡；Cortex 范式 case 显式声明 list_events 后按天聚合。
+    return wrap(c.source_tool_name === 'list_events' ? 'list_events' : 'calendar', c.title || '日程', items);
   }
 
   function buildListCard(ev) {
