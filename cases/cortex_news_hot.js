@@ -135,4 +135,106 @@
     ],
     annotations: []
   };
+
+  global.LOONA_CASES['cortex_news_hot_v3'] = {
+    task_id: 'cortex_news_hot_v3',
+    title: '新闻 · Cortex热点播报 V3',
+    scene: 'news',
+    source_case: 'Cortex web_ui · web_search / news_hot_natural · V3',
+    default_skin: 'glass',
+    decision_record: {
+      request_type: 'query',
+      primary_need: '最近热点新闻，先给英文入口主线，详情按分段讲解',
+      granularity: 'segmented',
+      evidence_level: 'E3',
+      action_risk: 'R0',
+      output_mode: 'voice_card',
+      tool_plan: 'query',
+      confirmation_required: false
+    },
+    events: [
+      { t: 0, gap_ms: 0, comp: 'user_query', text: '最近有什么热点新闻吗' },
+      { t: 250, gap_ms: 280, comp: 'agent_step', internal: true, label: 'ROUTER',
+        decision: 'router → NEW；命中 web_search；V3 使用英文 TTS 与英文新闻卡片，先入口总结，再由用户追问触发详情。', fields: ['scene:news', 'tool:web_search', 'entry-mode', 'english-copy'] },
+      { t: 600, gap_ms: 320, comp: 'tts', text: 'I will scan the latest headlines first, then group them by what actually matters instead of reading search results one by one.', pace: 'mid' },
+      { t: 950, gap_ms: 260, comp: 'toast', state: 'searching', dismiss_on: 'card' },
+      { t: 1250, gap_ms: 220, comp: 'agent_step', internal: true, label: 'TOOL_CALL',
+        decision: 'web_search(query=recent hot news, time_range=w) → 返回 10 条；前台标签显示新闻内容分类，内部按图文、数据、无图要点、引用表态和详情分段选择展示模板。', fields: ['source_tool_name:web_search', 'topic-category', 'typed-news', 'present_mode:entry_then_section'] },
+      { t: 2500, gap_ms: 1250, comp: 'NewsList', card_id: 'news_entry_v3',
+        content: { title: 'Hot News Brief', intro: 'Topics: Politics · Technology · Agriculture · Economy · Policy', items: [
+          Object.assign({}, ITEMS.n1, {
+            title: 'Iran Deal Breaks Down Hours Before Announcement',
+            source: 'NTDTV',
+            summary: 'A near-final agreement fell apart, pushing geopolitical risk back into focus.',
+            priority: 'Politics', card_type: 'image_story', type_label: 'Politics', source_label: 'Source'
+          }),
+          Object.assign({}, ITEMS.n3, {
+            title: 'Used Phone Recycling Prices Swing as Memory Chips Tighten',
+            source: 'CCTV Finance',
+            summary: 'Shortage pressure is reaching device resale and recycling channels.',
+            priority: 'Technology', card_type: 'data_metric', type_label: 'Technology', source_label: 'Source',
+            metric: { value: '+18%', label: 'High-end resale price volatility', trend: 'Chip shortage pressure is moving downstream' },
+            bullets: ['Recyclers are adjusting quotes more frequently', 'Consumer electronics now reflect upstream supply stress']
+          }),
+          {
+            id: 'n6',
+            title: 'Heat and Logistics Pressure Crop Supply Outlook',
+            source: 'AgriWatch',
+            time: '2 hours ago',
+            priority: 'Agriculture',
+            link: 'https://www.reuters.com/',
+            summary: 'Weather volatility and shipping delays are pushing food-supply risk back into the market discussion.',
+            card_type: 'no_image_points',
+            type_label: 'Agriculture',
+            source_label: 'Source',
+            bullets: ['Heat risk is affecting crop-yield expectations', 'Logistics delays could keep food-price pressure elevated']
+          },
+          {
+            id: 'n5',
+            title: 'IMF Chief Says Global Trade Remains Highly Uncertain',
+            source: 'Reuters',
+            time: '3 hours ago',
+            priority: 'Economy',
+            link: 'https://www.reuters.com/',
+            summary: 'International institutions remain cautious on trade friction and growth.',
+            card_type: 'quote_statement',
+            type_label: 'Economy',
+            source_label: 'Source',
+            quote: 'Global trade is still in a highly uncertain period.',
+            speaker: 'IMF Managing Director · trade and growth outlook'
+          },
+          Object.assign({}, ITEMS.n4, {
+            title: 'U.S. Pause on Taiwan Arms Sale Raises Credibility Questions',
+            source: 'YouTube',
+            summary: 'The story matters less as a single policy move and more as a signal to allies.',
+            priority: 'Policy', card_type: 'no_image_points', type_label: 'Policy', source_label: 'Source',
+            bullets: ['Watch whether the White House or Congress reopens the issue', 'The broader risk is confidence in long-term security commitments']
+          })
+        ] } },
+      { t: 3800, gap_ms: 520, comp: 'tts', text: 'My overall read is that today’s headlines cover politics, technology, agriculture, economy, and policy. The strongest thread is still risk moving from headlines into markets and supply chains.', pace: 'mid' },
+      { t: 4450, gap_ms: 440, comp: 'tts', text: 'The first story is the one I would watch most closely. A deal failing right before announcement usually creates a sharper market reaction than a negotiation that was never close.', highlight: 'n1', pace: 'mid' },
+      { t: 5050, gap_ms: 420, comp: 'tts', text: 'The recycling-price story is useful because it turns an abstract chip shortage into a concrete downstream signal: resale channels are already repricing risk.', highlight: 'n3', pace: 'mid' },
+      { t: 5650, gap_ms: 420, comp: 'tts', text: 'The agriculture story is worth separating out because weather and logistics pressure can feed directly into food prices, even when it is not the loudest headline.', highlight: 'n6', pace: 'mid' },
+      { t: 6250, gap_ms: 420, comp: 'tts', text: 'The economy item is not a dramatic event, but it matters because it frames how institutions are judging trade and growth risk.', highlight: 'n5', pace: 'mid' },
+      { t: 6850, gap_ms: 500, comp: 'tts', text: 'The policy story is less about one announcement and more about credibility. I would watch whether officials follow up with a clear signal.', highlight: 'n4', pace: 'mid' },
+      { t: 7350, gap_ms: 500, comp: 'tts', text: 'So my recommendation is: start with the political lead story, then compare technology, agriculture, and economy signals to see where pressure is becoming visible.', pace: 'mid' },
+      { t: 7900, gap_ms: 650, comp: 'user_query', text: '展开讲讲第一条，美伊协议破局那条' },
+      { t: 8200, gap_ms: 280, comp: 'agent_step', internal: true, label: 'FOLLOWUP',
+        decision: '用户指定第一条新闻；不自动切换其他卡片，复用 n1 进入英文分段详情。', fields: ['selected:n1', 'followup:detail', 'same-news-card-component'] },
+      { t: 8700, gap_ms: 620, comp: 'NewsList', card_id: 'news_detail_v3',
+        content: { title: 'Detail: Iran Deal Breakdown', intro: 'Same news card component · Background, facts, numbers, impact', items: [
+          { id: 'n1_bg_v3', title: 'Background: A near-final deal suddenly moved back into dispute', source: 'NTDTV', time: '6 days ago', priority: 'Background', source_label: 'Source', summary: 'The important part is not only that talks failed. It is that markets had briefly started to price in a cooler scenario, which makes the reversal more sensitive.', detail_points: ['Expectation: the deal appeared close enough to announce', 'Market gap: a late reversal can trigger a stronger risk reaction'] },
+          { id: 'n1_fact_v3', title: 'Facts: The core dispute returned to uranium handling and verification', source: 'NTDTV', time: '6 days ago', priority: 'Facts', source_label: 'Source', summary: 'The sticking points are practical: what happens to enriched uranium, how inspections are enforced, and whether both sides can publicly accept the political cost.', detail_points: ['Uranium handling: determines whether the agreement can be executed', 'Verification: shapes whether the deal is credible after signing'] },
+          { id: 'n1_number_v3', title: 'Numbers to watch: nuclear material, sanctions timing, and energy prices', source: 'NTDTV', time: '6 days ago', priority: 'Numbers', source_label: 'Source', summary: 'The follow-up signals should be concrete rather than rhetorical: material quantities, sanction-relief timelines, and immediate reactions in oil, gold, and the dollar.', detail_points: ['Nuclear material: look for verifiable quantities and deadlines', 'Assets: oil, gold, and the dollar will show risk pricing first'] },
+          { id: 'n1_impact_v3', title: 'Impact: Short-term risk pricing first, medium-term negotiation risk later', source: 'NTDTV', time: '6 days ago', priority: 'Impact', source_label: 'Source', summary: 'If the announcement is merely delayed, the effect may stay short-lived. If pressure escalates, energy, shipping, defense, and regional security expectations all need repricing.', detail_points: ['Short term: energy and safe-haven assets move first', 'Medium term: watch whether talks restart or proxy conflict rises'] }
+        ] } },
+      { t: 9100, gap_ms: 420, comp: 'tts', highlight: 'n1_bg_v3', text: 'For background, this was not a negotiation that had no chance. It appeared close, then moved back to the most sensitive unresolved conditions.', pace: 'mid' },
+      { t: 9750, gap_ms: 420, comp: 'tts', highlight: 'n1_fact_v3', text: 'The core facts are about implementation: uranium handling, inspection terms, and whether either side can accept the political cost of making the deal public.', pace: 'mid' },
+      { t: 10400, gap_ms: 420, comp: 'tts', highlight: 'n1_number_v3', text: 'The numbers I would watch are nuclear-material commitments, the sanctions timeline, and the first reaction in oil, gold, and the dollar.', pace: 'mid' },
+      { t: 11050, gap_ms: 420, comp: 'tts', highlight: 'n1_impact_v3', text: 'My view is that the short-term impact shows up first in risk sentiment. The medium-term question is whether talks restart or regional proxy conflict heats up again.', pace: 'mid' },
+      { t: 11600, gap_ms: 240, comp: 'agent_step', internal: true, label: 'DECISION_RECORD',
+        decision: 'V3 只读搜索 R0；英文 TTS/卡片；入口使用多模板新闻卡，详情由用户追问触发并复用新闻卡片组件。', fields: ['query:R0', 'typed-card', 'english-copy', 'user-triggered-detail'] }
+    ],
+    annotations: []
+  };
 })(window);

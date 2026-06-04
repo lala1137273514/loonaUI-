@@ -131,4 +131,123 @@
     ],
     annotations: []
   };
+
+  global.LOONA_CASES['cortex_mail_priority_v3'] = {
+    task_id: 'cortex_mail_priority_v3',
+    title: '邮件 · Cortex重要邮件播报 V3',
+    scene: 'email',
+    source_case: 'Cortex web_ui · get_mail_list / mail_auth_check · V3',
+    default_skin: 'glass',
+    decision_record: {
+      request_type: 'query',
+      primary_need: '汇报最近收到的邮件，英文 brief 后直接给业务回复草稿',
+      granularity: 'segmented',
+      evidence_level: 'E4',
+      action_risk: 'R1',
+      output_mode: 'voice_card',
+      tool_plan: 'read_private_data',
+      confirmation_required: true
+    },
+    events: [
+      { t: 0, gap_ms: 0, comp: 'user_query', text: '汇报一下我最近收到的邮件，重要的先说' },
+      { t: 250, gap_ms: 280, comp: 'agent_step', internal: true, label: 'ROUTER',
+        decision: 'router → NEW；命中 get_mail_list；V3 使用英文 TTS 与英文邮件卡片，最后产出待确认回复草稿。', fields: ['scene:email', 'tool:get_mail_list', 'business-mail', 'draft-confirm'] },
+      { t: 600, gap_ms: 320, comp: 'tts', text: 'I will review your latest inbox first, then separate the messages that need action from routine updates and low-value mail.', pace: 'mid' },
+      { t: 950, gap_ms: 260, comp: 'toast', state: 'reading', dismiss_on: 'card' },
+      { t: 1200, gap_ms: 220, comp: 'agent_step', internal: true, label: 'TOOL_CALL',
+        decision: 'get_mail_list(label:INBOX, max_results=20) → 返回 20 封；按业务往来、同事协作、商务合同和低价值信息归类。', fields: ['source_tool_name:get_mail_list', 'business-mail', 'present_mode:brief_card'] },
+      { t: 2500, gap_ms: 1280, comp: 'ListCard', card_id: 'mail_attention_v3', visual_state: 'active',
+        content: {
+          source_tool_name: 'get_mail_list',
+          title: 'Email Brief',
+          status: { text: '4 need replies · 9 low value', kind: 'ok' },
+          rows: [
+            { id: 'mail_summary_v3', title: 'Email brief: 20 new messages', card_type: 'brief',
+              sub: 'Three messages need your attention: partner scheduling, review-deck decisions, and contract sign-off.',
+              summary: '3 need action; 8 are routine updates; 9 are marketing or low-value messages.',
+              metrics: [
+                { label: 'Need action', value: '3', kind: 'hot' },
+                { label: 'Routine', value: '8', kind: 'muted' },
+                { label: 'Low value', value: '9', kind: 'muted' }
+              ],
+              attention_title: 'Needs attention',
+              attention_count_text: '3 emails',
+              attention_items: [
+                { title: 'Partner request · Galaxy Retail', summary: 'Confirm launch timing and budget wording.' },
+                { title: 'Colleague decision · Zhou Yue', summary: 'Approve review metrics and rollout pace.' },
+                { title: 'Contract sign-off · Beichen Procurement', summary: 'Check payment-term impact before signing.' }
+              ],
+              badge: { text: 'brief', kind: 'ok' }, right: 'Today' },
+            { id: 'mail_partner_v3', title: 'Galaxy Retail · Joint launch event confirmation',
+              from: 'Li Ran <liran@galaxy-retail.com>', received_at: '2026-06-04 09:42',
+              sub: 'Partner request: Galaxy Retail is waiting for launch timing, joint exposure scope, and budget wording today.',
+              summary: 'Confirm launch timing and budget wording.',
+              from_label: 'From', summary_label: 'Summary', label_separator: ': ',
+              badge: { text: 'Reply', kind: 'p1' }, right: '09:42' },
+            { id: 'mail_colleague_v3', title: 'Zhou Yue · Review deck comments',
+              from: 'Zhou Yue <zhouyue@loona.ai>', received_at: '2026-06-04 11:18',
+              sub: 'Colleague request: Zhou Yue needs your decision on release metrics and the staged rollout plan before review.',
+              summary: 'Approve metrics and rollout plan.',
+              from_label: 'From', summary_label: 'Summary', label_separator: ': ',
+              badge: { text: 'Reply', kind: 'p1' }, right: '11:18' },
+            { id: 'mail_contract_v3', title: 'Beichen Procurement · Contract terms and signature timing',
+              from: 'Chen Qiming <chen.qiming@beichen-procure.com>', received_at: '2026-06-04 14:06',
+              sub: 'Business contract: Beichen updated payment milestones and acceptance attachments, so the delivery impact needs confirmation.',
+              summary: 'Check impact before contract sign-off.',
+              from_label: 'From', summary_label: 'Summary', label_separator: ': ',
+              badge: { text: 'Check', kind: 'ok' }, right: '14:06' },
+            { id: 'mail_low_value_v3', title: 'Subscriptions, promos, and routine CCs',
+              sub: 'Routine and low-value mail: eight regular updates and nine marketing or spam messages are grouped for now.',
+              summary: 'Grouped; no action needed now.',
+              from_label: 'From', summary_label: 'Summary', label_separator: ': ',
+              badge: { text: 'Grouped', kind: 'p2' }, right: 'Multiple', dim: true }
+          ],
+          footer: '<span class="lbl">V3</span> Brief first, then action-ready business emails'
+        } },
+      { t: 3900, gap_ms: 520, comp: 'tts', highlight: 'mail_summary_v3', text: 'You have 20 new emails. Three need your attention, eight are routine updates, and nine look like marketing, ads, or low-value messages.', pace: 'mid' },
+      { t: 4650, gap_ms: 520, comp: 'tts', highlight: 'mail_partner_v3', text: 'The top item is from Galaxy Retail. They are waiting for your confirmation on the joint launch timing, exposure scope, and budget wording, so this one is the most actionable.', pace: 'mid' },
+      { t: 5400, gap_ms: 520, comp: 'tts', highlight: 'mail_colleague_v3', text: 'The second one is from Zhou Yue. She has updated the review deck, but still needs your decision on the release metrics and rollout pace.', pace: 'mid' },
+      { t: 6150, gap_ms: 520, comp: 'tts', highlight: 'mail_contract_v3', text: 'The third one is from Beichen Procurement. The payment milestones and acceptance attachments changed, so I would confirm delivery impact before legal proceeds.', pace: 'mid' },
+      { t: 6900, gap_ms: 480, comp: 'tts', highlight: 'mail_low_value_v3', text: 'I will leave the routine updates and low-value messages grouped unless you want to inspect them later.', pace: 'mid' },
+      { t: 7500, gap_ms: 420, comp: 'tts', highlight: 'mail_partner_v3', text: 'I drafted a reply to the Galaxy Retail email. Please review it and confirm whether you want to send it.', pace: 'mid' },
+      { t: 8020, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_v3', visual_state: 'active',
+        content: {
+          source_tool_name: 'get_mail_list',
+          title: 'Draft Reply',
+          status: { text: 'Pending confirmation', kind: 'ok' },
+          rows: [
+            { id: 'mail_partner_draft_v3', card_type: 'draft', title: 'Draft: Galaxy Retail Reply',
+              from: 'You <you@loona.ai>',
+              to: 'Li Ran <liran@galaxy-retail.com>',
+              draft_subject: 'Re: Joint launch event confirmation',
+              draft_body: 'Hi Li Ran,\nWe can tentatively proceed with next Wednesday morning for the joint launch. I will confirm the exposure scope and budget wording today and send any updates promptly.\nBest,',
+              draft_label: 'AI Draft', from_label: 'From', to_label: 'To', subject_label: 'Subject', label_separator: ': ',
+              confirm_label: 'Send', cancel_label: 'Cancel', status: 'Pending',
+              badge: { text: 'draft', kind: 'ok' }, right: 'Pending' }
+          ],
+          footer: '<span class="lbl">V3</span> Draft is not sent until you confirm'
+        } },
+      { t: 8520, gap_ms: 420, comp: 'tts', text: 'Here is the same draft in a review layout, with message details on the left and the editable draft area on the right.', pace: 'mid' },
+      { t: 9000, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_split_v3', visual_state: 'active',
+        content: {
+          source_tool_name: 'get_mail_list',
+          title: 'Draft Reply · Review Layout',
+          status: { text: 'Pending confirmation', kind: 'ok' },
+          rows: [
+            { id: 'mail_partner_draft_split_v3', card_type: 'draft', layout: 'split', title: 'Draft: Galaxy Retail Reply',
+              from: 'You <you@loona.ai>',
+              to: 'Li Ran <liran@galaxy-retail.com>',
+              draft_subject: 'Re: Joint launch event confirmation',
+              draft_body: 'Hi Li Ran,\nWe can tentatively proceed with next Wednesday morning for the joint launch. I will confirm the exposure scope and budget wording today and send any updates promptly.\nBest,',
+              draft_label: 'AI Draft', from_label: 'From', to_label: 'To', subject_label: 'Subject', label_separator: ': ',
+              confirm_label: 'Send', cancel_label: 'Cancel', status: 'Pending',
+              badge: { text: 'draft', kind: 'ok' }, right: 'Pending' }
+          ],
+          footer: '<span class="lbl">V3</span> Split draft review; still requires confirmation before sending'
+        } },
+      { t: 9700, gap_ms: 240, comp: 'agent_step', internal: true, label: 'DECISION_RECORD',
+        decision: 'V3 只读邮件并生成待确认英文草稿；先展示竖版草稿，再展示左右分栏 review 草稿，发送前必须用户确认。', fields: ['query:R0', 'draft:R1', 'confirm-before-send', 'split-draft', 'english-copy'] }
+    ],
+    annotations: []
+  };
 })(window);

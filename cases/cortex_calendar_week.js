@@ -99,4 +99,52 @@
     ],
     annotations: []
   };
+
+  global.LOONA_CASES['cortex_calendar_week_v3'] = {
+    task_id: 'cortex_calendar_week_v3',
+    title: '日程 · Cortex一周日程播报 V3',
+    scene: 'calendar',
+    source_case: 'Cortex web_ui · list_events / calendar_today · V3',
+    default_skin: 'glass',
+    decision_record: {
+      request_type: 'query',
+      primary_need: '查询今天到接下来一周的日程，英文 brief 和英文逐事件提醒',
+      granularity: 'segmented',
+      evidence_level: 'E4',
+      action_risk: 'R0',
+      output_mode: 'voice_card',
+      tool_plan: 'read_private_data',
+      confirmation_required: false
+    },
+    events: [
+      { t: 0, gap_ms: 0, comp: 'user_query', text: '我今天到接下来一周的日程都有哪些，总结一下' },
+      { t: 250, gap_ms: 280, comp: 'agent_step', internal: true, label: 'ROUTER',
+        decision: 'router → NEW；命中 list_events；V3 使用英文 TTS 与英文日程卡片，逐事件对齐提醒。', fields: ['scene:calendar', 'tool:list_events', 'english-copy', 'per-event'] },
+      { t: 600, gap_ms: 320, comp: 'tts', text: 'I will check your schedule from today through next week and start with the overall shape.', pace: 'mid' },
+      { t: 950, gap_ms: 260, comp: 'toast', state: 'reading', dismiss_on: 'card' },
+      { t: 1250, gap_ms: 220, comp: 'agent_step', internal: true, label: 'TOOL_CALL',
+        decision: 'list_events → 返回 4 条；英文卡片按日期聚合，TTS 逐事件高亮并补充提醒。', fields: ['source_tool_name:list_events', 'calendar-day-card', 'tts_focus:per-event'] },
+      { t: 2500, gap_ms: 1260, comp: 'ListCard', card_id: 'calendar_focus_v3', visual_state: 'active',
+        content: {
+          source_tool_name: 'list_events',
+          title: 'Weekly Schedule',
+          status: { text: '2 days · 4 events', kind: 'ok' },
+          rows: [
+            { id: 'cal_meet_v3', title: 'Meet at conference room', sub: 'Today · Conference room · Organizer: default calendar', lead: '15:30', raw_start: '2026-05-28T15:30:00+08:00', raw_end: '2026-05-28T16:00:00+08:00', event_date: '2026-05-28', event_start_sort: 930, badge: { text: 'Focus', kind: 'p1' }, copy_locale: 'en' },
+            { id: 'cal_trip_today_v3', title: 'Business trip', sub: 'Today · Airport · 2.5 hours after the previous event', lead: '18:30', raw_start: '2026-05-28T18:30:00+08:00', raw_end: '2026-05-28T20:00:00+08:00', event_date: '2026-05-28', event_start_sort: 1110, badge: { text: 'Travel', kind: 'p1' }, copy_locale: 'en' },
+            { id: 'cal_wrap_v3', title: 'Project wrap-up', sub: 'Tomorrow · Online · Afternoon follow-up', lead: '14:30', raw_start: '2026-05-29T14:30:00+08:00', raw_end: '2026-05-29T15:30:00+08:00', event_date: '2026-05-29', event_start_sort: 870, badge: { text: 'Work', kind: 'p1' }, copy_locale: 'en' },
+            { id: 'cal_trip_next_v3', title: 'Business trip', sub: 'Tomorrow · Train station · Evening departure', lead: '20:30', raw_start: '2026-05-29T20:30:00+08:00', raw_end: '2026-05-29T22:00:00+08:00', event_date: '2026-05-29', event_start_sort: 1230, badge: { text: 'Reminder', kind: 'p2' }, copy_locale: 'en' }
+          ],
+          footer: '<span class="lbl">V3</span> English schedule cards; each spoken detail maps to one event'
+        } },
+      { t: 3900, gap_ms: 520, comp: 'tts', text: 'Overall, you have four events across two days: a meeting this afternoon, travel in the evening, then project wrap-up tomorrow afternoon and another trip tomorrow night.', pace: 'mid' },
+      { t: 4450, gap_ms: 340, comp: 'tts', highlight: 'cal_meet_v3', text: 'At three thirty this afternoon, you need to meet in the conference room. It is a short item, but because travel follows later, I would pack the materials before the meeting starts.', pace: 'mid' },
+      { t: 5000, gap_ms: 340, comp: 'tts', highlight: 'cal_trip_today_v3', text: 'At six thirty this evening, you have a business trip to the airport. There are two and a half hours after the meeting, so leave room for traffic and security checks.', pace: 'mid' },
+      { t: 5550, gap_ms: 340, comp: 'tts', highlight: 'cal_wrap_v3', text: 'Tomorrow at two thirty in the afternoon is the project wrap-up. It would be better to review open items in the morning, so you are not rushing right before the session.', pace: 'mid' },
+      { t: 6100, gap_ms: 340, comp: 'tts', highlight: 'cal_trip_next_v3', text: 'Tomorrow at eight thirty in the evening, you have another trip from the train station. Plan dinner and departure time early, and try not to add another heavy meeting that night.', pace: 'mid' },
+      { t: 6600, gap_ms: 240, comp: 'agent_step', internal: true, label: 'DECISION_RECORD',
+        decision: 'V3 只读日程 R0；英文 TTS/卡片；overview 可概括多项，单条 detail 必须一条 TTS 对一个 event ref。', fields: ['query:R0', 'english-copy', 'brief-ok', 'detail:single-ref'] }
+    ],
+    annotations: []
+  };
 })(window);
