@@ -177,11 +177,11 @@
 <script src="cases/cortex_calendar_week.js"></script>
 <script src="cases/email_calendar_workflow.js"></script>
 <script src="cases/restaurant_quiet.js"></script>
-<!-- 旅行规划保留 4 个代表 case（其余下线，文件留存可恢复） -->
+<!-- 旅行规划代表 case -->
 <script src="cases/travel_chengdu_5d.js"></script>
-<script src="cases/travel_xian_solo.js"></script>
+<script src="cases/travel_chengdu_5d_v2.js"></script>
 <script src="cases/travel_dali_friends.js"></script>
-<script src="cases/travel_hangzhou_b.js"></script>
+<script src="cases/travel_dali_friends_v2.js"></script>
 <script src="cases/meeting_action.js"></script>
 <!-- case「立场标签」映射（演示对照用） -->
 <script src="js/case-stance.js"></script>
@@ -275,7 +275,7 @@
 
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_chengdu_5d', 'travel_xian_solo', 'travel_dali_friends', 'travel_hangzhou_b', 'cortex_mail_priority', 'cortex_news_hot', 'cortex_calendar_week', 'companion_chat', 'weather_5d',
+  var ORDER = ['travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2', 'cortex_mail_priority', 'cortex_news_hot', 'cortex_calendar_week', 'companion_chat', 'weather_5d',
     'email_calendar_workflow', 'restaurant_quiet',
     'meeting_action'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })

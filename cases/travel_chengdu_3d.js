@@ -31,13 +31,11 @@
       { t: 600, gap_ms: 320, comp: 'ClarifyCard', card_id: 'clarify', wait_for_user: true,
         tts: { text: '成都三天记下了。日期、出发地、几个人、预算、想松想赶，你愿意说我就照着调；不说也没事，我先按最舒服的那种城里慢逛给你铺。', pace: 'mid' },
         content: {
-          title: '确认几个槽位',
-          question: '必填已给；选填补不补都行，不补我按默认/你平时的来。',
+          title: '成都三日游',
           slots: {
             required: [{ label: '目的地', value: '成都' }, { label: '周期', value: '3 天' }],
-            optional: ['确切日期', '出发地', '同行人', '预算', '节奏', '兴趣/必去']
-          },
-          options: [{ label: '确认' }, { label: '取消' }]
+            optional: ['中等预算', '轻松节奏', '成人同行', '美食优先']
+          }
         } },
       { t: 0, gap_ms: 240, comp: 'user_query', text: '确认（按默认排）' },
 

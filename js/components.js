@@ -439,32 +439,57 @@
     c = c || {}; handlers = handlers || {};
     var body = el('div', 'clr-body');
     if (c.question) body.appendChild(el('div', 'clr-q', esc(c.question)));
-    /* 槽位卡：必填(已自动填充，带值+✓) + 选填(可补的 chip)。卡显示结构化槽位，TTS 另说人话 */
+    /* 双卡模式：已确认(只读信息行，低调) + 待确认(高亮核心问题+选项)。给了 confirmed/ask 即走这套，不显「必填/选填」 */
+    if (c.confirmed && c.confirmed.length) {
+      var cf = el('div', 'clr-confirmed');
+      cf.appendChild(el('div', 'clr-cf-cap', '已确认'));
+      c.confirmed.forEach(function (s) {
+        var row = el('div', 'clr-cf-row');
+        row.appendChild(el('span', 'clr-cf-k', esc(s.label || '')));
+        row.appendChild(el('span', 'clr-cf-v', esc(s.value || (typeof s === 'string' ? s : ''))));
+        cf.appendChild(row);
+      });
+      body.appendChild(cf);
+    }
+    if (c.ask) {
+      var ask = el('div', 'clr-ask-hl');
+      ask.appendChild(el('div', 'clr-ask-cap', esc(c.ask.label || '还想跟你确认一个')));
+      ask.appendChild(el('div', 'clr-ask-q', esc(c.ask.question || '')));
+      if (c.ask.options && c.ask.options.length) {
+        var ao = el('div', 'clr-opts');
+        c.ask.options.forEach(function (o, i) { ao.appendChild(btnFill(o.label || o, i === 0 ? 'primary' : 'ghost', handlers.onOption)); });
+        ask.appendChild(ao);
+      }
+      body.appendChild(ask);
+    }
+    /* 槽位卡：已知(必填已自动填充，值+✓) + 推荐(可补的偏好 chip)。卡显示结构化槽位，TTS 另说人话
+       视觉对齐 Figma「ClarifyCard / segmented」：两段各自成框(已知=实线/推荐=虚线)，标签独占一行 */
     if (c.slots) {
       var sb = el('div', 'clr-slots');
       function slotRow(label, items, kind) {
         if (!items || !items.length) return;
-        var row = el('div', 'clr-slot-row');
-        row.appendChild(el('span', 'clr-slot-lbl', label));
+        var seg = el('div', 'clr-seg ' + (kind === 'filled' ? 'known' : 'sug'));
+        seg.appendChild(el('div', 'clr-seg-lbl', label));
+        var chips = el('div', 'clr-seg-chips');
         items.forEach(function (s) {
           if (kind === 'filled') {
-            var has = s && typeof s === 'object' && s.value;     // 必填：有值=已填(✓)，无值=待填(醒目)
+            var has = s && typeof s === 'object' && s.value;     // 已知：有值=已填(值+✓)，无值=待填(醒目)
             var chip = el('span', 'clr-slot ' + (has ? 'filled' : 'need'));
-            chip.appendChild(el('span', 'cs-k', esc(s.label || s)));
             if (has) { chip.appendChild(el('span', 'cs-v', esc(s.value))); chip.appendChild(el('span', 'cs-ok', '✓')); }
-            else { chip.appendChild(el('span', 'cs-need', '待填')); }
-            row.appendChild(chip);
+            else { chip.appendChild(el('span', 'cs-k', esc(s.label || s))); chip.appendChild(el('span', 'cs-need', '待填')); }
+            chips.appendChild(chip);
           } else {
             var oc = el('span', 'clr-slot opt');
             oc.appendChild(el('span', 'cs-add', '+'));
             oc.appendChild(document.createTextNode(esc(typeof s === 'string' ? s : (s.label || ''))));
-            row.appendChild(oc);
+            chips.appendChild(oc);
           }
         });
-        sb.appendChild(row);
+        seg.appendChild(chips);
+        sb.appendChild(seg);
       }
-      slotRow('必填', c.slots.required, 'filled');
-      slotRow('选填', c.slots.optional, 'opt');
+      slotRow('已知', c.slots.required, 'filled');
+      slotRow('推荐', c.slots.optional, 'opt');
       body.appendChild(sb);
     }
     if (c.options && c.options.length) {

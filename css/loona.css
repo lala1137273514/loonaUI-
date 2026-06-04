@@ -372,18 +372,29 @@ body{font-family:var(--font);background:var(--wb-bg);color:var(--wb-text);-webki
 .clr-badge{background:var(--btn-amber)!important;color:#000}
 /* 澄清槽位卡：必填(已填值+✓) / 选填(可补) chip */
 .clr-slots{display:flex;flex-direction:column;gap:8px;width:100%}
-.clr-slot-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.clr-slot-lbl{font-size:11px;color:var(--t3);flex:0 0 auto;width:28px}
+.clr-seg{display:flex;flex-direction:column;gap:8px;width:100%;padding:10px 12px;border-radius:12px}   /* Figma segmented：每段成框 */
+.clr-seg.known{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}                 /* 已知：实线浅框 */
+.clr-seg.sug{border:1px dashed rgba(255,255,255,.28)}                                                   /* 推荐：虚线框 */
+.clr-seg-lbl{font-size:11px;color:var(--t2);line-height:1.2;width:100%}
+.clr-seg-chips{display:flex;align-items:center;gap:7px;flex-wrap:wrap;width:100%}
 .clr-slot{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
 .clr-slot.filled{background:rgba(255,180,84,.14);border:1px solid rgba(255,180,84,.45)}
-.clr-slot.filled .cs-k{color:var(--t2);font-size:11px}
-.clr-slot.filled .cs-v{color:var(--t0);font-weight:600}
-.clr-slot.filled .cs-ok{color:#7fe0a0;font-size:11px}
+.clr-slot.filled .cs-v{color:var(--amber-1);font-weight:500}     /* 已知值：琥珀金 #ffd47a */
+.clr-slot.filled .cs-ok{color:var(--amber-2);font-size:11px}     /* ✓ 改琥珀 #ffb454，对齐 Figma */
 .clr-slot.opt{background:transparent;border:1px dashed rgba(255,255,255,.28);color:var(--t1);cursor:default}
 .clr-slot.opt .cs-add{color:var(--amber-2);font-weight:700}
 .clr-slot.need{background:rgba(255,180,84,.10);border:1px solid rgba(255,180,84,.7)}   /* 待填的必填槽：醒目琥珀实框 */
 .clr-slot.need .cs-k{color:var(--amber-1);font-weight:600}
 .clr-slot.need .cs-need{color:var(--t2);font-size:11px}
+/* 澄清双卡：已确认(低调只读信息行) + 待确认(琥珀高亮问题) */
+.clr-confirmed{display:flex;flex-direction:column;gap:3px;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.clr-cf-cap{font-size:10.5px;color:var(--t3);letter-spacing:.4px;margin-bottom:1px}
+.clr-cf-row{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.45}
+.clr-cf-k{flex:0 0 auto;min-width:42px;color:var(--t3);font-size:12px}
+.clr-cf-v{color:var(--t1);font-weight:500}
+.clr-ask-hl{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,180,84,.10);border:1px solid rgba(255,180,84,.5);border-left:3px solid var(--btn-amber)}
+.clr-ask-cap{font-size:10.5px;color:var(--amber-1);letter-spacing:.4px}
+.clr-ask-q{font-size:14.5px;font-weight:600;color:var(--t0);line-height:1.45}
 
 /* 卡内高亮（TTS 同步，行级 / 段级，平滑迁移） */
 .row-hl{background:rgba(255,180,84,.12)}

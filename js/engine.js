@@ -371,6 +371,12 @@
     /* ---------- 渲染单个事件 ---------- */
     _renderEvent: function (ev, i, instant) {
       var comp = ev.comp;
+      // 旅行两阶段：带 drill_day/travel_back 的任意事件都驱动轮播——
+      // tts=Loona 主动连讲逐天、user_query=用户点名某天；不再只认 user_query（主动连讲所需）
+      if (this._travelStages && (ev.drill_day || ev.travel_back)) {
+        if (ev.drill_day) this._drill({ day: ev.drill_day, flip: !instant });
+        else this._backToOverview(!instant);
+      }
       if (comp === 'agent_step') { this._renderAgentStep(ev, i); return; }      // 仅侧轨
       if (ev.internal) { this._renderAgentStep(ev, i); return; }
       if (comp === 'MomentCard') { this._renderMoment(ev, instant); return; }   // 叙事流：满屏一图一刻
@@ -401,10 +407,7 @@
 
       switch (comp) {
         case 'user_query':
-          this._setSubtitle(ev.text, true, 'user');   // ASR = 对话，走底部，与 TTS 同位（先用户后 Loona）
-          // 旅行两阶段：用户"说某一天"→下钻；"返回总览"→回封面（点封面卡走 onCardClick）
-          if (this._travelStages && ev.drill_day) this._drill({ day: ev.drill_day, flip: !instant });
-          else if (this._travelStages && ev.travel_back) this._backToOverview(!instant);
+          this._setSubtitle(ev.text, true, 'user');   // ASR = 对话，走底部；下钻/返回已在 _renderEvent 顶部统一驱动
           break;
         case 'pop_small':
           this._pushPop(UI.popSmall({ role: ev.role || 'status', text: ev.text, state_visual: ev.state_visual }));
