@@ -49,8 +49,7 @@
       head.appendChild(el('label', null, '事件 #' + (idx + 1) + ' / ' + this.engine.events.length + '　·　' + esc(ev.comp) + (ev.internal ? '（侧轨）' : '')));
       box.appendChild(head);
 
-      /* 链路增删改 + 事件↔契约映射（控制台核心） */
-      this._chainOps(box, idx);
+      /* 链路增删改按钮已下线（评审态聚焦看/评，不编辑链路）；保留事件↔契约映射 */
       if (global.LoonaConsole && LoonaConsole.contractPanel) {
         var sc = this._section('事件 ↔ 真实 agent 调用契约');
         sc.appendChild(LoonaConsole.contractPanel(ev, this.engine.caseObj));

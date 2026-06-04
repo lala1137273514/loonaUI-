@@ -16,6 +16,7 @@
       this.tiles = []; this.tileEls = []; this.curNode = -1;
       var self = this;
       engine.onStep = function (idx) { self._onStep(idx); };
+      window.addEventListener('resize', function () { self._applyScale(); });
       return this;
     },
 
@@ -25,51 +26,58 @@
       this.engine.storyboardMode = true;
       this.tiles = this.engine.buildStoryboard();
       this._renderFeed();
+      this._applyScale();
       this._renderSummary();
       this._renderActivity();
       this.curNode = -1;
       this._renderNodeThread(-1);
+      if (this.tiles.length) this.engine.seekTo(this.tiles[0].idx);   // 实时播放器显示首帧
     },
 
     _renderFeed: function () {
       var feed = this.refs.feed, self = this;
       feed.innerHTML = ''; this.tileEls = [];
       this.tiles.forEach(function (t) {
-        var tile = el('div', 'sb-tile' + (t.agent ? ' sb-agent' : ''));
+        var tile = el('div', 'sb-tile');
         tile.dataset.idx = t.idx;
         var head = el('div', 'sb-thead');
         head.appendChild(el('span', 'sb-tn', '#' + (t.idx + 1)));
         head.appendChild(el('span', 'sb-tlabel', esc(t.label || t.comp)));
         var badge = el('span', 'sb-cmt'); head.appendChild(badge); tile._badge = badge;
         tile.appendChild(head);
-        if (t.agent) {
-          var ab = el('div', 'sb-agentbox');
-          ab.appendChild(el('div', 'sb-agentlb', '⚙ ' + esc(t.agentLabel || 'AGENT')));
-          if (t.agentDecision) ab.appendChild(el('div', 'sb-agentdec', esc(t.agentDecision)));
-          if (t.agentFields && t.agentFields.length) {
-            var f = el('div', 'sb-agentfields');
-            t.agentFields.forEach(function (x) { f.appendChild(el('span', 'chip', esc(x))); });
-            ab.appendChild(f);
-          }
-          tile.appendChild(ab);
-        } else {
-          var screen = el('div', 'sb-screen' + (t.empty ? ' sb-empty' : ''));
-          if (t.dom) screen.appendChild(t.dom);
-          tile.appendChild(screen);
-          if (t.text) tile.appendChild(el('div', 'sb-cap', esc(t.text)));
-        }
+        if (t.userContext) tile.appendChild(el('div', 'sb-userctx', '🗣 ' + esc(t.userContext)));   // 触发这帧的用户提问
+        var frame = el('div', 'sb-frame' + (t.empty ? ' sb-empty' : ''));
+        var screen = el('div', 'sb-screen');
+        if (t.dom) screen.appendChild(t.dom);
+        frame.appendChild(screen);
+        tile.appendChild(frame);
+        if (t.text) tile.appendChild(el('div', 'sb-cap', esc(t.text)));   // 这帧的 TTS 口播（评 tts 内容）
         tile.addEventListener('click', function () { self.engine.seekTo(t.idx); });
         feed.appendChild(tile);
+        if (t.scrollLeft) { var crr = tile.querySelector('.carousel-rail'); if (crr) crr.scrollLeft = t.scrollLeft; }   // 插入后施加居中位置
         self.tileEls[t.idx] = tile;
       });
       this._refreshBadges();
     },
 
+    /* 算两档 scale：--sb-scale 播放器(填满栏宽)，--kf-scale 关键帧(小一号 filmstrip)。812×375 内部坐标整体缩放，不改内部 px */
+    _applyScale: function () {
+      var feed = this.refs.feed; if (!feed) return;
+      var avail = feed.clientWidth - 36;
+      var w = Math.max(0, Math.min(740, avail));
+      var ps = Math.max(0.4, Math.min(1, w / 812));
+      var ks = Math.max(0.34, ps * 0.62);
+      var root = document.documentElement;
+      root.style.setProperty('--sb-scale', ps.toFixed(4));
+      root.style.setProperty('--kf-scale', ks.toFixed(4));
+    },
+
     /* engine 每步（播放/seek/点击）回调：高亮+滚动 active tile + 联动右侧节点评论串 */
     _onStep: function (idx) {
+      if (!this.tileEls[idx]) return;   // 非帧步（被过滤掉的 internal/toast/纯提问）：保持当前 active 不动
       for (var i = 0; i < this.tileEls.length; i++) if (this.tileEls[i]) this.tileEls[i].classList.toggle('active', i === idx);
       var te = this.tileEls[idx];
-      if (te && te.scrollIntoView) te.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (te && te.scrollIntoView) te.scrollIntoView({ block: 'nearest', behavior: 'smooth' });   // 关键帧瀑布滚到当前帧，与左侧时间线对齐
       this.curNode = idx;
       if (!this._typingInThread()) this._renderNodeThread(idx);
     },
@@ -83,9 +91,10 @@
     _renderNodeThread: function (idx) {
       var box = this.refs.nodeThread; if (!box) return;
       box.innerHTML = '';
-      if (idx == null || idx < 0) { box.appendChild(el('div', 'rh-hint', '点中间任一节点，在这看 / 写评论')); return; }
+      if (idx == null || idx < 0) { box.appendChild(el('div', 'rh-hint', '👈 点中间任一关键帧，在这里给那一步写评论')); return; }
       var ev = this.engine.events[idx] || {};
-      box.appendChild(el('div', 'rh-node-head', '节点 #' + (idx + 1) + ' · ' + esc(this.engine._stageLabel(ev))));
+      box.appendChild(el('div', 'rh-node-head', '已选中关键帧 #' + (idx + 1) + ' · ' + esc(this.engine._stageLabel(ev))));
+      box.appendChild(el('div', 'rh-node-sub', '点中间其它关键帧可切换；下面的评论只属于这一步'));
       if (global.LoonaEditor && LoonaEditor._commentThread) box.appendChild(LoonaEditor._commentThread(idx));
     },
 
@@ -128,6 +137,8 @@
         var blk = hit.some(function (a) { return a.type === '卡点'; });
         te._badge.innerHTML = (blk ? '🚩' : '') + (nC ? ('💬' + nC) : '');
         te.classList.toggle('has-ann', hit.length > 0);
+        te.classList.toggle('has-cmt', nC > 0);          // 有评论：tile 加左侧琥珀条
+        te._badge.classList.toggle('on', hit.length > 0); // 角标做成琥珀胶囊+红点
       }
     },
 

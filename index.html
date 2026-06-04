@@ -18,7 +18,13 @@
   <!-- ===== 顶部控制条 ===== -->
   <header class="wb-header">
     <span class="brand"><span class="dot"></span>Loona 工作台</span>
-    <select class="speed-sel case-sel" id="caseSel" title="切换 case"></select>
+    <div class="case-pick" id="casePick">
+      <button class="case-pick-btn" id="casePickBtn" title="切换 case"><span class="cp-cur" id="cpCur">选择 case</span><span class="cp-caret">▾</span></button>
+      <div class="case-pick-panel" id="casePickPanel" hidden>
+        <input class="cp-search" id="cpSearch" type="text" placeholder="搜 case…" autocomplete="off">
+        <div class="cp-list" id="cpList"></div>
+      </div>
+    </div>
     <div class="variant-bar" id="variantBar"></div>
     <span class="spacer"></span>
 
@@ -79,42 +85,29 @@
       <div class="now-stage" id="nowStage">IDLE · 待命</div>
       <!-- 播放时「本步有标注」提示（设备外，不碰产品 UI） -->
       <button class="ann-live" id="annLive" hidden></button>
-      <!-- 瀑布故事板：每个事件=一块宽舞台截图，往下平铺（buildStoryboard 出快照） -->
-      <div class="storyboard" id="storyboardFeed"></div>
-      <!-- 隐藏暂存舞台：仅供 buildStoryboard 渲染+克隆，不直接展示 -->
-      <div class="sb-staging" id="sbStaging">
-        <!-- web_ui 同款舞台：深色大眼睛底图，结果走轮播，澄清/确认/状态/字幕走玻璃浮层 -->
-        <div class="loona-stage web-stage" id="loonaStage">
-          <!-- 内容遮罩（玻璃浮层出现时柔化背景） -->
-          <div class="content-scrim"></div>
-          <!-- 叙事流：满屏「一图一刻」moment 层（独立于轮播） -->
-          <div class="story-layer" id="storyLayer"></div>
-
-          <!-- web_ui 同款轮播（结果卡：trip/news/mail/event/weather…）：横向 rail + 居中聚焦缩放 -->
-          <section class="carousel-panel hidden" id="carouselPanel" aria-label="结构化结果">
-            <div class="carousel-head">
-              <button id="backOverview" class="carousel-back hidden" type="button">‹ 返回总览</button>
-              <h2 id="carouselTitle">旅行规划</h2>
-              <div class="carousel-controls">
-                <button id="prevItem" class="icon-button" type="button" title="上一项/上一天">‹</button>
-                <button id="nextItem" class="icon-button" type="button" title="下一项/下一天">›</button>
+      <!-- ① 实时播放器：点播放在此跑全链路（轮播可拖动/点击切卡，无 ‹ › 箭头） -->
+      <div class="sb-player" id="sbPlayer">
+        <div class="sb-screen">
+          <div class="loona-stage web-stage" id="loonaStage">
+            <div class="content-scrim"></div>
+            <div class="story-layer" id="storyLayer"></div>
+            <section class="carousel-panel hidden" id="carouselPanel" aria-label="结构化结果">
+              <div class="carousel-head">
+                <button id="backOverview" class="carousel-back hidden" type="button">‹ 返回总览</button>
+                <h2 id="carouselTitle">旅行规划</h2>
               </div>
-            </div>
-            <div id="carouselRail" class="carousel-rail"></div>
-          </section>
-
-          <!-- 右上菜单（vg_menu） -->
-          <button class="vg-menu" title="菜单"></button>
-          <!-- pop_small 槽（右上） -->
-          <div class="pop-slot" id="popSlot"></div>
-          <!-- 浮层内容区（澄清/确认/失败/回执 玻璃卡） -->
-          <div class="content-area" id="contentArea"></div>
-          <!-- toast 槽 -->
-          <div class="toast-slot" id="toastSlot"></div>
-          <!-- 底部 TTS 字幕 -->
-          <div class="subtitle" id="subtitle"></div>
+              <div id="carouselRail" class="carousel-rail"></div>
+            </section>
+            <button class="vg-menu" title="菜单"></button>
+            <div class="pop-slot" id="popSlot"></div>
+            <div class="content-area" id="contentArea"></div>
+            <div class="toast-slot" id="toastSlot"></div>
+            <div class="subtitle" id="subtitle"></div>
+          </div>
         </div>
       </div>
+      <!-- ② 节点关键帧瀑布：静态快照，点击=跳转该帧+评论（不可拖动切卡） -->
+      <div class="storyboard" id="storyboardFeed"></div>
       <!-- 停等横幅（澄清/确认门） -->
       <div class="wait-banner" id="waitBanner"></div>
     </section>
@@ -122,28 +115,38 @@
     <!-- 右：agent 侧轨 + 编辑器（可拖拽分隔 + 侧轨可折叠） -->
     <section class="wb-col right">
       <div class="review-hub" id="reviewHub">
+        <!-- 顶部操作引导：一句话讲清这块怎么用 -->
+        <div class="rh-intro">
+          <div class="rh-intro-title">评审中心</div>
+          <div class="rh-intro-steps">
+            <span class="rh-intro-step"><b>①</b> 点中间任一<b>关键帧</b> → 在下面给<b>这一步</b>写评论</span>
+            <span class="rh-intro-step"><b>②</b> 想评整条链路 → 用「总评」</span>
+          </div>
+        </div>
         <!-- 选中节点的评论串（点中间任一节点联动） -->
         <div class="rh-block rh-nodeblock">
-          <div class="rh-title">节点评论</div>
+          <div class="rh-title">💬 当前关键帧 · 评论</div>
           <div class="rh-thread" id="rhThread"></div>
         </div>
         <!-- 总评（整条链路，event_idx = -1） -->
         <details class="rh-det" open>
-          <summary>📋 总评（整条链路）</summary>
+          <summary>📋 总评 · 评整条链路</summary>
           <div class="rh-summary" id="rhSummary"></div>
         </details>
         <!-- 全链评论活动流 -->
         <details class="rh-det" open>
-          <summary>🕓 评论活动流 <span class="rh-cnt" id="rhActCount"></span></summary>
+          <summary>🕓 全部评论 <span class="rh-cnt" id="rhActCount"></span></summary>
           <div class="rh-activity" id="rhActivity"></div>
         </details>
+        <!-- 以下为次要工具，弱化分组 -->
+        <div class="rh-tools-label">更多工具</div>
         <!-- 折叠保留：编辑链路 -->
-        <details class="rh-det">
+        <details class="rh-det rh-det-tool">
           <summary>✎ 编辑链路（改文案 / 节奏 / 卡内容）</summary>
           <div class="editor" id="editor"></div>
         </details>
         <!-- 折叠保留：agent 内部决策日志（侧轨；引擎渲染落点，保留） -->
-        <details class="rh-det">
+        <details class="rh-det rh-det-tool">
           <summary>⚙ agent 内部决策日志</summary>
           <div class="sidetrack" id="sideTrack"></div>
         </details>
@@ -171,24 +174,11 @@
 <script src="cases/calendar_today.js"></script>
 <script src="cases/email_calendar_workflow.js"></script>
 <script src="cases/restaurant_quiet.js"></script>
-<script src="cases/travel_chengdu_3d.js"></script>
+<!-- 旅行规划保留 4 个代表 case（其余下线，文件留存可恢复） -->
 <script src="cases/travel_chengdu_5d.js"></script>
-<script src="cases/travel_chengdu_5d_2stage.js"></script>
-<script src="cases/travel_chengdu_story.js"></script>
-<script src="cases/travel_chengdu_film.js"></script>
-<!-- 三方案对比 mock（杭州）：A 封面卡钻取 / C 总览+亮点条 / B 种草灵感流 -->
-<script src="cases/travel_hangzhou_a.js"></script>
-<script src="cases/travel_hangzhou_c.js"></script>
-<script src="cases/travel_hangzhou_b.js"></script>
-<!-- 泛化：不同目的地×人群（同范式骨架 + 同款暖/种草 TTS） -->
-<script src="cases/travel_chongqing_couple.js"></script>
 <script src="cases/travel_xian_solo.js"></script>
-<script src="cases/travel_xiamen_family.js"></script>
 <script src="cases/travel_dali_friends.js"></script>
-<!-- 新形式：多目的地对比 / 主题玩法 / 交通·住宿·预算卡 -->
-<script src="cases/travel_compare_cities.js"></script>
-<script src="cases/travel_theme_chengdu.js"></script>
-<script src="cases/travel_logistics_demo.js"></script>
+<script src="cases/travel_hangzhou_b.js"></script>
 <script src="cases/meeting_action.js"></script>
 <!-- case「立场标签」映射（演示对照用） -->
 <script src="js/case-stance.js"></script>
@@ -282,19 +272,36 @@
 
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_chongqing_couple', 'travel_xian_solo', 'travel_xiamen_family', 'travel_dali_friends', 'travel_compare_cities', 'travel_theme_chengdu', 'travel_logistics_demo', 'travel_chengdu_film', 'travel_chengdu_story', 'travel_chengdu_5d', 'travel_chengdu_5d_2stage', 'travel_chengdu_3d', 'travel_hangzhou_a', 'travel_hangzhou_c', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
+  var ORDER = ['travel_chengdu_5d', 'travel_xian_solo', 'travel_dali_friends', 'travel_hangzhou_b', 'companion_chat', 'weather_5d', 'news_briefing', 'email_briefing', 'calendar_today',
     'email_calendar_workflow', 'restaurant_quiet',
     'meeting_action'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
-  var sel = $('caseSel');
-  ids.forEach(function (id) { var o = document.createElement('option'); o.value = id; o.textContent = CASES[id].title || id; sel.appendChild(o); });
-
-  /* 每个场景有最合适的「默认展现形式」(case.default_skin)；载入即切到该形式，用户仍可手动切 */
-  /* 经控制台中央加载：克隆为可编辑工作链 + 注册/恢复变体 + 渲染变体条（全局 CASES 保持原始） */
-  function loadCase(id) { LoonaConsole.loadCase(id); }
-  loadCase(ids[0]); sel.value = ids[0];
-  sel.addEventListener('change', function () { loadCase(sel.value); });
+  /* case 选择器：分组(旅游规划/其他场景) + 搜索 的弹层，替代长下拉，一眼可选 */
+  var curCase = ids[0];
+  function isTravel(id) { return /^travel/.test(id) || (CASES[id] && CASES[id].scene === 'travel'); }
+  function caseTitle(id) { return (CASES[id] && CASES[id].title) || id; }
+  function renderPickList(q) {
+    var list = $('cpList'); if (!list) return; list.innerHTML = ''; q = (q || '').toLowerCase();
+    [['旅游规划', ids.filter(isTravel)], ['其他场景', ids.filter(function (k) { return !isTravel(k); })]].forEach(function (g) {
+      var items = g[1].filter(function (id) { return !q || caseTitle(id).toLowerCase().indexOf(q) >= 0; });
+      if (!items.length) return;
+      var gl = document.createElement('div'); gl.className = 'cp-group'; gl.textContent = g[0] + ' · ' + items.length; list.appendChild(gl);
+      items.forEach(function (id) {
+        var it = document.createElement('button'); it.className = 'cp-item' + (id === curCase ? ' cur' : ''); it.textContent = caseTitle(id);
+        it.addEventListener('click', function () { loadCase(id); closePick(); });
+        list.appendChild(it);
+      });
+    });
+  }
+  function openPick() { $('casePickPanel').hidden = false; $('cpSearch').value = ''; renderPickList(); setTimeout(function () { try { $('cpSearch').focus(); } catch (e) {} }, 0); }
+  function closePick() { $('casePickPanel').hidden = true; }
+  function loadCase(id) { curCase = id; LoonaConsole.loadCase(id); $('cpCur').textContent = caseTitle(id); }
+  $('casePickBtn').addEventListener('click', function (e) { e.stopPropagation(); if ($('casePickPanel').hidden) openPick(); else closePick(); });
+  $('cpSearch').addEventListener('input', function () { renderPickList(this.value.trim()); });
+  $('cpSearch').addEventListener('keydown', function (e) { if (e.key === 'Escape') closePick(); });
+  document.addEventListener('click', function (e) { if ($('casePick') && !$('casePick').contains(e.target)) closePick(); });
+  loadCase(ids[0]);
 
   /* 控制条联动 */
   engine.onState = function (st) {

@@ -560,6 +560,7 @@ a.news-pill:hover {
   border-color: rgba(255, 180, 84, 0.85);
 }
 
+.trip-card { isolation: isolate; }
 /* hero 照片头 */
 .trip-header {
   position: relative;
@@ -1164,6 +1165,14 @@ a.news-pill:hover {
   background: rgba(255, 255, 255, 0.13); color: rgba(255,255,255,0.92); border: 1px solid rgba(255, 255, 255, 0.3);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
+/* 修：动画期(scale/flip/view-transition) Blink 对方角满幅 img 的圆角裁剪会失效→方角从24px圆角漏出=看着像图溢出被截。
+   两手治：全幅照片自身圆到与卡同角(inherit)，会做动画的照片卡加 isolation:isolate 成稳定裁剪容器。封顶尺寸无关。 */
+.trip-cover, .inspo-card, .dest-card, .theme-card { isolation: isolate; }
+.trip-cover .cover-photo,
+.inspo-card .inspo-photo,
+.dest-card .dest-photo,
+.theme-card .theme-photo { border-radius: inherit; }
+
 /* View Transition：封面↔详情的 hero 图 morph 时长/缓动 */
 ::view-transition-group(trip-hero){ animation-duration:.44s; animation-timing-function:cubic-bezier(.2,.8,.25,1); }
 ::view-transition-old(trip-hero),::view-transition-new(trip-hero){ mix-blend-mode:normal; }
@@ -1182,6 +1191,7 @@ a.news-pill:hover {
   -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
 }
 .travel-overview.active { border-color: rgba(255,180,84,0.85); }
+.travel-overview { isolation: isolate; }
 .tov-hero { position: relative; flex: 0 0 132px; height: 132px; overflow: hidden; }
 .tov-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .tov-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.85) 100%); }
@@ -1233,7 +1243,8 @@ a.news-pill:hover {
 }
 @keyframes moment-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .moment-card { animation: none; } }
-.moment-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.moment-card { isolation: isolate; }
+.moment-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .moment-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.12) 0, rgba(0,0,0,0) 30%, rgba(0,0,0,.5) 60%, rgba(0,0,0,.92) 100%); }
 .moment-body { position: absolute; left: 18px; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
 .moment-dots { display: flex; gap: 7px; }
@@ -1313,6 +1324,7 @@ a.news-pill:hover {
   -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); color: #fff;
 }
 .hotel-card.active { border-color: rgba(255,180,84,0.85); }
+.hotel-card { isolation: isolate; }
 .hotel-head { position: relative; flex: 0 0 132px; height: 132px; overflow: hidden; border-radius: 16px; }
 .hotel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hotel-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.85) 100%); }

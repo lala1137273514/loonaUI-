@@ -675,10 +675,14 @@ body{font-family:var(--font);background:var(--wb-bg);color:var(--wb-text);-webki
    ============================================================ */
 .web-stage{
   position:absolute; inset:0; overflow:hidden;
+  /* 眼睛贴图自带 #000 黑底；用 background-blend-mode:screen 让黑底与舞台底无缝融合
+     （screen 下纯黑 = 恒等，PNG 的矩形黑底彻底化掉，只剩琥珀辉光自然衰减，杜绝硬边接缝）。
+     图层顺序：眼睛(screen) → 暖辉光渐变(normal) → #060606 底。 */
   background:
+    url('../assets/loona_eyes.png') no-repeat center 40% / auto 74%,
     radial-gradient(120% 82% at 50% 40%, rgba(74,48,18,.5), rgba(6,6,6,0) 64%),
-    url('../assets/loona_eyes.png') no-repeat center 42% / auto 60%,
     #060606;
+  background-blend-mode:screen, normal;
 }
 /* 把 web_ui 调色板 token 限定在轮播内，让原样搬来的 carousel.css 完全解析（不污染工作台外壳） */
 .carousel-panel{
@@ -688,8 +692,8 @@ body{font-family:var(--font);background:var(--wb-bg);color:var(--wb-text);-webki
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --sans:"Avenir Next","Helvetica Neue",Helvetica,sans-serif;
 }
-/* 轮播面板铺满承载层（web_ui 里它是 stage 的 grid 行；这里绝对填充） */
-.web-stage .carousel-panel{ position:absolute; inset:0; z-index:6; height:auto; }
+/* 轮播缩进 CardStage 区（UI-SPEC §2：top30/bottom58 → 可用 287 高），不再铺满整屏压住眼睛/字幕 */
+.web-stage .carousel-panel{ position:absolute; top:30px; right:0; bottom:58px; left:0; z-index:6; height:auto; }
 .web-stage .carousel-panel.hidden{ display:none; }
 /* 浮层层级压在轮播之上；与轮播互斥由引擎切换 */
 .web-stage .content-scrim{ z-index:2; }

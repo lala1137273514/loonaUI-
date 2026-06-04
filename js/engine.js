@@ -370,7 +370,6 @@
 
     /* ---------- 渲染单个事件 ---------- */
     _renderEvent: function (ev, i, instant) {
-      if (this.storyboardMode && !this._building) return;   // 故事板态：tile 已预建，播放/seek 不重渲 live 舞台
       var comp = ev.comp;
       if (comp === 'agent_step') { this._renderAgentStep(ev, i); return; }      // 仅侧轨
       if (ev.internal) { this._renderAgentStep(ev, i); return; }
@@ -758,32 +757,30 @@
       this._cancel();
       this._building = true;
       this._clearStage();
-      var tiles = [];
+      var tiles = [], pendingUser = '';
       for (var i = 0; i < this.events.length; i++) {
         var ev = this.events[i];
-        this._renderEvent(ev, i, true);
+        this._renderEvent(ev, i, true);                  // 始终渲染（维持累积态），只是不一定出 tile
         var tp = this._ttsOf(ev);
         if (tp && tp.text) this._setSubtitle(tp.text, true, ev.comp === 'user_query' ? 'user' : 'loona');
         if (tp && tp.highlight) this._highlightCard(tp.highlight);
-        var isAgent = (ev.comp === 'agent_step' || ev.internal);
-        var tile = { idx: i, comp: ev.comp, agent: isAgent, label: this._stageLabel(ev),
-          text: ev.text || (tp && tp.text) || ev.decision || '' };
-        if (isAgent) {
-          tile.agentLabel = ev.label || 'AGENT STEP';
-          tile.agentDecision = ev.decision || ev.text || '';
-          tile.agentFields = (ev.fields || []).slice();
-        } else {
-          var clone = this.refs.stage.cloneNode(true);
-          var origRail = this.refs.carouselRail, cr = clone.querySelector('.carousel-rail');
-          if (origRail && cr) cr.scrollLeft = origRail.scrollLeft;
-          var idd = clone.querySelectorAll('[id]'); for (var k = 0; k < idd.length; k++) idd[k].removeAttribute('id');
-          clone.removeAttribute('id');
-          tile.empty = !(this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden')) &&
-            !(this.refs.storyLayer && this.refs.storyLayer.classList.contains('show')) &&
-            !(this.refs.contentArea && this.refs.contentArea.children.length);
-          tile.dom = clone;
-        }
-        tiles.push(tile);
+        // 任何轮播帧（含钻取详情帧、非首张高亮帧）：克隆前同步把 active 卡滚到居中
+        // （focusCarouselItem 的 smooth scroll 是异步的，赶不上同步克隆，不在此处补就会"图对不上"）
+        var _rail = this.refs.carouselRail, _act = _rail && _rail.querySelector('.result-card.active');
+        if (_rail && _act && this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden'))
+          _rail.scrollLeft = Math.max(0, _act.offsetLeft + _act.offsetWidth / 2 - _rail.clientWidth / 2);
+        // 只「有界面的帧」成为可评论 tile：跳过 internal agent决策 / 取数 toast / 纯用户提问(无下钻)
+        var pureQuery = (ev.comp === 'user_query' && !ev.drill_day && !ev.travel_back);
+        if (pureQuery) { pendingUser = ev.text || pendingUser; continue; }     // 提问并入下一帧作上下文
+        if (ev.comp === 'agent_step' || ev.internal || ev.comp === 'toast') continue;
+        var label = ev.drill_day ? '钻取 · 详情' : ev.travel_back ? '返回 · 总览' : this._stageLabel(ev);
+        var clone = this.refs.stage.cloneNode(true);
+        var origRail = this.refs.carouselRail;
+        var sl = origRail ? origRail.scrollLeft : 0;   // 居中位置（克隆不带 scrollLeft，存下来插入后再施加）
+        var idd = clone.querySelectorAll('[id]'); for (var k = 0; k < idd.length; k++) idd[k].removeAttribute('id');
+        clone.removeAttribute('id');
+        tiles.push({ idx: i, comp: ev.comp, label: label, text: (tp && tp.text) || ev.text || '', userContext: pendingUser, scrollLeft: sl, dom: clone });
+        pendingUser = '';
       }
       this._clearStage();
       this._building = prevBuilding;
@@ -867,9 +864,11 @@
       this._reflectAnnLive(idx);
       if (this.onStep) this.onStep(idx);   // 故事板：滚动 feed 到当前 tile + 高亮
     },
-    /* 播放/跳转时在设备外提示「本步有标注」——强可见性，不碰产品 UI */
+    /* 播放/跳转时在设备外提示「本步有标注」——强可见性，不碰产品 UI。
+       故事板态：节点评论提示改由下方关键帧 tile 的 💬 角标承担，播放器上不再显示此横幅。 */
     _reflectAnnLive: function (idx) {
       var live = this.refs.annLive; if (!live) return;
+      if (this.storyboardMode) { live.hidden = true; live.onclick = null; return; }
       var ann = (this.caseObj && this.caseObj.annotations) || [];
       var hit = ann.filter(function (a) { return a.event_idx === idx; });
       if (!hit.length) { live.hidden = true; live.onclick = null; return; }

@@ -18,29 +18,57 @@
 .storyboard::-webkit-scrollbar { width: 9px; }
 .storyboard::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 8px; }
 
-/* 隐藏暂存舞台：渲染+克隆用，移出可视区但保留布局（克隆才有正确尺寸/scrollLeft） */
-.sb-staging { position: fixed; left: -10000px; top: 0; width: 720px; height: 460px; pointer-events: none; }
+/* ① 实时播放器：顶部固定一行（不随瀑布滚），点播放全链路在此跑；轮播可拖动/点击切卡。
+   锁 812×375（UI-SPEC 内部坐标）+ 外层 --sb-scale 整体缩放，px 死数值忠实。 */
+.sb-player { flex: 0 0 auto; align-self: center; margin: 14px auto 6px; width: calc(812px * var(--sb-scale, .88)); height: calc(375px * var(--sb-scale, .88)); overflow: hidden; border-radius: 16px; background: #060606; box-shadow: 0 10px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08); }
+.sb-player .sb-screen { transform: scale(var(--sb-scale, .88)); }
 
-/* 节点 tile */
+/* ② 关键帧 tile（静态快照，小一号 filmstrip） */
 .sb-tile {
-  flex: 0 0 auto; width: 100%; max-width: 740px; margin: 0 auto;
+  flex: 0 0 auto; width: calc(812px * var(--kf-scale, .55)); max-width: 96%; margin: 0 auto;
   border: 1px solid var(--wb-line); border-radius: 16px; background: var(--wb-panel-2);
   overflow: hidden; transition: border-color .18s, box-shadow .18s; cursor: pointer;
 }
 .sb-tile:hover { border-color: rgba(255,180,84,.5); }
 .sb-tile.active { border-color: rgba(255,180,84,.9); box-shadow: 0 0 0 1px rgba(255,180,84,.6), 0 12px 40px rgba(255,150,40,.22); }
 .sb-tile.has-ann { background: linear-gradient(0deg, rgba(255,180,84,.06), rgba(255,180,84,.06)), var(--wb-panel-2); }
+/* 有评论的关键帧：左侧琥珀竖条，扫一眼瀑布即知哪些节点被评论过 */
+.sb-tile.has-cmt { box-shadow: inset 3px 0 0 0 var(--amber-2, #f0bc1d); }
+.sb-tile.has-cmt.active { box-shadow: inset 3px 0 0 0 var(--amber-2, #f0bc1d), 0 0 0 1px rgba(255,180,84,.6), 0 12px 40px rgba(255,150,40,.22); }
 
 .sb-thead { display: flex; align-items: center; gap: 9px; padding: 9px 13px; border-bottom: 1px solid var(--wb-line); }
 .sb-tn { font: 700 11px var(--mono, monospace); color: var(--amber-2, #f0bc1d); background: rgba(255,180,84,.12); border-radius: 6px; padding: 2px 7px; }
 .sb-tlabel { flex: 1 1 auto; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--wb-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb-cmt { flex: 0 0 auto; font-size: 12px; color: #ffd49a; }
+.sb-cmt { flex: 0 0 auto; font-size: 12px; color: #ffd49a; display: inline-flex; align-items: center; }
+/* 有标注的节点：角标做成琥珀胶囊+右上红点，关键帧旁一眼可见「该节点有评论」（替代播放器横幅） */
+.sb-cmt.on { position: relative; font-weight: 700; color: #1a1205; background: var(--amber-2, #f0bc1d); border-radius: 999px; padding: 2px 9px; box-shadow: 0 2px 8px rgba(255,180,84,.45); }
+.sb-cmt.on::after { content: ''; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: #ff5a5a; box-shadow: 0 0 0 2px var(--wb-panel-2), 0 0 6px rgba(255,90,90,.7); }
 
-/* 屏幕快照（宽舞台克隆铺满） */
-.sb-screen { position: relative; width: 100%; aspect-ratio: 720 / 460; background: #14110f; overflow: hidden; }
-.sb-screen .loona-stage { position: absolute; inset: 0; }
-.sb-screen.sb-empty::after { content: '听取中…'; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.35); font-size: 13px; }
+/* 屏幕快照：812×375 内部坐标 + 外层 scale（UI-SPEC 模型，px 死数值忠实）。
+   .sb-frame = 缩放后的真实占位框；.sb-screen = 固定 812×375 被 scale 缩进框里。 */
+.sb-frame { align-self: center; width: calc(812px * var(--kf-scale, .55)); height: calc(375px * var(--kf-scale, .55)); overflow: hidden; border-radius: 14px; background: #060606; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.sb-screen { position: relative; width: 812px; height: 375px; transform-origin: top left; }   /* scale 由 .sb-player / .sb-tile 各自给 */
+.sb-screen > .loona-stage { position: absolute; inset: 0; }
+.sb-tile .sb-screen { transform: scale(var(--kf-scale, .55)); pointer-events: none; }   /* 关键帧=静态快照，不可拖动切卡 */
+.sb-frame.sb-empty::after { content: '听取中…'; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.35); font-size: 13px; pointer-events: none; }
 .sb-cap { padding: 9px 13px; font-size: 12.5px; line-height: 1.45; color: var(--wb-text-dim); border-top: 1px solid var(--wb-line); }
+
+/* 812×375 帧内：轮播卡收到 ≤约232 高（CardStage 287 − head），保留横向 rail 范式 */
+.web-stage .carousel-panel .result-card { height: 232px; }
+.web-stage .carousel-panel .trip-cover,
+.web-stage .carousel-panel .inspo-card,
+.web-stage .carousel-panel .dest-card,
+.web-stage .carousel-panel .theme-card { flex: 0 0 326px; width: 326px; height: 232px; }
+.web-stage .carousel-panel .trip-card { flex: 0 0 300px; width: 300px; height: 232px; }
+.web-stage .carousel-panel .route-card,
+.web-stage .carousel-panel .hotel-card,
+.web-stage .carousel-panel .budget-card { flex: 0 0 300px; width: 300px; max-height: 232px; }
+.web-stage .carousel-rail { gap: 18px; padding-inline: calc(50% - 163px); }
+.web-stage .carousel-head { padding: 8px 14px 4px; }
+.web-stage .carousel-head h2 { font-size: 13px; }
+/* 叙事流 moment 卡也收进帧（≤帧高，居中） */
+.web-stage .story-layer .moment-card { flex: 0 0 380px; width: 380px; height: 300px; }
+.web-stage .story-layer .moment-title { font-size: 22px; }
 
 /* agent 决策条（无手机屏） */
 .sb-tile.sb-agent { max-width: 600px; background: var(--wb-bg); cursor: default; }
@@ -53,11 +81,21 @@
 /* ===== 右侧：评审中心 ===== */
 .review-hub { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; padding: 0; scrollbar-width: thin; }
 .review-hub::-webkit-scrollbar { width: 8px; } .review-hub::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 8px; }
+/* 顶部操作引导 */
+.rh-intro { padding: 12px 14px 11px; border-bottom: 1px solid var(--wb-line); background: var(--wb-panel-2); }
+.rh-intro-title { font-size: 14px; font-weight: 800; color: var(--wb-text); letter-spacing: .3px; margin-bottom: 7px; }
+.rh-intro-steps { display: flex; flex-direction: column; gap: 5px; }
+.rh-intro-step { font-size: 12px; line-height: 1.5; color: var(--wb-text-dim); }
+.rh-intro-step b { color: var(--amber-1, #ffd47a); font-weight: 700; }
+.rh-intro-step b:first-child { display: inline-block; min-width: 15px; color: var(--amber-2); }
+
 .rh-block { padding: 12px 14px; border-bottom: 1px solid var(--wb-line); }
-.rh-title { font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--wb-text-dim); margin-bottom: 8px; }
-.rh-nodeblock { background: rgba(255,180,84,.04); }
-.rh-node-head { font-size: 12.5px; font-weight: 700; color: var(--amber-2, #f0bc1d); margin-bottom: 8px; }
-.rh-hint { font-size: 12.5px; color: var(--wb-text-dim); line-height: 1.5; padding: 6px 2px; }
+.rh-title { font-size: 12px; font-weight: 700; color: var(--wb-text); margin-bottom: 9px; }
+/* 节点块=当前关键帧：左侧琥珀竖条 + 略亮底，强调它跟随中间选中帧 */
+.rh-nodeblock { background: rgba(255,180,84,.06); border-left: 3px solid var(--amber-2); }
+.rh-node-head { font-size: 12.5px; font-weight: 700; color: var(--amber-2, #f0bc1d); margin-bottom: 4px; }
+.rh-node-sub { font-size: 11px; color: var(--wb-text-dim); line-height: 1.4; margin-bottom: 8px; }
+.rh-hint { font-size: 12.5px; color: var(--wb-text-dim); line-height: 1.55; padding: 8px 2px; }
 
 .rh-det { border-bottom: 1px solid var(--wb-line); }
 .rh-det > summary { cursor: pointer; list-style: none; padding: 11px 14px; font-size: 12.5px; font-weight: 600; color: var(--wb-text); display: flex; align-items: center; gap: 6px; }
@@ -66,6 +104,9 @@
 .rh-det[open] > summary::before { transform: rotate(90deg); }
 .rh-det > summary:hover { background: #1c2230; }
 .rh-cnt { color: var(--amber-2, #f0bc1d); font-weight: 700; }
+/* 次要工具分组：标题 + 弱化 summary，和主评论区拉开层级 */
+.rh-tools-label { padding: 12px 14px 4px; font-size: 10.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--wb-text-dim); opacity: .8; border-top: 1px solid var(--wb-line); margin-top: 2px; }
+.rh-det-tool > summary { color: var(--wb-text-dim); font-weight: 500; }
 .rh-summary, .rh-activity { padding: 4px 14px 14px; }
 .rh-det .editor, .rh-det .sidetrack { padding: 4px 12px 14px; max-height: 360px; overflow-y: auto; }
 
@@ -78,4 +119,26 @@
 .rh-act-time { flex: 0 0 auto; color: var(--wb-text-dim); font-variant-numeric: tabular-nums; }
 .rh-act-text { margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: var(--wb-text); }
 
-@media (max-width: 1100px) { .sb-staging { width: 600px; height: 384px; } }
+/* 暂存舞台恒 812×375（克隆需真实尺寸）；适配靠 --sb-scale 整体缩放，不改内部 px */
+
+/* 触发这帧的用户提问（并入帧上下文） */
+.sb-userctx { padding: 6px 13px; font-size: 12px; color: #ffd49a; background: rgba(255,180,84,.07); border-bottom: 1px solid var(--wb-line); }
+
+/* 帧内 TTS 字幕：单行 + 压到最底，与卡片留清晰间隙（不遮卡）；加深底+琥珀描边可读 */
+.web-stage .subtitle { -webkit-line-clamp: 1; bottom: 10px; background: rgba(0,0,0,.74); border: 1px solid rgba(255,180,84,.3); z-index: 40; }
+
+/* ===== case 选择器：分组+搜索弹层（替代长下拉） ===== */
+.case-pick { position: relative; }
+.case-pick-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 240px; background: var(--wb-panel-2); border: 1px solid var(--wb-line); border-radius: 10px; padding: 6px 11px; color: var(--wb-text); font-size: 13px; font-family: var(--font); cursor: pointer; }
+.case-pick-btn:hover { border-color: rgba(229,195,116,.55); }
+.case-pick-btn .cp-cur { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.case-pick-btn .cp-caret { color: var(--wb-text-dim); font-size: 10px; }
+.case-pick-panel { position: absolute; z-index: 200; top: calc(100% + 6px); left: 0; width: 300px; max-height: 70vh; display: flex; flex-direction: column; overflow: hidden; background: var(--wb-panel-2); border: 1px solid var(--wb-line); border-radius: 12px; box-shadow: 0 18px 48px rgba(0,0,0,.6); }
+.case-pick-panel[hidden] { display: none; }
+.cp-search { margin: 8px; padding: 7px 10px; border: 1px solid var(--wb-line); border-radius: 8px; background: var(--wb-bg); color: var(--wb-text); font-size: 13px; font-family: var(--font); outline: none; }
+.cp-search:focus { border-color: rgba(229,195,116,.55); }
+.cp-list { overflow-y: auto; padding: 0 6px 8px; scrollbar-width: thin; }
+.cp-group { font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; color: var(--wb-text-dim); padding: 9px 8px 4px; position: sticky; top: 0; background: var(--wb-panel-2); }
+.cp-item { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--wb-text); font-size: 13px; font-family: var(--font); padding: 7px 9px; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-item:hover { background: #222634; }
+.cp-item.cur { background: rgba(255,180,84,.14); color: var(--amber-2, #f0bc1d); font-weight: 600; }
