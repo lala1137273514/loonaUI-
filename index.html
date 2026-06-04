@@ -85,7 +85,9 @@
       <div class="now-stage" id="nowStage">IDLE · 待命</div>
       <!-- 播放时「本步有标注」提示（设备外，不碰产品 UI） -->
       <button class="ann-live" id="annLive" hidden></button>
-      <!-- ① 实时播放器：点播放在此跑全链路（轮播可拖动/点击切卡，无 ‹ › 箭头） -->
+      <!-- ① 实时播放器（抽屉，默认收起；点抽屉条或播放键拉下来跑全链路；轮播可拖动/点击切卡，无 ‹ › 箭头） -->
+      <div class="sb-player-wrap collapsed" id="sbPlayerWrap">
+      <button class="sb-drawer" id="sbDrawer" type="button"><span class="sb-drawer-caret">▾</span><span class="sb-drawer-txt">实时播放器</span><span class="sb-drawer-hint">点开看播放 · 再点收起</span></button>
       <div class="sb-player" id="sbPlayer">
         <div class="sb-screen">
           <div class="loona-stage web-stage" id="loonaStage">
@@ -106,6 +108,7 @@
           </div>
         </div>
       </div>
+      </div><!-- /.sb-player-wrap -->
       <!-- ② 节点关键帧瀑布：静态快照，点击=跳转该帧+评论（不可拖动切卡） -->
       <div class="storyboard" id="storyboardFeed"></div>
       <!-- 停等横幅（澄清/确认门） -->
@@ -310,7 +313,12 @@
     $('btnPlay').querySelector('.ico').textContent = playing ? '⏸' : '▶';
   };
 
+  /* 播放器抽屉：默认收起，点抽屉条或播放键拉下来 */
+  function setDrawer(open) { $('sbPlayerWrap').classList.toggle('collapsed', !open); }
+  $('sbDrawer').addEventListener('click', function () { setDrawer($('sbPlayerWrap').classList.contains('collapsed')); });
+
   $('btnPlay').addEventListener('click', function () {
+    setDrawer(true);   // 播放即把抽屉拉下来
     if (engine.idx >= engine.events.length && engine.mode !== 'play') { engine.replay(); return; }
     engine.toggle();
   });
