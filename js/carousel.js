@@ -357,12 +357,6 @@
       from.className = "mail-from";
       card.appendChild(from);
     }
-    const recipients = [raw.to, raw.cc ? "抄送：" + raw.cc : ""].filter(Boolean).join("  ");
-    if (recipients) {
-      const to = createTextElement("div", "收件人：" + recipients);
-      to.className = "mail-recipient";
-      card.appendChild(to);
-    }
     // 时间（meta 多为空 → 从 raw.internal_date 取并格式化）
     const time = mailTime(item);
     if (time) {
