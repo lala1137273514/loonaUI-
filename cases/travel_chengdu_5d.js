@@ -24,9 +24,9 @@
       /* ===== 阶段① 方案选择卡（横滑·首张主推） ===== */
       { t: 700, gap_ms: 1400, comp: 'InspoFlow', card_id: 'plans', visual_state: 'active',
         content: { echo: '成都 5 天 · 选个路线', cards: [
-          { id: 'p1', rec: true, title: '巴适美食 5 日', photo: 'assets/travel/bund.jpg', tags: ['带爸妈优选', '苍蝇馆子', '茶馆', '慢'], punchline: '带爸妈最巴适：节奏慢、不爬高、吃得开心' },
-          { id: 'p2', title: '经典打卡 5 日', photo: 'assets/travel/westbund.jpg', tags: ['初游友好', '宽窄巷子', '武侯祠', '熊猫'], punchline: '第一次来成都必看的都在这条' },
-          { id: 'p3', title: '古镇自然 5 日', photo: 'assets/travel/tianzifang.jpg', tags: ['人少清净', '都江堰', '青城山'], punchline: '想清净往山水走，人少不挤' }
+          { id: 'p1', rec: true, title: '巴适美食 5 日', photo: 'assets/travel/cd_jinli.jpg', tags: ['带爸妈优选', '苍蝇馆子', '茶馆', '慢'], punchline: '带爸妈最巴适：节奏慢、不爬高、吃得开心' },
+          { id: 'p2', title: '经典打卡 5 日', photo: 'assets/travel/cd_kuanzhai.jpg', tags: ['初游友好', '宽窄巷子', '武侯祠', '熊猫'], punchline: '第一次来成都必看的都在这条' },
+          { id: 'p3', title: '古镇自然 5 日', photo: 'assets/travel/cd_dujiangyan.jpg', tags: ['人少清净', '都江堰', '青城山'], punchline: '想清净往山水走，人少不挤' }
         ] } },
       /* TTS-1b 拆成按卡高亮的几句 → 方案选择卡跟着轮播逐张聚焦（p1→p2→p3→回 p1） */
       { t: 2100, gap_ms: 500, comp: 'tts', highlight: 'p1', text: '带爸妈我最推第一个，巴适美食路线。成都的魂不在景点，在茶馆和苍蝇馆子里——节奏慢、不爬高，爸妈坐得住还吃得开心。', pace: 'mid' },
@@ -42,24 +42,24 @@
       { t: 1000, gap_ms: 1500, comp: 'TravelStages', card_id: 'plan', visual_state: 'active',
         content: { destination: '成都', duration_days: 5, title: '成都 · 5 天 · 巴适美食',
           stages: [
-            { id: 's1', title: '市井烟火', hook: '玉林路那几家是本地人排队的，不是网红店', photo: 'assets/travel/bund.jpg', tags: ['苍蝇馆子', '串串', '太古里'], days: [
-              { id: 'd1', label: '市井烟火 · 第1天', pace: 'light', photo: 'assets/travel/bund.jpg', nodes: [
+            { id: 's1', title: '市井烟火', hook: '玉林路那几家是本地人排队的，不是网红店', photo: 'assets/travel/cd_jinli.jpg', tags: ['苍蝇馆子', '串串', '太古里'], days: [
+              { id: 'd1', label: '市井烟火 · 第1天', pace: 'light', photo: 'assets/travel/cd_jinli.jpg', nodes: [
                 { time: '上午', place: '宽窄巷子', note: '逛老院子，看糖画变脸' }, { time: '中午', place: '钟水饺', note: '本地老字号垫一口' },
                 { time: '下午', place: '锦里', note: '慢慢逛' }, { time: '晚上', place: '玉林路', note: '苍蝇馆子串串，陪二老喝点小酒' }], footer: '玉林路越晚越热闹，留肚子' },
-              { id: 'd2', label: '市井烟火 · 第2天', pace: 'light', photo: 'assets/travel/westbund.jpg', nodes: [
+              { id: 'd2', label: '市井烟火 · 第2天', pace: 'light', photo: 'assets/travel/cd_taikoo.jpg', nodes: [
                 { time: '上午', place: '东郊记忆', note: '老厂区改的文创，慢逛' }, { time: '中午', place: '马旺子', note: '川菜小馆，爸妈合口' },
                 { time: '下午', place: '太古里·大慈寺', note: '潮区里藏个千年古寺' }, { time: '晚上', place: '香香巷', note: '巷子美食一条街' }], footer: '今天不赶，逛吃为主' }
             ] },
-            { id: 's2', title: '茶馆慢生活', hook: '这是最成都的一天，专门留来歇', photo: 'assets/travel/tianzifang.jpg', tags: ['人民公园', '盖碗茶', '掏耳朵'], days: [
-              { id: 'd3', label: '茶馆慢生活 · 第3天', pace: 'light', photo: 'assets/travel/tianzifang.jpg', nodes: [
+            { id: 's2', title: '茶馆慢生活', hook: '这是最成都的一天，专门留来歇', photo: 'assets/travel/cd_teahouse.jpg', tags: ['人民公园', '盖碗茶', '掏耳朵'], days: [
+              { id: 'd3', label: '茶馆慢生活 · 第3天', pace: 'light', photo: 'assets/travel/cd_teahouse.jpg', nodes: [
                 { time: '上午', place: '鹤鸣茶社', note: '竹椅坐下，盖碗茶慢喝' }, { time: '中午', place: '公园边小吃', note: '就近随便吃' },
                 { time: '下午', place: '掏耳朵晒太阳', note: '师傅掏个耳，酥麻到笑' }, { time: '晚上', place: '锦里', note: '夜里灯笼一条街' }], footer: '专门留一整天慢下来，别排满' }
             ] },
-            { id: 's3', title: '周边透气', hook: '带爸妈往周边走，不累还出片', photo: 'assets/travel/bund.jpg', tags: ['都江堰', '大熊猫', '不累'], days: [
-              { id: 'd4', label: '周边透气 · 第4天', pace: 'normal', photo: 'assets/travel/bund.jpg', nodes: [
+            { id: 's3', title: '周边透气', hook: '带爸妈往周边走，不累还出片', photo: 'assets/travel/cd_dujiangyan.jpg', tags: ['都江堰', '大熊猫', '不累'], days: [
+              { id: 'd4', label: '周边透气 · 第4天', pace: 'normal', photo: 'assets/travel/cd_dujiangyan.jpg', nodes: [
                 { time: '上午', place: '都江堰', note: '看千年的水，平路好走' }, { time: '中午', place: '灌县古城', note: '古城里吃顿便饭' },
                 { time: '下午', place: '南桥', note: '桥上吹风看水' }, { time: '晚上', place: '返市区', note: '回城歇脚' }], footer: '都江堰平路为主，不爬高' },
-              { id: 'd5', label: '周边透气 · 第5天', pace: 'light', photo: 'assets/travel/westbund.jpg', nodes: [
+              { id: 'd5', label: '周边透气 · 第5天', pace: 'light', photo: 'assets/travel/cd_panda.jpg', nodes: [
                 { time: '上午', place: '大熊猫基地', note: '趁早看滚滚合个影' }, { time: '中午', place: '基地周边', note: '简餐' },
                 { time: '下午', place: '春熙路太古里', note: '逛吃收尾，离车站近' }], footer: '熊猫趁早，下午轻松收尾返程' }
             ] }
