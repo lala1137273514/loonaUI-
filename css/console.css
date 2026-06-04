@@ -26,6 +26,18 @@
 .vb-item .vi-x:hover{background:rgba(255,90,90,.18);color:#ff9c9c}
 .vb-sep{height:1px;background:var(--wb-line);margin:5px 6px}
 
+/* ===== 立场带（演示对照：当前 case 对应框架的哪种立场） ===== */
+.stance-bar{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:8px 10px;margin-bottom:8px;
+  background:var(--wb-panel-2);border:1px solid var(--wb-line);border-radius:10px}
+.stance-bar[hidden]{display:none}
+.stance-lb{font-size:10px;letter-spacing:.4px;color:var(--wb-text-dim);text-transform:uppercase;margin-right:2px}
+.stance-chip{font-size:11px;line-height:1.1;color:var(--wb-text);background:var(--wb-bg);
+  border:1px solid var(--wb-line);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.stance-chip.stance-role{color:#1f1a0e;background:var(--amber-2,#f0bc1d);border-color:transparent;font-weight:700}
+.stance-chip.stance-ota{color:var(--amber-2,#f0bc1d);background:rgba(255,180,84,.12);border-color:rgba(255,180,84,.35);font-weight:700}
+.stance-chip.stance-form{color:#9fe0d6;background:rgba(13,117,109,.18);border-color:rgba(84,185,171,.4);font-weight:600}
+.stance-chip.stance-mem{color:#ffd49a;background:rgba(255,180,84,.1);border-color:rgba(255,180,84,.3)}
+
 /* ===== 编辑器：链路增删改工具条 ===== */
 .chain-ops{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .chain-ops .co-btn{flex:1 1 auto;min-width:42px;background:var(--wb-panel-2);border:1px solid var(--wb-line);color:var(--wb-text);

@@ -225,8 +225,26 @@
       this.engine.setTheme((base && base.default_skin) || 'glass');
       this.curVariant = 0;
       this._bindComments(id);
+      this._renderStance(id);
       if (this.refs.tlCount) this.refs.tlCount.textContent = this.engine.events.length + ' 步';
       this.renderBar();
+    },
+    /* 立场带：按框架给当前 case 显示「OTA / 形式 / 叙事 / 轮次 / 澄清 / selling / 记忆」标签（演示对照） */
+    _renderStance: function (id) {
+      var bar = document.getElementById('stanceBar'); if (!bar) return;
+      var s = (global.LOONA_STANCE || {})[id];
+      bar.innerHTML = '';
+      if (!s) { bar.hidden = true; return; }
+      bar.hidden = false;
+      bar.appendChild(el('span', 'stance-lb', '立场'));
+      if (s.role) bar.appendChild(el('span', 'stance-chip stance-role', esc(s.role)));
+      if (s.ota) bar.appendChild(el('span', 'stance-chip stance-ota', 'OTA · ' + esc(s.ota)));
+      if (s.form) bar.appendChild(el('span', 'stance-chip stance-form', esc(s.form)));
+      if (s.narrative) bar.appendChild(el('span', 'stance-chip', esc(s.narrative)));
+      if (s.turns) bar.appendChild(el('span', 'stance-chip', esc(s.turns)));
+      if (s.clarify) bar.appendChild(el('span', 'stance-chip', esc(s.clarify)));
+      if (s.selling) bar.appendChild(el('span', 'stance-chip', 'selling ' + esc(s.selling)));
+      if (s.memory && s.memory !== '—') bar.appendChild(el('span', 'stance-chip stance-mem', esc(s.memory)));
     },
     /* 评论同步：把当前 case 的 annotations 绑给 CommentSync（本地持久化 / Supabase 实时）。
        远程/本地有变更时刷新左侧 💬 角标，且若没在输入框里打字就原地重渲评论串。 */

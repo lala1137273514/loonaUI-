@@ -51,6 +51,8 @@
 
     <!-- 左：事件时间线 -->
     <section class="wb-col left">
+      <!-- 立场带：当前 case 对应的「框架立场」标签（演示对照用） -->
+      <div class="stance-bar" id="stanceBar" hidden></div>
       <div class="col-title"><span>事件时间线 · 理想链路</span><span id="tlCount"></span></div>
       <div class="tl-toolbar">
         <div class="tl-search">
@@ -171,6 +173,8 @@
 <script src="cases/travel_theme_chengdu.js"></script>
 <script src="cases/travel_logistics_demo.js"></script>
 <script src="cases/meeting_action.js"></script>
+<!-- case「立场标签」映射（演示对照用） -->
+<script src="js/case-stance.js"></script>
 <!-- 运行配置 + 评论同步层（Supabase 实时多人 / localStorage 单机兜底；file:// 可跑） -->
 <script src="js/config.js"></script>
 <script src="js/comment-sync.js"></script>
