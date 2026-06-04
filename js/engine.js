@@ -31,6 +31,9 @@
       this._lastConfirm = null;
       this.onSelect = null;             // (idx, ev) 钩子，editor 用
       this.onState = null;              // (stateObj) 钩子，控制条用
+      this.onStep = null;              // (idx) 钩子，故事板 feed 滚动到 active tile 用
+      this.storyboardMode = false;     // 开启后播放/seek 不再渲染 live 舞台（tile 已预建），只滚动+念
+      this._building = false;          // buildStoryboard 进行中（绕过 storyboardMode 门，真渲染以便克隆）
       this._initSynth();
       // web_ui 同款轮播控制器（原样搬来的 CortexCarousel）：结果卡走它，澄清/确认仍走玻璃浮层
       if (global.CortexCarousel && refs.carouselPanel && refs.carouselRail && refs.carouselTitle) {
@@ -367,6 +370,7 @@
 
     /* ---------- 渲染单个事件 ---------- */
     _renderEvent: function (ev, i, instant) {
+      if (this.storyboardMode && !this._building) return;   // 故事板态：tile 已预建，播放/seek 不重渲 live 舞台
       var comp = ev.comp;
       if (comp === 'agent_step') { this._renderAgentStep(ev, i); return; }      // 仅侧轨
       if (ev.internal) { this._renderAgentStep(ev, i); return; }
@@ -745,6 +749,48 @@
     },
     _setPlaying: function (on) { this._playing = on; if (this.refs.stage) this.refs.stage.classList.toggle('is-playing', !!on); },
 
+    /* ---------- 故事板快照 ---------- */
+    /* 累积渲染 0..N（不在事件间清屏），每步把 #loonaStage 深克隆成一块静态 tile。
+       agent_step/internal → 返回决策条数据(不克隆)。供中间瀑布 feed 平铺。
+       注意：必须累积（像 seekTo），否则带 highlight 的 tts 步会丢掉它依附的轮播。 */
+    buildStoryboard: function () {
+      var prevBuilding = this._building;
+      this._cancel();
+      this._building = true;
+      this._clearStage();
+      var tiles = [];
+      for (var i = 0; i < this.events.length; i++) {
+        var ev = this.events[i];
+        this._renderEvent(ev, i, true);
+        var tp = this._ttsOf(ev);
+        if (tp && tp.text) this._setSubtitle(tp.text, true, ev.comp === 'user_query' ? 'user' : 'loona');
+        if (tp && tp.highlight) this._highlightCard(tp.highlight);
+        var isAgent = (ev.comp === 'agent_step' || ev.internal);
+        var tile = { idx: i, comp: ev.comp, agent: isAgent, label: this._stageLabel(ev),
+          text: ev.text || (tp && tp.text) || ev.decision || '' };
+        if (isAgent) {
+          tile.agentLabel = ev.label || 'AGENT STEP';
+          tile.agentDecision = ev.decision || ev.text || '';
+          tile.agentFields = (ev.fields || []).slice();
+        } else {
+          var clone = this.refs.stage.cloneNode(true);
+          var origRail = this.refs.carouselRail, cr = clone.querySelector('.carousel-rail');
+          if (origRail && cr) cr.scrollLeft = origRail.scrollLeft;
+          var idd = clone.querySelectorAll('[id]'); for (var k = 0; k < idd.length; k++) idd[k].removeAttribute('id');
+          clone.removeAttribute('id');
+          tile.empty = !(this.refs.carouselPanel && !this.refs.carouselPanel.classList.contains('hidden')) &&
+            !(this.refs.storyLayer && this.refs.storyLayer.classList.contains('show')) &&
+            !(this.refs.contentArea && this.refs.contentArea.children.length);
+          tile.dom = clone;
+        }
+        tiles.push(tile);
+      }
+      this._clearStage();
+      this._building = prevBuilding;
+      this.idx = 0; this._prevT = 0;
+      return tiles;
+    },
+
     /* ---------- 时间线（左栏） ---------- */
     rebuildTimeline: function () {
       var tl = this.refs.timeline; if (!tl) return;
@@ -808,13 +854,18 @@
         row.appendChild(flag);
       }
     },
-    refreshRowFlags: function () { var rows = this.refs.timeline.querySelectorAll('.tl-event'); for (var i = 0; i < rows.length; i++) this._applyRowFlag(rows[i], +rows[i].dataset.idx); },
+    refreshRowFlags: function () {
+      var rows = this.refs.timeline.querySelectorAll('.tl-event');
+      for (var i = 0; i < rows.length; i++) this._applyRowFlag(rows[i], +rows[i].dataset.idx);
+      if (global.LoonaStoryboard && this.storyboardMode && LoonaStoryboard.onCommentsChanged) LoonaStoryboard.onCommentsChanged();
+    },
     _setCurrent: function (idx) {
       var rows = this.refs.timeline.querySelectorAll('.tl-event');
       for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('current', +rows[i].dataset.idx === idx);
       var cur = this.refs.timeline.querySelector('.tl-event.current');
       if (cur) cur.scrollIntoView({ block: 'nearest' });
       this._reflectAnnLive(idx);
+      if (this.onStep) this.onStep(idx);   // 故事板：滚动 feed 到当前 tile + 高亮
     },
     /* 播放/跳转时在设备外提示「本步有标注」——强可见性，不碰产品 UI */
     _reflectAnnLive: function (idx) {

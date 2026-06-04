@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/scenario-forms.css">
 <link rel="stylesheet" href="css/carousel.css">
 <link rel="stylesheet" href="css/console.css">
+<link rel="stylesheet" href="css/storyboard.css">
 </head>
 <body>
 <div class="wb">
@@ -78,7 +79,10 @@
       <div class="now-stage" id="nowStage">IDLE · 待命</div>
       <!-- 播放时「本步有标注」提示（设备外，不碰产品 UI） -->
       <button class="ann-live" id="annLive" hidden></button>
-      <div class="stage-wrap">
+      <!-- 瀑布故事板：每个事件=一块宽舞台截图，往下平铺（buildStoryboard 出快照） -->
+      <div class="storyboard" id="storyboardFeed"></div>
+      <!-- 隐藏暂存舞台：仅供 buildStoryboard 渲染+克隆，不直接展示 -->
+      <div class="sb-staging" id="sbStaging">
         <!-- web_ui 同款舞台：深色大眼睛底图，结果走轮播，澄清/确认/状态/字幕走玻璃浮层 -->
         <div class="loona-stage web-stage" id="loonaStage">
           <!-- 内容遮罩（玻璃浮层出现时柔化背景） -->
@@ -117,19 +121,32 @@
 
     <!-- 右：agent 侧轨 + 编辑器（可拖拽分隔 + 侧轨可折叠） -->
     <section class="wb-col right">
-      <div class="right-split" id="rightSplit">
-        <section class="rs-pane rs-sidetrack" id="paneSidetrack">
-          <div class="col-title rs-head" id="sidetrackHead">
-            <span><span class="rs-caret">▾</span> agent 处理 · 内部决策侧轨</span>
-            <span class="rs-count" id="sidetrackCount"></span>
-          </div>
-          <div class="sidetrack" id="sideTrack"></div>
-        </section>
-        <div class="rs-divider" id="rsDivider" title="拖动调整上下高度 · 双击复位"></div>
-        <section class="rs-pane rs-editor">
-          <div class="col-title">批注 / 编辑（点事件改 4 面）</div>
+      <div class="review-hub" id="reviewHub">
+        <!-- 选中节点的评论串（点中间任一节点联动） -->
+        <div class="rh-block rh-nodeblock">
+          <div class="rh-title">节点评论</div>
+          <div class="rh-thread" id="rhThread"></div>
+        </div>
+        <!-- 总评（整条链路，event_idx = -1） -->
+        <details class="rh-det" open>
+          <summary>📋 总评（整条链路）</summary>
+          <div class="rh-summary" id="rhSummary"></div>
+        </details>
+        <!-- 全链评论活动流 -->
+        <details class="rh-det" open>
+          <summary>🕓 评论活动流 <span class="rh-cnt" id="rhActCount"></span></summary>
+          <div class="rh-activity" id="rhActivity"></div>
+        </details>
+        <!-- 折叠保留：编辑链路 -->
+        <details class="rh-det">
+          <summary>✎ 编辑链路（改文案 / 节奏 / 卡内容）</summary>
           <div class="editor" id="editor"></div>
-        </section>
+        </details>
+        <!-- 折叠保留：agent 内部决策日志（侧轨；引擎渲染落点，保留） -->
+        <details class="rh-det">
+          <summary>⚙ agent 内部决策日志</summary>
+          <div class="sidetrack" id="sideTrack"></div>
+        </details>
       </div>
     </section>
 
@@ -181,6 +198,7 @@
 <script src="js/engine.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/console.js"></script>
+<script src="js/storyboard.js"></script>
 <script src="js/news-gestures.js"></script>
 <script>
 (function () {
@@ -197,6 +215,7 @@
   var engine = LoonaEngine.init(refs);
   LoonaEditor.init(engine, { editor: $('editor') });
   LoonaConsole.init(engine, { variantBar: $('variantBar'), btnCompare: $('btnCompare'), cmpOverlay: $('cmpOverlay'), tlCount: $('tlCount') });
+  LoonaStoryboard.init(engine, { feed: $('storyboardFeed'), nodeThread: $('rhThread'), summaryBody: $('rhSummary'), activityBody: $('rhActivity'), actCount: $('rhActCount') });
 
   /* ===== 左栏时间线：搜索 + 类型筛选（纯视图层，链路重建后自动重应用） ===== */
   var tlSearch = $('tlSearch'), tlSearchX = $('tlSearchX'), tlFilters = $('tlFilters'), tlEmptyHint = $('tlEmptyHint'), sidetrackCount = $('sidetrackCount');

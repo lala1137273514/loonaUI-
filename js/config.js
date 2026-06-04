@@ -23,9 +23,8 @@
      -- 开启 Realtime：Database → Replication → 勾选 public.comments
    说明：策略对"可信内部小团队"开放读写；要锁定再加 Supabase Auth。
    ============================================================ */
-window.LOONA_SUPABASE = null;
-// 开启示例（取消注释并填入自己的值）：
-// window.LOONA_SUPABASE = { url: 'https://xxxxxxxx.supabase.co', anonKey: 'eyJhbGci...' , table: 'comments' };
+window.LOONA_SUPABASE = { url: 'https://btjpgadfxrxfytillsod.supabase.co', anonKey: 'sb_publishable_cU6PcpNT76-sIhFHsEKAww_AKyjL2oS', table: 'comments' };
+// 不接时设为 null 即回到单机 localStorage 模式。
 
 /* 配置存在时，按需注入 supabase-js（CDN）。没配置就完全不发任何远程请求。 */
 (function () {

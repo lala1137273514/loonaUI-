@@ -226,6 +226,7 @@
       this.curVariant = 0;
       this._bindComments(id);
       this._renderStance(id);
+      if (global.LoonaStoryboard && LoonaStoryboard.rebuild) LoonaStoryboard.rebuild();
       if (this.refs.tlCount) this.refs.tlCount.textContent = this.engine.events.length + ' 步';
       this.renderBar();
     },
@@ -275,6 +276,7 @@
       this.engine.setTheme((v.caseObj && v.caseObj.default_skin) || this.engine.theme || 'glass');
       this.curVariant = i;
       this._bindComments(this.curCaseId);
+      if (global.LoonaStoryboard && LoonaStoryboard.rebuild) LoonaStoryboard.rebuild();
       if (this.refs.tlCount) this.refs.tlCount.textContent = this.engine.events.length + ' 步';
       this.renderBar();
       if (global.LoonaEditor && LoonaEditor._renderEmpty) LoonaEditor._renderEmpty();
