@@ -541,7 +541,12 @@
   var SKIN_FORM = { glass: 'card', bubble: 'bubble', aura: 'immersive' };
   function confBadge(c) { return c ? badge(confLabel(c), conf2kind(c)) : null; }
   function metaText(it) { return (it.source || '') + (it.time ? (' · ' + it.time) : ''); }
-  function newsThumb(src, cls) { var w = el('span', 'nf-thumb ' + (cls || '')); if (src) { var im = el('img'); im.src = src; im.alt = ''; im.draggable = false; w.appendChild(im); } return w; }
+  function newsThumb(src, cls) {
+    if (!src) return null;
+    var w = el('span', 'nf-thumb ' + (cls || ''));
+    var im = el('img'); im.src = src; im.alt = ''; im.draggable = false; w.appendChild(im);
+    return w;
+  }
 
   /* 关键要点列表(bullets)：聚焦态高密度用 */
   function pointsBlock(points, cls, max) {
@@ -559,7 +564,9 @@
     var body = el('div', 'nfc-rows');
     (c.items || []).forEach(function (it) {
       var r = el('div', 'nfc-row'); if (it.id) r.dataset.rowId = it.id;
-      r.appendChild(newsThumb(it.image));
+      var thumb = newsThumb(it.image);
+      if (thumb) r.appendChild(thumb);
+      else r.classList.add('nfc-row-no-image');
       var info = el('div', 'nfc-info');
       info.appendChild(el('div', 'nfc-title', esc(it.title || '')));
       if (it.summary) info.appendChild(el('div', 'nfc-sum', esc(it.summary)));

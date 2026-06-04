@@ -28,6 +28,14 @@ window.LOONA_STANCE = {
   /* —— 深度：后勤 OTA L2（交通/住宿/预算） —— */
   travel_logistics_demo: { role: '深度·后勤 L2', ota: 'L2', form: '后勤卡·交通/住宿/预算', narrative: '结构化', turns: '0轮·看', clarify: '不澄清', selling: '中·务实', memory: '—' },
 
+  /* —— Cortex 三场景：原始链路 vs V2 优化链路对照 —— */
+  cortex_mail_priority: { role: 'V1·P级优先', ota: 'Cortex', form: '邮件列表轮播', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '低·效率', memory: 'P0/P1' },
+  cortex_mail_priority_v2: { role: 'V2·用户关注', ota: 'Cortex', form: 'brief→重点卡', narrative: '结构化', turns: '0轮·可接动作', clarify: '不澄清', selling: '低·效率', memory: '关注原因' },
+  cortex_news_hot: { role: 'V1·搜索结果', ota: 'Cortex', form: '新闻入口列表', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '中·信息筛选', memory: 'P级排序' },
+  cortex_news_hot_v2: { role: 'V2·新闻入口', ota: 'Cortex', form: '入口列表→分段详情', narrative: '结构化', turns: '0轮·可追问', clarify: '不澄清', selling: '中·信息筛选', memory: '类型标签' },
+  cortex_calendar_week: { role: 'V1·日期聚合', ota: 'Cortex', form: '日程日期卡', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '低·提醒', memory: '同日聚合' },
+  cortex_calendar_week_v2: { role: 'V2·焦点对齐', ota: 'Cortex', form: '日程列表→逐项聚焦', narrative: '结构化', turns: '0轮·可追问', clarify: '不澄清', selling: '低·提醒', memory: '时间冲突' },
+
   /* —— 对照：杭州三方案（同地不同形式，选型用） —— */
   travel_hangzhou_a: { role: '对照·封面钻取', ota: 'L1', form: '阶段轮播', narrative: '结构化', turns: '多轮·钻取', clarify: '停等', selling: '中', memory: '—' },
   travel_hangzhou_c: { role: '对照·总览条', ota: 'L1', form: '总览条', narrative: '结构化', turns: '多轮·钻取', clarify: '停等', selling: '中', memory: '—' },
