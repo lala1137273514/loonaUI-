@@ -25,6 +25,7 @@
 .news-card-list .nfc-rows { display:flex; flex-direction:column; gap:9px; width:100%; }
 .nfc-row { display:flex; align-items:center; gap:11px; width:100%; border-radius:10px;
   transition:background .25s, box-shadow .25s, padding .25s; }
+.nfc-row-no-image { padding-left:0; }
 .nfc-info { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:3px; }
 .nfc-title { font-size:13.5px; font-weight:600; color:var(--t0); line-height:1.28; word-break:break-word;
   display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }

@@ -197,6 +197,97 @@
   border-color: rgba(255, 180, 84, 0.85);
 }
 
+.search-card.no-image {
+  padding: 18px 20px 20px;
+  gap: 14px;
+}
+
+.news-detail-structured {
+  gap: 10px;
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.news-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.news-detail-badge {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 170, 0, 0.92);
+  color: #543d18;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.news-detail-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-card .news-detail-title {
+  display: block;
+  margin: 0;
+  overflow: visible;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.25;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.search-card .news-detail-summary {
+  display: block;
+  margin: 0;
+  overflow: visible;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.news-detail-points {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.news-detail-point {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11.5px;
+  line-height: 1.36;
+}
+
+.news-detail-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #ffaa00;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.42);
+}
+
 .news-header {
   position: relative;
   display: flex;
@@ -217,10 +308,6 @@
   object-fit: cover;
 }
 
-.news-photo-ph {
-  background: linear-gradient(160deg, #5a5f68 0%, #34373d 60%, #24262a 100%);
-}
-
 .news-shade {
   position: absolute;
   inset: 0;
@@ -239,17 +326,23 @@
   line-height: 1;
 }
 
-.news-headline {
-  position: relative;
-  display: -webkit-box;
-  margin: 0;
-  overflow: hidden;
+.search-card .news-headline {
+  display: block;
+  margin: 0 2px;
+  overflow: visible;
   color: #ffffff;
   font-size: 16px;
   font-weight: 600;
   line-height: 1.3;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.search-card .news-headline-standalone {
+  font-size: 18px;
+  line-height: 1.32;
 }
 
 .news-body {
@@ -302,6 +395,7 @@ a.news-pill:hover {
   align-self: start;
   height: auto;
   max-height: 100%;
+  overflow-y: auto;
   padding: 16px 18px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
@@ -334,25 +428,36 @@ a.news-pill:hover {
   color: #1c1c1c;
 }
 
-.mail-subject {
+.mail-card .mail-subject {
+  display: block;
   margin: 12px 0 0;
-  font-size: 20px;
+  overflow: visible;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.25;
   color: #ffffff;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
 }
 
-.mail-from {
+.mail-card .mail-from,
+.mail-card .mail-recipient {
   margin-top: 8px;
-  overflow: hidden;
+  overflow: visible;
   font-size: 12px;
   color: rgba(255, 236, 198, 0.58);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
-.mail-time {
-  margin-top: 3px;
+.mail-card .mail-recipient {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.mail-card .mail-time {
+  margin-top: 5px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.76);
   font-variant-numeric: tabular-nums;
@@ -370,15 +475,80 @@ a.news-pill:hover {
   color: #ffc400;
 }
 
-.mail-sum-text {
-  display: -webkit-box;
+.mail-card .mail-sum-text {
+  display: block;
   margin: 6px 0 0;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 1.5;
+  overflow: visible;
+  font-size: 11.5px;
+  line-height: 1.42;
   color: rgba(255, 255, 255, 0.76);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 7;
+  white-space: pre-line;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.mail-brief-card {
+  gap: 0;
+  padding: 16px 18px;
+}
+
+.mail-brief-title {
+  margin-top: 10px;
+}
+
+.mail-brief-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+}
+
+.mail-brief-section h4 {
+  margin: 0 0 5px;
+  color: #ffc400;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mail-brief-section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mail-brief-section li {
+  position: relative;
+  padding-left: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+
+.mail-brief-section li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 196, 0, 0.78);
+}
+
+.mail-card .mail-brief-fallback {
+  display: block;
+  margin: 0;
+  overflow: visible;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-line;
 }
 
 .event-card {

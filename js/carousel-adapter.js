@@ -74,12 +74,12 @@
   function buildEmail(ev) {
     var c = ev.content || {}, items = (c.rows || []).map(function (r, i) {
       var sub = String(r.sub || ''), parts = sub.split(' · ');
-      var from = parts.length > 1 ? parts[0] : (r.sub || null);
-      var summary = parts.length > 1 ? parts.slice(1).join(' · ') : null;
+      var from = r.from || (parts.length > 1 ? parts[0] : null);
+      var summary = r.summary || (parts.length > 1 ? parts.slice(1).join(' · ') : r.sub || null);
       return mkItem(i + 1, 'mail', {
         id: r.id, title: r.title, subtitle: from, summary: summary,
         priority: r.badge && /^P\d/.test(r.badge.text || '') ? r.badge.text : null,
-        meta: r.right, raw: r
+        meta: r.received_at || r.time || r.right, raw: r
       });
     });
     return wrap('get_mail_list', c.title || '邮件', items);
