@@ -66,7 +66,7 @@
       var avail = feed.clientWidth - 36;
       var w = Math.max(0, Math.min(740, avail));
       var ps = Math.max(0.4, Math.min(1, w / 812));
-      var ks = Math.max(0.34, ps * 0.62);
+      var ks = ps;   // 关键帧与播放器同尺寸（用户要求一致大小）
       var root = document.documentElement;
       root.style.setProperty('--sb-scale', ps.toFixed(4));
       root.style.setProperty('--kf-scale', ks.toFixed(4));

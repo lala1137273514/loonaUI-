@@ -20,8 +20,19 @@
 
 /* ① 实时播放器：顶部固定一行（不随瀑布滚），点播放全链路在此跑；轮播可拖动/点击切卡。
    锁 812×375（UI-SPEC 内部坐标）+ 外层 --sb-scale 整体缩放，px 死数值忠实。 */
-.sb-player { flex: 0 0 auto; align-self: center; margin: 14px auto 6px; width: calc(812px * var(--sb-scale, .88)); height: calc(375px * var(--sb-scale, .88)); overflow: hidden; border-radius: 16px; background: #060606; box-shadow: 0 10px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08); }
+.sb-player-wrap { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; align-items: center; width: calc(812px * var(--sb-scale, .88)); max-width: 100%; margin: 10px auto 4px; }
+.sb-player { flex: 0 0 auto; margin: 6px auto 0; width: calc(812px * var(--sb-scale, .88)); height: calc(375px * var(--sb-scale, .88)); overflow: hidden; border-radius: 16px; background: #060606; box-shadow: 0 10px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08); transition: height .22s ease, opacity .18s ease; }
 .sb-player .sb-screen { transform: scale(var(--sb-scale, .88)); }
+
+/* 播放器抽屉条：默认收起，点条或播放键拉下来 */
+.sb-drawer { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 14px; cursor: pointer; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: linear-gradient(180deg, rgba(40,40,46,.92), rgba(24,24,28,.92)); color: #e8e8ec; font-size: 12.5px; letter-spacing: .3px; box-shadow: 0 4px 14px rgba(0,0,0,.32); transition: background .15s; }
+.sb-drawer:hover { background: linear-gradient(180deg, rgba(54,54,62,.96), rgba(34,34,40,.96)); }
+.sb-drawer-caret { font-size: 12px; transition: transform .2s; }
+.sb-drawer-txt { font-weight: 600; }
+.sb-drawer-hint { margin-left: auto; font-size: 11px; color: #8b8b93; }
+/* 收起：caret 朝右，播放器收成 0 高（保留宽度布局，居中算法仍有效）。展开：caret 朝下 */
+.sb-player-wrap.collapsed .sb-drawer-caret { transform: rotate(-90deg); }
+.sb-player-wrap.collapsed .sb-player { height: 0; margin: 0; opacity: 0; box-shadow: none; pointer-events: none; }
 
 /* ② 关键帧 tile（静态快照，小一号 filmstrip） */
 .sb-tile {
@@ -64,8 +75,8 @@
 .web-stage .carousel-panel .hotel-card,
 .web-stage .carousel-panel .budget-card { flex: 0 0 300px; width: 300px; max-height: 232px; }
 .web-stage .carousel-rail { gap: 18px; padding-inline: calc(50% - 163px); }
-.web-stage .carousel-head { padding: 8px 14px 4px; }
-.web-stage .carousel-head h2 { font-size: 13px; }
+.web-stage .carousel-head { padding: 6px 14px 2px; }
+.web-stage .carousel-head h2 { display: none; }   /* 删左上角「旅行规划」标题 */
 /* 叙事流 moment 卡也收进帧（≤帧高，居中） */
 .web-stage .story-layer .moment-card { flex: 0 0 380px; width: 380px; height: 300px; }
 .web-stage .story-layer .moment-title { font-size: 22px; }
