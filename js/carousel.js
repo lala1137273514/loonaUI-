@@ -206,15 +206,100 @@
     card.title = item.title || `条目 ${item.item_idx}`;
 
     const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
+    const cardType = raw.card_type || raw.news_card_type || "";
+    if (cardType === "data_metric") {
+      card.classList.add("no-image", "news-metric-card");
+      appendNewsMetricCard(card, item, raw);
+      return card;
+    }
+    if (cardType === "no_image_points") {
+      card.classList.add("no-image", "news-points-card");
+      appendNewsPointsCard(card, item, raw);
+      return card;
+    }
+    if (cardType === "quote_statement") {
+      card.classList.add("no-image", "news-quote-card");
+      appendNewsQuoteCard(card, item, raw);
+      return card;
+    }
     if (!item.photo && raw.detail_points) {
       card.classList.add("no-image", "news-detail-structured");
       appendNewsDetailStructured(card, item, raw);
       return card;
     }
 
+    if (cardType === "image_story") {
+      card.classList.add("news-image-story");
+    }
     appendNewsHeader(card, item);
     appendNewsFooter(card, item);
     return card;
+  }
+
+  function appendNewsTypeHead(card, item, label) {
+    const head = document.createElement("div");
+    head.className = "news-type-head";
+    const badge = createTextElement("span", label || "news");
+    badge.className = "news-type-badge";
+    head.appendChild(badge);
+    card.appendChild(head);
+  }
+
+  function appendNewsBullets(card, bullets) {
+    if (!Array.isArray(bullets) || !bullets.length) return;
+    const list = document.createElement("div");
+    list.className = "news-type-bullets";
+    bullets.forEach(function (text) {
+      const row = document.createElement("div");
+      row.className = "news-type-bullet";
+      row.appendChild(document.createElement("span"));
+      row.appendChild(createTextElement("b", text));
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+  }
+
+  function appendNewsPointsCard(card, item, raw) {
+    appendNewsTypeHead(card, item, raw.type_label || "要点");
+    const title = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
+    title.className = "news-type-title";
+    card.appendChild(title);
+    appendNewsBullets(card, raw.bullets || raw.points || []);
+    appendNewsFooter(card, item, { includeNoImage: true });
+  }
+
+  function appendNewsMetricCard(card, item, raw) {
+    appendNewsTypeHead(card, item, raw.type_label || "数据");
+    const title = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
+    title.className = "news-type-title";
+    card.appendChild(title);
+
+    const metric = raw.metric || {};
+    const box = document.createElement("div");
+    box.className = "news-metric-box";
+    box.appendChild(createTextElement("strong", metric.value || raw.metric_value || ""));
+    box.appendChild(createTextElement("span", metric.label || raw.metric_label || ""));
+    if (metric.trend || raw.metric_trend) {
+      box.appendChild(createTextElement("em", metric.trend || raw.metric_trend));
+    }
+    card.appendChild(box);
+    appendNewsBullets(card, raw.bullets || []);
+    appendNewsFooter(card, item, { includeNoImage: true });
+  }
+
+  function appendNewsQuoteCard(card, item, raw) {
+    appendNewsTypeHead(card, item, raw.type_label || "表态");
+    const quote = createTextElement("blockquote", raw.quote || item.summary || "");
+    quote.className = "news-quote-text";
+    card.appendChild(quote);
+    const title = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
+    title.className = "news-quote-title";
+    card.appendChild(title);
+    if (raw.speaker) {
+      card.appendChild(createTextElement("p", raw.speaker));
+      card.lastChild.className = "news-quote-speaker";
+    }
+    appendNewsFooter(card, item, { includeNoImage: true });
   }
 
   function appendNewsDetailStructured(card, item, raw) {
@@ -224,12 +309,6 @@
     const badge = createTextElement("span", badgeText);
     badge.className = "news-detail-badge";
     head.appendChild(badge);
-    const meta = [item.subtitle, item.meta].filter(Boolean).join(" · ");
-    if (meta) {
-      const m = createTextElement("span", meta);
-      m.className = "news-detail-meta";
-      head.appendChild(m);
-    }
     card.appendChild(head);
 
     const title = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
@@ -252,11 +331,26 @@
         const dot = document.createElement("span");
         dot.className = "news-detail-dot";
         row.appendChild(dot);
-        row.appendChild(createTextElement("span", point));
+        const text = String(point || "");
+        const zhSplit = text.indexOf("：");
+        const enSplit = text.indexOf(":");
+        const splitAt = zhSplit >= 0 ? zhSplit : enSplit;
+        if (splitAt > 0 && splitAt <= 22) {
+          const copy = document.createElement("span");
+          copy.className = "news-detail-point-copy";
+          const label = createTextElement("strong", text.slice(0, splitAt));
+          label.className = "news-detail-point-label";
+          copy.appendChild(label);
+          copy.appendChild(createTextElement("span", text.slice(splitAt + 1)));
+          row.appendChild(copy);
+        } else {
+          row.appendChild(createTextElement("span", text));
+        }
         list.appendChild(row);
       });
       card.appendChild(list);
     }
+    appendNewsFooter(card, item, { includeNoImage: true });
   }
 
   function appendNewsHeader(card, item) {
@@ -281,8 +375,10 @@
     shade.className = "news-shade";
     header.appendChild(shade);
 
+    const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
     const prio = String(item.priority || "").toUpperCase();
-    const badge = createTextElement("span", /^P[0-9]$/.test(prio) ? prio + " · news" : "news");
+    const badgeText = raw.type_label || (/^P[0-9]$/.test(prio) ? prio + " · news" : (item.priority || "news"));
+    const badge = createTextElement("span", badgeText);
     badge.className = "news-badge";
     header.appendChild(badge);
     card.appendChild(header);
@@ -292,16 +388,18 @@
     card.appendChild(headline);
   }
 
-  function appendNewsFooter(card, item) {
-    if (card.classList.contains("no-image")) return;
+  function appendNewsFooter(card, item, options) {
+    options = options || {};
+    if (card.classList.contains("no-image") && !options.includeNoImage) return;
+    const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
     const source = item.subtitle || sourceFromLink(item.link);
     const time = item.meta;
     if (!source && !time) return;
 
     const footer = document.createElement("div");
-    footer.className = "news-footer";
+    footer.className = "news-footer" + (options.includeNoImage ? " news-footer-inline" : "");
     if (source) {
-      const s = createTextElement(item.link ? "a" : "span", "来源:" + source);
+      const s = createTextElement(item.link ? "a" : "span", (raw.source_label || "来源") + ":" + source);
       s.className = "news-pill";
       if (item.link) {
         s.href = item.link;
@@ -335,6 +433,9 @@
     if (raw.card_type === "brief") {
       return buildMailBriefCarouselCard(item, raw);
     }
+    if (raw.card_type === "draft") {
+      return buildMailDraftCarouselCard(item, raw);
+    }
 
     const card = document.createElement("article");
     card.className = "result-card mail-card";
@@ -353,15 +454,9 @@
 
     // 发件人（item.subtitle = from）
     if (item.subtitle) {
-      const from = createTextElement("div", "发件人：" + item.subtitle);
+      const from = createTextElement("div", (raw.from_label || "发件人") + (raw.label_separator || "：") + item.subtitle);
       from.className = "mail-from";
       card.appendChild(from);
-    }
-    const recipients = [raw.to, raw.cc ? "抄送：" + raw.cc : ""].filter(Boolean).join("  ");
-    if (recipients) {
-      const to = createTextElement("div", "收件人：" + recipients);
-      to.className = "mail-recipient";
-      card.appendChild(to);
     }
     // 时间（meta 多为空 → 从 raw.internal_date 取并格式化）
     const time = mailTime(item);
@@ -375,7 +470,7 @@
       const divider = document.createElement("div");
       divider.className = "mail-div";
       card.appendChild(divider);
-      const label = createTextElement("div", "摘要");
+      const label = createTextElement("div", raw.summary_label || "摘要");
       label.className = "mail-sum-label";
       card.appendChild(label);
       const text = createTextElement("p", item.summary);
@@ -387,46 +482,157 @@
 
   function buildMailBriefCarouselCard(item, raw) {
     const card = document.createElement("article");
-    card.className = "result-card mail-card mail-brief-card";
+    card.className = "result-card mail-brief-card";
     card.dataset.itemIdx = item.item_idx;
     card.title = item.title || `条目 ${item.item_idx}`;
 
-    const badge = createTextElement("span", "mail brief");
-    badge.className = "mail-badge";
-    card.appendChild(badge);
-
-    const subject = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
-    subject.className = "mail-subject mail-brief-title";
-    card.appendChild(subject);
-
+    const top = document.createElement("div");
+    top.className = "mail-brief-top";
+    const badge = createTextElement("span", "brief");
+    badge.className = "mail-brief-badge";
+    top.appendChild(badge);
     const time = mailTime(item);
     if (time) {
-      const t = createTextElement("div", time);
-      t.className = "mail-time";
-      card.appendChild(t);
+      const t = createTextElement("span", time);
+      t.className = "mail-brief-time";
+      top.appendChild(t);
+    }
+    card.appendChild(top);
+
+    const subject = createTextElement("h3", item.title || `条目 ${item.item_idx}`);
+    subject.className = "mail-brief-title";
+    card.appendChild(subject);
+
+    const metrics = Array.isArray(raw.metrics) ? raw.metrics : [];
+    if (metrics.length) {
+      const grid = document.createElement("div");
+      grid.className = "mail-brief-metrics";
+      metrics.forEach(function (metric) {
+        const cell = document.createElement("div");
+        cell.className = "mail-brief-metric" + (metric.kind ? " is-" + metric.kind : "");
+        cell.appendChild(createTextElement("span", metric.value || ""));
+        cell.appendChild(createTextElement("b", metric.label || ""));
+        grid.appendChild(cell);
+      });
+      card.appendChild(grid);
     }
 
-    const sections = Array.isArray(raw.sections) ? raw.sections : [];
+    const attention = Array.isArray(raw.attention_items) ? raw.attention_items : [];
     const wrap = document.createElement("div");
-    wrap.className = "mail-brief-sections";
-    sections.forEach(function (section) {
-      const group = document.createElement("section");
-      group.className = "mail-brief-section";
-      group.appendChild(createTextElement("h4", section.title || ""));
-      const list = document.createElement("ul");
-      (section.items || []).forEach(function (text) {
-        const li = createTextElement("li", text);
-        list.appendChild(li);
+    wrap.className = "mail-brief-attention";
+    if (attention.length) {
+      const head = document.createElement("div");
+      head.className = "mail-brief-attention-head";
+      head.appendChild(createTextElement("span", raw.attention_title || "需要关注"));
+      head.appendChild(createTextElement("b", raw.attention_count_text || (String(attention.length) + " 封")));
+      wrap.appendChild(head);
+      attention.forEach(function (entry) {
+        const row = document.createElement("div");
+        row.className = "mail-brief-attention-row";
+        row.appendChild(createTextElement("h4", entry.title || ""));
+        if (entry.summary) {
+          row.appendChild(createTextElement("p", entry.summary));
+        }
+        wrap.appendChild(row);
       });
-      group.appendChild(list);
-      wrap.appendChild(group);
-    });
-    if (!sections.length && item.summary) {
+    } else if (item.summary) {
       const fallback = createTextElement("p", item.summary);
       fallback.className = "mail-brief-fallback";
       wrap.appendChild(fallback);
     }
     card.appendChild(wrap);
+    return card;
+  }
+
+  function buildMailDraftCarouselCard(item, raw) {
+    if (raw.layout === "split") {
+      return buildMailDraftSplitCarouselCard(item, raw);
+    }
+
+    const card = document.createElement("article");
+    card.className = "result-card mail-draft-card";
+    card.dataset.itemIdx = item.item_idx;
+    card.title = item.title || `条目 ${item.item_idx}`;
+
+    const top = document.createElement("div");
+    top.className = "mail-draft-top";
+    top.appendChild(createTextElement("span", raw.draft_label || "AI 草稿"));
+    const state = createTextElement("b", raw.status || "待确认");
+    top.appendChild(state);
+    card.appendChild(top);
+
+    const title = createTextElement("h3", item.title || "邮件回复草稿");
+    title.className = "mail-draft-title";
+    card.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "mail-draft-meta";
+    if (raw.from) meta.appendChild(createTextElement("span", (raw.from_label || "发件人") + (raw.label_separator || "：") + raw.from));
+    if (raw.to) meta.appendChild(createTextElement("span", (raw.to_label || "收件人") + (raw.label_separator || "：") + raw.to));
+    if (raw.draft_subject) meta.appendChild(createTextElement("span", (raw.subject_label || "标题") + (raw.label_separator || "：") + raw.draft_subject));
+    card.appendChild(meta);
+
+    const body = createTextElement("p", raw.draft_body || item.summary || "");
+    body.className = "mail-draft-body";
+    card.appendChild(body);
+
+    const actions = document.createElement("div");
+    actions.className = "mail-draft-actions";
+    actions.appendChild(createTextElement("button", raw.confirm_label || "确认发送"));
+    actions.appendChild(createTextElement("button", raw.cancel_label || "取消"));
+    actions.firstChild.className = "mail-draft-btn confirm";
+    actions.lastChild.className = "mail-draft-btn cancel";
+    card.appendChild(actions);
+    return card;
+  }
+
+  function buildMailDraftSplitCarouselCard(item, raw) {
+    const card = document.createElement("article");
+    card.className = "result-card mail-draft-card is-split";
+    card.dataset.itemIdx = item.item_idx;
+    card.title = item.title || `条目 ${item.item_idx}`;
+
+    const layout = document.createElement("div");
+    layout.className = "mail-draft-split";
+
+    const info = document.createElement("div");
+    info.className = "mail-draft-info";
+    const top = document.createElement("div");
+    top.className = "mail-draft-top";
+    top.appendChild(createTextElement("span", raw.draft_label || "AI 草稿"));
+    top.appendChild(createTextElement("b", raw.status || "待确认"));
+    info.appendChild(top);
+
+    const title = createTextElement("h3", item.title || "邮件回复草稿");
+    title.className = "mail-draft-title";
+    info.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "mail-draft-meta";
+    if (raw.from) meta.appendChild(createTextElement("span", (raw.from_label || "发件人") + (raw.label_separator || "：") + raw.from));
+    if (raw.to) meta.appendChild(createTextElement("span", (raw.to_label || "收件人") + (raw.label_separator || "：") + raw.to));
+    if (raw.draft_subject) meta.appendChild(createTextElement("span", (raw.subject_label || "标题") + (raw.label_separator || "：") + raw.draft_subject));
+    info.appendChild(meta);
+
+    const editor = document.createElement("div");
+    editor.className = "mail-draft-editor";
+    const body = document.createElement("textarea");
+    body.className = "mail-draft-body mail-draft-textarea";
+    body.value = raw.draft_body || item.summary || "";
+    body.readOnly = true;
+    editor.appendChild(body);
+
+    const actions = document.createElement("div");
+    actions.className = "mail-draft-actions";
+    actions.appendChild(createTextElement("button", raw.confirm_label || "确认发送"));
+    actions.appendChild(createTextElement("button", raw.cancel_label || "取消"));
+    actions.firstChild.className = "mail-draft-btn confirm";
+    actions.lastChild.className = "mail-draft-btn cancel";
+    editor.appendChild(actions);
+
+    layout.appendChild(info);
+    layout.appendChild(editor);
+    card.appendChild(layout);
     return card;
   }
 
@@ -579,6 +785,11 @@
 
     const head = document.createElement("div");
     head.className = "cal-head";
+    const englishCopy = items.some(function (it) {
+      const raw = it.raw && typeof it.raw === "object" ? it.raw : {};
+      const row = raw.row && typeof raw.row === "object" ? raw.row : {};
+      return raw.copy_locale === "en" || row.copy_locale === "en";
+    });
     const badge = createTextElement("span", "calendar");
     badge.className = "cal-badge";
     head.appendChild(badge);
@@ -613,6 +824,21 @@
     if (diff === -1) return en ? "Yesterday" : "昨日日程";
     if (en) return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(parts[1]) - 1] + " " + Number(parts[2]);
     return Number(parts[1]) + "." + Number(parts[2]) + "日程";
+  }
+
+  function calDayLabelEn(date) {
+    const parts = String(date || "").split("-");
+    if (parts.length !== 3) {
+      return "Schedule";
+    }
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    if (diff === -1) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " Schedule";
   }
 
   function buildCalendarRow(item) {
