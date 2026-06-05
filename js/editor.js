@@ -69,6 +69,7 @@
       } else if (ev.comp === 'tts') {
         var s1 = this._section('① 口播 TTS');
         s1.appendChild(this._field('口播文字（会被念出 + 显示为字幕）', ev.text || '', function (v) { ev.text = v; }, true));
+        this._ttsSaveRow(s1, idx, ev);
         box.appendChild(s1);
       }
 
@@ -137,6 +138,38 @@
       var applied = el('div', 'ed-applied', '✓ 已写回内存（导出即得最新链路）');
       act.appendChild(applied); box._applied = applied;
       box.appendChild(act);
+    },
+
+    /* ---------- ① TTS 文案 · 本地保存 / 恢复原文（持久化到 localStorage，刷新 / 重选 case 仍在） ---------- */
+    _ttsSaveRow: function (section, idx, ev) {
+      var self = this, CON = global.LoonaConsole;
+      var row = el('div', 'ed-actions');
+      var saveBtn = el('button', 'ed-flag-btn', '💾 保存文案到本地');
+      var resetBtn = el('button', 'ed-flag-btn', '↩ 恢复原文');
+      var hint = el('div', 'ed-applied');
+      function refresh() {
+        var on = !!(CON && CON.hasTtsOverride && CON.hasTtsOverride(idx));
+        if (on) { hint.textContent = '✓ 已保存到本地（刷新 / 重选 case 仍在）'; hint.classList.add('show'); resetBtn.style.display = ''; }
+        else { hint.textContent = ''; hint.classList.remove('show'); resetBtn.style.display = 'none'; }
+      }
+      saveBtn.addEventListener('click', function () {
+        if (CON && CON.saveTtsOverride) CON.saveTtsOverride(idx, ev.text || '');
+        refresh();
+        if (CON && CON.toast) CON.toast('TTS 文案已保存到本地');
+      });
+      resetBtn.addEventListener('click', function () {
+        var id = (CON && CON.curCaseId) || (self.engine.caseObj && self.engine.caseObj.task_id);
+        var base = global.LOONA_CASES && global.LOONA_CASES[id];
+        var orig = (base && base.events && base.events[idx] && base.events[idx].text) || '';
+        ev.text = orig;
+        if (CON && CON.clearTtsOverride) CON.clearTtsOverride(idx);
+        self.select(idx);        // 重渲面板：输入框回到原文
+        self.previewStep(idx);   // 念一遍原文确认
+        if (CON && CON.toast) CON.toast('已恢复原文');
+      });
+      row.appendChild(saveBtn); row.appendChild(resetBtn);
+      section.appendChild(row); section.appendChild(hint);
+      refresh();
     },
 
     /* ---------- ③ TravelDayCard 编辑 ---------- */

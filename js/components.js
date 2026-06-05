@@ -438,6 +438,44 @@
   function clarifyCard(c, handlers) {
     c = c || {}; handlers = handlers || {};
     var body = el('div', 'clr-body');
+    /* understand 形态（纯展示理解卡，无可点）：语音产品不让点 chip。
+       亮「已知」(实框白字)+「我猜」(琥珀高亮，标在猜的)，问答全交口播+用户语音。 */
+    if (c.understand) {
+      var u = c.understand;
+      if (u.lead) body.appendChild(el('div', 'clr-lead', esc(u.lead)));
+      function uSeg(label, items, kind) {
+        if (!items || !items.length) return;
+        var seg = el('div', 'clr-und-seg ' + kind);
+        seg.appendChild(el('div', 'clr-und-lbl', esc(label)));
+        var chips = el('div', 'clr-und-chips');
+        items.forEach(function (s) { chips.appendChild(el('span', 'clr-und-chip ' + kind, esc(typeof s === 'string' ? s : (s.label || '')))); });
+        seg.appendChild(chips);
+        body.appendChild(seg);
+      }
+      uSeg(window.LOONA_LANG === 'en' ? 'Known' : '已知', u.known, 'known');
+      uSeg(window.LOONA_LANG === 'en' ? 'I remember' : '记得你', u.memory, 'guess');   // 用户画像/记忆点(L5)：从历史偏好推断，显化"懂你"
+      uSeg(window.LOONA_LANG === 'en' ? 'My guess' : '我猜你想', u.guess, 'guess');
+      var undCard = popLargeCard({ icon: el('span', 'cc-badge clr-badge', '?'), title: c.title || '', body: body, closeable: false });
+      undCard.classList.add('clarify-card-wrap', 'clarify-und-wrap');
+      return undCard;
+    }
+    /* 承接句 lead：顺着对话往下问的一句人话（不复述结论/不定性/不表功）。一张卡两屏靠 lead+问句节奏区分 */
+    if (c.lead) body.appendChild(el('div', 'clr-lead', esc(c.lead)));
+    /* chip 形态的问句（lead + ask.style:'chip'）：问句 + 可点 chip(单选/多选) + 弱文字链 skip。
+       chip 自身只演出可点态(无真选择逻辑，工作台靠后续 user_query 推进)；web search 拉取的 options 直接用，拉空退回 options_fallback */
+    if (c.ask && c.ask.style === 'chip') {
+      body.appendChild(el('div', 'clarify-ask', esc(c.ask.question || '')));
+      var opts = (c.ask.options && c.ask.options.length) ? c.ask.options : (c.ask.options_fallback || []);
+      if (opts.length) {
+        var chips = el('div', 'clarify-chips' + (c.ask.multi ? ' multi' : ''));
+        opts.forEach(function (o) { chips.appendChild(el('span', 'clarify-chip', esc(typeof o === 'string' ? o : (o.label || '')))); });
+        body.appendChild(chips);
+      }
+      if (c.ask.skip) body.appendChild(el('div', 'clarify-skip', esc(c.ask.skip) + ' ›'));
+      var chipCard = popLargeCard({ icon: el('span', 'cc-badge clr-badge', '?'), title: c.title || '', body: body, closeable: false });
+      chipCard.classList.add('clarify-card-wrap', 'clarify-chip-wrap');
+      return chipCard;
+    }
     if (c.question) body.appendChild(el('div', 'clr-q', esc(c.question)));
     /* 双卡模式：已确认(只读信息行，低调) + 待确认(高亮核心问题+选项)。给了 confirmed/ask 即走这套，不显「必填/选填」 */
     if (c.confirmed && c.confirmed.length) {
@@ -499,6 +537,58 @@
     }
     var card = popLargeCard({ icon: el('span', 'cc-badge clr-badge', '?'), title: c.title || '想先确认一下', body: body, closeable: false });  // 澄清是门：选项决策，无 X
     card.classList.add('clarify-card-wrap'); return card;
+  }
+
+  /* ---- ResultCard（收尾结果卡 · 新组件）：顶部大✓收束 + D1/D2/D3 章节徽章 + 结果三件套(纯事实，无金额) + 整宽琥珀主按钮(真实搜索页)。
+     复用 pop_large 框架；去表功(不贴「已记着/我空开了」)，靠结果体现。
+     content = { seal:{title,subtitle}, days:[{badge,text,star}], facts:[{icon,text}], primary:{label,count,href,empty_label} } ---- */
+  var RC_FACT_ICON = { calendar: '📅', weather: '☀', doc: '📄', hotel: '🛏' };
+  function resultCard(c) {
+    c = c || {};
+    var card = el('div', 'pop-large result-card-wrap card-state-done');
+    /* 顶部大号收束 ✓（区别于中间态卡：居中、琥珀大圆标） */
+    var sealWrap = el('div', 'rc-seal');
+    sealWrap.appendChild(el('span', 'rc-check', '✓'));
+    var seal = (c.seal || {});
+    if (seal.title) sealWrap.appendChild(el('div', 'rc-title', esc(seal.title)));
+    if (seal.subtitle) sealWrap.appendChild(el('div', 'rc-sub', esc(seal.subtitle)));
+    card.appendChild(sealWrap);
+
+    var body = el('div', 'pl-body rc-body');
+    /* D1/D2/D3 章节序号徽章行（章节序号样式，不套日程时间列） */
+    if (c.days && c.days.length) {
+      var dl = el('div', 'rc-days');
+      c.days.forEach(function (d) {
+        var row = el('div', 'rc-day');
+        row.appendChild(el('span', 'rc-day-badge', esc(d.badge || '')));
+        row.appendChild(el('span', 'rc-day-text', esc(d.text || '')));
+        if (d.star) row.appendChild(el('span', 'rc-day-star', '★'));
+        dl.appendChild(row);
+      });
+      body.appendChild(dl);
+    }
+    /* 结果三件套：每条 icon + 一句纯事实（无「我办了」主角腔） */
+    (c.facts || []).forEach(function (f) {
+      var r = el('div', 'rc-fact');
+      r.appendChild(el('span', 'rc-fact-ic', RC_FACT_ICON[f.icon] || '·'));
+      r.appendChild(el('span', 'rc-fact-tx', esc(f.text || '')));
+      body.appendChild(r);
+    });
+    card.appendChild(body);
+
+    /* 整宽琥珀主按钮「挑客栈·去订」→ 真实可达搜索页；命中 0 家走降级态(无外链、去点击) */
+    var p = c.primary || {};
+    var hasHotel = p.href && (p.count == null || p.count > 0);
+    var foot = el('div', 'pl-footer rc-foot');
+    if (hasHotel) {
+      var a = el('a', 'btn-fill primary rc-cta', esc(p.label || '去订'));
+      a.href = p.href; a.target = '_blank'; a.rel = 'noreferrer';
+      foot.appendChild(a);
+    } else {
+      foot.appendChild(el('div', 'btn-fill disabled rc-cta', esc(p.empty_label || '客栈线索先存着')));
+    }
+    card.appendChild(foot);
+    return card;
   }
 
   /* 脚注：字符串(可含 <span class=lbl>) 或节点 */
@@ -685,6 +775,7 @@
     NewsList: newsList, NewsFocus: newsFocus,
     /* 按展示类型（新，case 用这些） */
     ListCard: listCard, SubjectCard: subjectCard, SectionCard: sectionCard, ClarifyCard: clarifyCard,
+    ResultCard: resultCard,
     FailureCard: failureCard,
     /* 按业务卡（旧，gallery 示例/向后兼容保留） */
     TravelDayCard: travelDayCard, EmailCard: emailCard, MeetingActionCard: meetingActionCard,
@@ -714,7 +805,7 @@
     travelDayCard: travelDayCard, emailCard: emailCard, meetingActionCard: meetingActionCard,
     failureCard: failureCard, weatherCard: weatherCard, newsCard: newsCard, calendarCard: calendarCard,
     restaurantCard: restaurantCard, workflowCard: workflowCard,
-    lcRow: lcRow, listCard: listCard, subjectCard: subjectCard, sectionCard: sectionCard, clarifyCard: clarifyCard,
+    lcRow: lcRow, listCard: listCard, subjectCard: subjectCard, sectionCard: sectionCard, clarifyCard: clarifyCard, resultCard: resultCard,
     newsList: newsList, newsFocus: newsFocus, SKIN_FORM: SKIN_FORM,
     badge: badge, kindBadge: kindBadge, listItem: listItem, btnFill: btnFill,
     countdownRing: countdownRing, confirmCard: confirmCard, applyCardState: applyCardState, build: build
