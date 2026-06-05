@@ -187,13 +187,13 @@
           title: '已加进日程',
           rows: [
             { id: 'meet_moved', title: '部门同步会（挪到中午）', sub: '原在上午 · 给出发让路', lead: '12:00',
-              raw_start: '2026-06-07T12:00:00+08:00', raw_end: '2026-06-07T12:30:00+08:00', event_date: '2026-06-07', event_start_sort: 720, badge: { text: 'P2', kind: 'p2' } },
+              raw_start: '2026-06-07T12:00:00+08:00', raw_end: '2026-06-07T12:30:00+08:00', event_date: '2026-06-07', event_start_sort: 720 },
             { id: 'd1', title: '大理 Day1 · 古城热身', sub: '午后到 · 古城慢逛吃饵丝', lead: '14:30',
-              raw_start: '2026-06-07T14:30:00+08:00', raw_end: '2026-06-07T21:00:00+08:00', event_date: '2026-06-07', event_start_sort: 870, badge: { text: 'P1', kind: 'p1' } },
+              raw_start: '2026-06-07T14:30:00+08:00', raw_end: '2026-06-07T21:00:00+08:00', event_date: '2026-06-07', event_start_sort: 870 },
             { id: 'd2', title: '大理 Day2 · 环洱海看日落', sub: '骑行环湖 · 傍晚龙龛日落', lead: '09:30',
-              raw_start: '2026-06-08T09:30:00+08:00', raw_end: '2026-06-08T19:30:00+08:00', event_date: '2026-06-08', event_start_sort: 570, badge: { text: 'P1', kind: 'p1' } },
+              raw_start: '2026-06-08T09:30:00+08:00', raw_end: '2026-06-08T19:30:00+08:00', event_date: '2026-06-08', event_start_sort: 570 },
             { id: 'd3', title: '大理 Day3 · 喜洲返程', sub: '喜洲收尾 · 午后赶飞机', lead: '09:30',
-              raw_start: '2026-06-09T09:30:00+08:00', raw_end: '2026-06-09T15:00:00+08:00', event_date: '2026-06-09', event_start_sort: 570, badge: { text: 'P1', kind: 'p1' } }
+              raw_start: '2026-06-09T09:30:00+08:00', raw_end: '2026-06-09T15:00:00+08:00', event_date: '2026-06-09', event_start_sort: 570 }
           ],
           footer: '<span class="lbl">日程</span> 三天已排进日历，按天左右滑'
         } },
