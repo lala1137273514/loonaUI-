@@ -72,10 +72,10 @@
     label: 'Day 3 · 懒散收尾', pace: 'light', photo: 'assets/travel/dl_gucheng.jpg',
     theme: '懒散收尾', transport: '打车', total: '院子到机场约 18km',
     nodes: [
-      { time: '上午', place: '院子睡到自然醒', note: '不订闹钟，醒了再说' },
-      { time: '午后', place: '咖啡馆泡着', note: '晒太阳翻翻书，发会呆',
+      { time: '10:30', place: '院子睡到自然醒', note: '不订闹钟，醒了再说' },
+      { time: '13:00', place: '咖啡馆泡着', note: '晒太阳翻翻书，发会呆',
         transport_to_next: 'car', distance_to_next: '院子到机场约 18km', duration_to_next: '打车约 40 分' },
-      { time: '傍晚', place: '慢慢挪去机场', note: '路上买点乳扇带走' }
+      { time: '14:30', place: '慢慢挪去机场', note: '路上买点乳扇带走' }
     ],
     footer: '这天就躺平，不赶了'
   };
@@ -192,8 +192,8 @@
               raw_start: '2026-06-07T14:30:00+08:00', raw_end: '2026-06-07T21:00:00+08:00', event_date: '2026-06-07', event_start_sort: 870 },
             { id: 'd2', title: '大理 Day2 · 环洱海看日落', sub: '骑行环湖 · 傍晚龙龛日落', lead: '09:30',
               raw_start: '2026-06-08T09:30:00+08:00', raw_end: '2026-06-08T19:30:00+08:00', event_date: '2026-06-08', event_start_sort: 570 },
-            { id: 'd3', title: '大理 Day3 · 喜洲返程', sub: '喜洲收尾 · 午后赶飞机', lead: '09:30',
-              raw_start: '2026-06-09T09:30:00+08:00', raw_end: '2026-06-09T15:00:00+08:00', event_date: '2026-06-09', event_start_sort: 570 }
+            { id: 'd3', title: '大理 Day3 · 懒散收尾', sub: '院子泡到午后 · 从容赶飞机', lead: '10:30',
+              raw_start: '2026-06-09T10:30:00+08:00', raw_end: '2026-06-09T15:00:00+08:00', event_date: '2026-06-09', event_start_sort: 630 }
           ],
           footer: '<span class="lbl">日程</span> 三天已排进日历，按天左右滑'
         } },
