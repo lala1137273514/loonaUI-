@@ -583,7 +583,7 @@
     badge.className = "cal-badge";
     head.appendChild(badge);
     head.appendChild(createTextElement("h3", calDayLabel(date)));
-    const sub = createTextElement("div", (date && date !== "未排期" ? date + " · " : "") + items.length + " 个日程");
+    const sub = createTextElement("div", (date && date !== "未排期" ? date + " · " : "") + items.length + (window.LOONA_LANG === 'en' ? (items.length > 1 ? " events" : " event") : " 个日程"));
     sub.className = "cal-sub";
     head.appendChild(sub);
     card.appendChild(head);
@@ -600,16 +600,18 @@
   /* 相对今天：今日/明日/昨日日程；否则 M.D 日程 */
   function calDayLabel(date) {
     const parts = String(date || "").split("-");
+    const en = window.LOONA_LANG === 'en';
     if (parts.length !== 3) {
-      return "日程安排";
+      return en ? "Schedule" : "日程安排";
     }
     const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
-    if (diff === 0) return "今日日程";
-    if (diff === 1) return "明日日程";
-    if (diff === -1) return "昨日日程";
+    if (diff === 0) return en ? "Today" : "今日日程";
+    if (diff === 1) return en ? "Tomorrow" : "明日日程";
+    if (diff === -1) return en ? "Yesterday" : "昨日日程";
+    if (en) return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(parts[1]) - 1] + " " + Number(parts[2]);
     return Number(parts[1]) + "." + Number(parts[2]) + "日程";
   }
 
@@ -962,7 +964,7 @@
     if (item.photo) { const img = document.createElement("img"); img.className = "inspo-photo"; img.src = item.photo; img.alt = item.title || ""; card.appendChild(img); }
     else { const ph = document.createElement("div"); ph.className = "inspo-photo cover-photo-ph"; card.appendChild(ph); }
     const sh = document.createElement("div"); sh.className = "inspo-shade"; card.appendChild(sh);
-    if (item.rec) { const rb = createTextElement("span", "⭐ 我推这个"); rb.className = "inspo-rec"; card.appendChild(rb); }   // 方案主推徽标
+    if (item.rec) { const rb = createTextElement("span", window.LOONA_LANG === 'en' ? "⭐ My pick" : "⭐ 我推这个"); rb.className = "inspo-rec"; card.appendChild(rb); }   // 方案主推徽标
     const body = document.createElement("div"); body.className = "inspo-body";
     const ht = createTextElement("h3", item.title || "亮点"); ht.className = "inspo-title"; body.appendChild(ht);
     const tags = Array.isArray(item.tags) ? item.tags : [];
@@ -1150,7 +1152,9 @@
 
   function paceZh(p) {
     if (!p) return "";
-    const map = { light: "轻松", normal: "适中", intense: "紧凑", intence: "紧凑", relaxed: "轻松", moderate: "适中", packed: "紧凑" };
+    const map = window.LOONA_LANG === 'en'
+      ? { light: "Easy", normal: "Balanced", intense: "Packed", intence: "Packed", relaxed: "Easy", moderate: "Balanced", packed: "Packed" }
+      : { light: "轻松", normal: "适中", intense: "紧凑", intence: "紧凑", relaxed: "轻松", moderate: "适中", packed: "紧凑" };
     return map[String(p).toLowerCase()] || p;
   }
 
@@ -1158,7 +1162,8 @@
     const body = document.createElement("div");
     body.className = "trip-body";
     if (Array.isArray(item.nodes) && item.nodes.length) {
-      for (const node of item.nodes.slice(0, 4)) {
+      /* 时间轴卡可超 4 个节点（如环洱海骑行日 5 段，含傍晚龙龛日落王牌行）；卡身已内部滚动，封顶 6 不丢命门节点 */
+      for (const node of item.nodes.slice(0, 6)) {
         body.appendChild(buildTripNode(node));
       }
     } else {
@@ -1167,12 +1172,17 @@
     card.appendChild(body);
   }
 
+  /* 段间移动图标（不点名具体租赁/交通工具品牌；只给方式 motif）。大理三天：步行/骑行/大巴/打车 */
+  var TRIP_MOVE_ICON = { walk: "🚶", bike: "🚲", bus: "🚌", car: "🚕", drive: "🚗", train: "🚆", ferry: "⛴" };
+
   function buildTripNode(node) {
     const row = document.createElement("div");
-    row.className = "trip-node";
+    /* 王牌行整行高亮(▍ + ★)：仅 node.highlight 时；不点名系统行为，只视觉强调今日命门 */
+    row.className = "trip-node" + (node.highlight ? " trip-node-hl" : "");
 
     const head = document.createElement("div");
     head.className = "trip-node-head";
+    if (node.star) head.appendChild(Object.assign(createTextElement("span", "★"), { className: "trip-node-star" }));
     head.appendChild(createTextElement("strong", node.place || ""));
     const line = document.createElement("i");
     line.className = "trip-node-line";
@@ -1180,9 +1190,19 @@
     head.appendChild(createTextElement("span", node.time || ""));
     row.appendChild(head);
 
-    if (node.note) {
-      const note = createTextElement("p", node.note);
+    /* 段间移动（到下一节点）折进 note 行尾：· 🚲 骑行 8km · 约 40 分。
+       只占一行、不再用 ∝距离 的竖条——省纵向高度，密集日(环洱海 5 段)也能在一张卡里排全不切。
+       仅当给了任一衔接字段时拼接，老 case(无字段)完全不受影响 */
+    const moveBits = [node.distance_to_next, node.duration_to_next].filter(Boolean).map(function (s) { return String(s).replace(/\s+/g, ""); });
+    const moveTx = (node.transport_to_next ? (TRIP_MOVE_ICON[node.transport_to_next] || "→") + " " : "") + moveBits.join("·");
+    if (node.note || moveTx) {
+      const note = createTextElement("p", node.note || "");
       note.className = "trip-node-note";
+      if (moveTx) {
+        const mv = createTextElement("span", (node.note ? " · " : "") + moveTx);
+        mv.className = "trip-node-move";
+        note.appendChild(mv);
+      }
       row.appendChild(note);
     }
     return row;

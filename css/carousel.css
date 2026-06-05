@@ -714,8 +714,8 @@ a.news-pill:hover {
 
 /* ===== 旅游卡（精确对齐 Figma 1104:6939 "card_itinerary"） ===== */
 .trip-card {
-  gap: 16px;
-  padding: 10px;
+  gap: 4px;
+  padding: 9px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
   background:
@@ -731,11 +731,11 @@ a.news-pill:hover {
 }
 
 .trip-card { isolation: isolate; }
-/* hero 照片头 */
+/* hero 照片头：缩成窄 banner（弱化大图），把高度让给时间轴——时间轴才是日程卡主体 */
 .trip-header {
   position: relative;
-  flex: 0 0 100px;
-  height: 100px;
+  flex: 0 0 88px;
+  height: 88px;
   overflow: hidden;
   border-radius: 16px;
 }
@@ -816,17 +816,23 @@ a.news-pill:hover {
   white-space: nowrap;
 }
 
-/* 节点列表 */
+/* 节点列表（时间轴为主体；gap 收紧让 4-5 段在 300 高卡内尽量铺全，超出走卡内滚动不硬切） */
 .trip-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
   flex: 1 1 auto;
   min-height: 0;
   padding: 0 4px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+/* 时间轴超卡身高度时：底部渐隐边提示「下面还有」(premium 收口)；命门日落节点 highlight 时会滚进视野 */
+.trip-card .trip-body {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
 }
 
 .trip-node {
@@ -874,9 +880,12 @@ a.news-pill:hover {
 .trip-node-note {
   margin: 0;
   min-width: 0;
+  overflow: hidden;
   color: #cccccc;
   font-size: 12px;
   line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .trip-summary {
@@ -885,6 +894,19 @@ a.news-pill:hover {
   font-size: 13px;
   line-height: 1.4;
 }
+
+/* ===== 日程时间轴卡（工作台新增 · drill 钻取态）：王牌行整行高亮 + ★ + 段间移动 ┊图标+距离+时长 =====
+   仅当 node 带 highlight/star/transport_to_next/distance_to_next 时生效，老 trip 卡不受影响 */
+.trip-node-hl {
+  margin: 0 -6px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 10px;
+  background: rgba(255, 180, 84, 0.12);
+  box-shadow: inset 3px 0 0 #ffb454;   /* ▍整行高亮：左侧琥珀脊 */
+}
+.trip-node-star { color: #ffb454; font-size: 13px; flex: 0 0 auto; margin-right: 2px; }
+/* 段间移动折进 note 行尾的暗色后缀（🚲 骑行 8km · 约 40 分）：只占行内，省纵向高度让密集日排全 */
+.trip-node-move { color: #9aa2af; }
 
 @media (max-width: 920px) {
   .carousel-panel {
@@ -1287,9 +1309,9 @@ a.news-pill:hover {
    工作台新增：旅行两阶段轮播（封面卡 trip-cover + 翻转过渡 + 返回总览）
    一阶段=阶段封面（大图+tag）；二阶段=逐天详情卡（复用 .trip-card）。待并回 web_ui。
    ============================================================ */
-/* 旅行卡横向加大、居中（封面 + 日详情都加宽；其它场景卡不受影响）。居中靠 centerCarouselCard。 */
-.carousel-panel .trip-cover { flex: 0 0 468px; width: 468px; height: 360px; }
-.carousel-panel .trip-card { flex: 0 0 424px; width: 424px; }
+/* 统一横滑卡尺寸 460×300（方案/封面/日程一致）。居中靠 centerCarouselCard。 */
+.carousel-panel .trip-cover { flex: 0 0 460px; width: 460px; height: 300px; }
+.carousel-panel .trip-card { flex: 0 0 460px; width: 460px; height: 300px; }
 .trip-cover {
   position: relative; padding: 0; overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 24px; background: #222; box-shadow: none;
@@ -1378,8 +1400,8 @@ a.news-pill:hover {
 .tov-row-tag { flex: 0 0 auto; font-size: 11px; color: #ffd49a; background: rgba(255,180,84,.14); border: 1px solid rgba(255,180,84,.4); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .tov-row-arr { flex: 0 0 auto; color: rgba(255,255,255,.5); font-size: 18px; line-height: 1; }
 
-/* ===== B/方案选择：灵感卡（大图 + 主题 + tags + 强 punchline）。尺寸统一到 TravelStages 封面同款 ===== */
-.carousel-panel .inspo-card { flex: 0 0 468px; width: 468px; height: 360px; }
+/* ===== B/方案选择：灵感卡（大图 + 主题 + tags + 强 punchline）。尺寸统一 460×300 ===== */
+.carousel-panel .inspo-card { flex: 0 0 460px; width: 460px; height: 300px; }
 .inspo-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
 .inspo-card.active { border-color: rgba(255,180,84,0.85); }
 .inspo-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }

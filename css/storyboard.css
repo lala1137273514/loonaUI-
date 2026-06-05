@@ -67,14 +67,16 @@
 /* 812×375 帧内：轮播卡收到 ≤约232 高（CardStage 287 − head），保留横向 rail 范式 */
 .web-stage .carousel-panel .result-card { height: 232px; }
 .web-stage .carousel-panel .trip-cover,
-.web-stage .carousel-panel .inspo-card,
 .web-stage .carousel-panel .dest-card,
 .web-stage .carousel-panel .theme-card { flex: 0 0 326px; width: 326px; height: 232px; }
-.web-stage .carousel-panel .trip-card { flex: 0 0 300px; width: 300px; height: 232px; }
+/* 大理方案卡(inspo)/规划卡(trip)统一 326×296：吃满 panel 可用区但留上下边距(rail 去掉底 padding 后可用~303，296 不顶到边=不截断)，
+   时间轴够高、注记够宽，5 段日(环洱海)也能在一张卡里排全不切；两卡同尺寸=视觉一致 */
+.web-stage .carousel-panel .inspo-card,
+.web-stage .carousel-panel .trip-card { flex: 0 0 326px; width: 326px; height: 296px; }
 .web-stage .carousel-panel .route-card,
 .web-stage .carousel-panel .hotel-card,
 .web-stage .carousel-panel .budget-card { flex: 0 0 300px; width: 300px; max-height: 232px; }
-.web-stage .carousel-rail { gap: 18px; padding-inline: calc(50% - 163px); }
+.web-stage .carousel-rail { gap: 18px; padding-inline: calc(50% - 163px); padding-block: 0; }   /* 去掉底部 10px：否则可用高 293<卡高→卡顶被裁一点点 */
 .web-stage .carousel-head { padding: 6px 14px 2px; }
 .web-stage .carousel-head h2 { display: none; }   /* 删左上角「旅行规划」标题 */
 /* 叙事流 moment 卡也收进帧（≤帧高，居中） */

@@ -221,6 +221,7 @@
         this.variants[id] = list.concat(this._restore(id));
       }
       var live = clone(base); delete live.variants;
+      this._applyTtsOverrides(live, id);   // 套用本地保存过的 TTS 文案修改
       this.engine.load(live);
       this.engine.setTheme((base && base.default_skin) || 'glass');
       this.curVariant = 0;
@@ -382,6 +383,18 @@
     _verdictKey: function (id) { return 'loona_verdict_' + (id || this.curCaseId); },
     _loadVerdict: function (id) { try { return JSON.parse((global.localStorage && localStorage.getItem(this._verdictKey(id))) || 'null'); } catch (e) { return null; } },
     _saveVerdict: function (v) { try { if (global.localStorage) localStorage.setItem(this._verdictKey(), JSON.stringify(v)); } catch (e) {} },
+
+    /* ---------- TTS 文案修改 · 本地保存（键到 task_id，按事件 idx 覆盖 ev.text；纯前端持久化，刷新仍在） ---------- */
+    _ttsKey: function (id) { return 'loona_tts_' + (id || this.curCaseId); },
+    _loadTtsOverrides: function (id) { try { return JSON.parse((global.localStorage && localStorage.getItem(this._ttsKey(id))) || '{}') || {}; } catch (e) { return {}; } },
+    saveTtsOverride: function (idx, text) { try { if (!global.localStorage) return; var id = this.curCaseId, m = this._loadTtsOverrides(id); m[idx] = text; localStorage.setItem(this._ttsKey(id), JSON.stringify(m)); } catch (e) {} },
+    clearTtsOverride: function (idx) { try { if (!global.localStorage) return; var id = this.curCaseId, m = this._loadTtsOverrides(id); delete m[idx]; localStorage.setItem(this._ttsKey(id), JSON.stringify(m)); } catch (e) {} },
+    hasTtsOverride: function (idx) { var m = this._loadTtsOverrides(this.curCaseId); return m && m[idx] != null; },
+    /* 加载 case 时把保存过的文案套回 events（只认 comp==='tts'，idx 对不上类型就跳过，避免编辑链路增删后错套） */
+    _applyTtsOverrides: function (live, id) {
+      var m = this._loadTtsOverrides(id); if (!m) return;
+      (live.events || []).forEach(function (ev, i) { if (ev && ev.comp === 'tts' && m[i] != null) ev.text = m[i]; });
+    },
     _verdictBar: function () {
       var self = this, opts = this._cmpOptions;
       var aName = opts[this._cmpA].name, bName = opts[this._cmpB].name;

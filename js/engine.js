@@ -232,6 +232,7 @@
     load: function (caseObj) {
       this._cancel();
       this.caseObj = caseObj;
+      global.LOONA_LANG = (caseObj && caseObj.lang) || 'zh';   // 卡片组件按此切换标签语言(中文/英文)，避免英文 case 漏中文标签
       this.events = (caseObj && caseObj.events) || [];
       this.idx = 0; this._prevT = 0; this.mode = 'idle'; this._paused = false;
       this._clearStage();
@@ -666,7 +667,11 @@
       // 轮播在场：TTS 念到哪条 → 居中聚焦对应卡（web_ui focusCarouselItem）
       if (this._carouselShowing() && global.LoonaCarouselAdapter) {
         var hidx = LoonaCarouselAdapter.highlightToIdx(id);
-        if (hidx) { this._carousel.focusCarouselItem(hidx); return; }
+        if (hidx) {
+          this._carousel.focusCarouselItem(hidx);
+          this._revealHlNode(hidx);   // 该卡时间轴若超高，把命门节点(★/highlight)滚进卡内视野，别藏在折叠区
+          return;
+        }
       }
       this._clearHighlights();
       var ca = this.refs.contentArea;
@@ -675,6 +680,20 @@
         node.classList.add(node.classList.contains('pop-large') ? 'card-highlight' : 'row-hl');
         try { node.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}   // 横向 track 也把高亮的那张滚到中间
       }
+    },
+    /* 把聚焦的那张日程卡里的命门节点(.trip-node-hl，如龙龛日落)滚进卡内时间轴视野——
+       5 段的满载天时间轴超 300 高卡，命门节点会落到滚动折叠区；念到它时滚出来。仅日程卡有该节点，其它卡 no-op。 */
+    _revealHlNode: function (itemIdx) {
+      var rail = this.refs.carouselRail; if (!rail) return;
+      var self = this;
+      setTimeout(function () {
+        var card = rail.querySelector('.result-card[data-item-idx="' + itemIdx + '"]');
+        var body = card && card.querySelector('.trip-body');
+        var hl = body && body.querySelector('.trip-node-hl');
+        if (!hl || body.scrollHeight <= body.clientHeight + 1) return;   // 没溢出就不滚
+        try { body.scrollTo({ top: Math.max(0, hl.offsetTop - 12), behavior: self._playing ? 'smooth' : 'auto' }); }
+        catch (e) { body.scrollTop = Math.max(0, hl.offsetTop - 12); }
+      }, this._playing ? 420 : 0);   // 等卡居中落定再滚卡内（播放 smooth；seek 即时）
     },
     _clearHighlights: function () {
       var ns = this.refs.contentArea.querySelectorAll('.row-hl, .card-highlight');

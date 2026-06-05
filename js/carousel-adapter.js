@@ -45,8 +45,10 @@
 
   /* ---- 旅行两阶段：stages（阶段，可含多天）→ ①封面 items ②按阶段分组的逐天详情 items ---- */
   function dayToItem(idx, day) {
+    /* reminder = 当天主线串(交通/总里程/总时长)，渲染在卡头标题下方。仅当 case 提供 theme/transport/total 时才出，老 case 不受影响 */
+    var rem = [day.transport, day.total].filter(Boolean).join(' · ') || null;
     return mkItem(idx, 'trip', {
-      id: day.id, title: day.label, subtitle: day.pace, photo: day.photo,
+      id: day.id, title: day.label, subtitle: day.pace, photo: day.photo, reminder: rem,
       nodes: Array.isArray(day.nodes) ? day.nodes : null, summary: strip(day.footer || day.card_footer), raw: day
     });
   }
@@ -126,10 +128,12 @@
     // 契约形态 cards[] 优先；否则 legacy sections[]
     if (Array.isArray(c.cards) && c.cards.length) {
       return c.cards.map(function (card, i) {
+        /* reminder = 当天主线串(交通·总里程/时长)，渲染在卡头标题下方。仅当 card 给了 transport/total 才出，老 case(无字段)不受影响 */
+        var rem = [card.transport, card.total].filter(Boolean).join(' · ') || null;
         return mkItem(i + 1, 'trip', {
-          id: card.id, title: card.label, subtitle: card.pace, photo: card.photo,
+          id: card.id, title: card.label, subtitle: card.pace, photo: card.photo, reminder: rem,
           nodes: Array.isArray(card.nodes) ? card.nodes : null,
-          summary: strip(card.card_footer), raw: card
+          summary: strip(card.card_footer || card.footer), raw: card
         });
       });
     }
@@ -332,6 +336,8 @@
     /* 返回 {action:'render'|'focus'|'none', carousel?, item_idx?, focus?} */
     feed: function (ev) {
       var comp = ev.comp, c = ev.content || {};
+      // 扁平结果卡（非两阶段）登场：清掉上一张两阶段态(stages)，否则 highlightToIdx 会误走残留 stages 分支。
+      this.stages = null; this.mode = null;
       if (FOCUS_COMPS[comp]) {
         var fid = (c.item && c.item.id) || c.id || null;
         var ft = (c.item && c.item.title) || c.title || null;

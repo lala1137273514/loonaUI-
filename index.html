@@ -170,19 +170,16 @@
 <script src="js/carousel-adapter.js"></script>
 <!-- 预渲染百炼 TTS 清单（node tools/gen_tts.mjs 生成；缺则引擎回落浏览器合成） -->
 <script src="assets/tts/manifest.js"></script>
-<script src="cases/companion_chat.js"></script>
-<script src="cases/weather_5d.js"></script>
 <script src="cases/cortex_news_hot.js"></script>
 <script src="cases/cortex_mail_priority.js"></script>
 <script src="cases/cortex_calendar_week.js"></script>
-<script src="cases/email_calendar_workflow.js"></script>
-<script src="cases/restaurant_quiet.js"></script>
-<!-- 旅行规划代表 case -->
+<!-- 旅行规划代表 case（大理/日本 V3 置顶为默认） -->
+<script src="cases/travel_dali_3d_solo.js"></script>
+<script src="cases/travel_japan_7d.js"></script>
 <script src="cases/travel_chengdu_5d.js"></script>
 <script src="cases/travel_chengdu_5d_v2.js"></script>
 <script src="cases/travel_dali_friends.js"></script>
 <script src="cases/travel_dali_friends_v2.js"></script>
-<script src="cases/meeting_action.js"></script>
 <!-- case「立场标签」映射（演示对照用） -->
 <script src="js/case-stance.js"></script>
 <!-- 运行配置 + 评论同步层（Supabase 实时多人 / localStorage 单机兜底；file:// 可跑） -->
@@ -275,9 +272,8 @@
 
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2', 'cortex_mail_priority', 'cortex_mail_priority_v2', 'cortex_news_hot', 'cortex_news_hot_v2', 'cortex_calendar_week', 'cortex_calendar_week_v2', 'companion_chat', 'weather_5d',
-    'email_calendar_workflow', 'restaurant_quiet',
-    'meeting_action'];
+  var ORDER = ['travel_dali_3d_solo', 'travel_japan_7d', 'travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2',
+    'cortex_mail_priority', 'cortex_mail_priority_v2', 'cortex_mail_priority_v3', 'cortex_news_hot', 'cortex_news_hot_v2', 'cortex_news_hot_v3', 'cortex_calendar_week', 'cortex_calendar_week_v2', 'cortex_calendar_week_v3'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
   /* case 选择器：分组(旅游规划/其他场景) + 搜索 的弹层，替代长下拉，一眼可选 */

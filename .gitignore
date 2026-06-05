@@ -14,3 +14,12 @@ desktop.ini
 
 # scratch/working screenshots (not referenced by review pages)
 _ref/
+_review/
+proto_*.png
+.feishu_build/
+
+# loose design drafts (not part of the demo)
+Loona*.md
+旅行case_*.md
+旅行规划_*.md
+travel_japan_7d_EN.md
