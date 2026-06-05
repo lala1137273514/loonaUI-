@@ -32,12 +32,15 @@ window.LOONA_STANCE = {
   cortex_mail_priority: { role: 'V1·P级优先', ota: 'Cortex', form: '邮件列表轮播', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '低·效率', memory: 'P0/P1' },
   cortex_mail_priority_v2: { role: 'V2·用户关注', ota: 'Cortex', form: 'brief→重点卡', narrative: '结构化', turns: '0轮·可接动作', clarify: '不澄清', selling: '低·效率', memory: '关注原因' },
   cortex_mail_priority_v3: { role: 'V3·英文草稿', ota: 'Cortex', form: 'brief→待发草稿', narrative: '结构化', turns: '0轮·确认发送', clarify: '不澄清', selling: '低·效率', memory: '业务动作' },
+  cortex_mail_priority_v4: { role: 'V4·紧凑草稿', ota: 'Cortex', form: 'brief→窄/宽草稿对比', narrative: '结构化', turns: '0轮·确认发送', clarify: '不澄清', selling: '低·效率', memory: '业务动作' },
   cortex_news_hot: { role: 'V1·搜索结果', ota: 'Cortex', form: '新闻入口列表', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '中·信息筛选', memory: 'P级排序' },
   cortex_news_hot_v2: { role: 'V2·新闻入口', ota: 'Cortex', form: '入口列表→分段详情', narrative: '结构化', turns: '0轮·可追问', clarify: '不澄清', selling: '中·信息筛选', memory: '类型标签' },
   cortex_news_hot_v3: { role: 'V3·多模板英文', ota: 'Cortex', form: '多类型入口→英文详情', narrative: '结构化', turns: '1轮·追问展开', clarify: '不澄清', selling: '中·信息筛选', memory: '类型标签' },
+  cortex_news_hot_v4: { role: 'V4·关键句详情', ota: 'Cortex', form: '多类型入口→关键句详情', narrative: '结构化', turns: '1轮·追问展开', clarify: '不澄清', selling: '中·信息筛选', memory: '题材泛化' },
   cortex_calendar_week: { role: 'V1·日期聚合', ota: 'Cortex', form: '日程日期卡', narrative: '结构化', turns: '0轮', clarify: '不澄清', selling: '低·提醒', memory: '同日聚合' },
   cortex_calendar_week_v2: { role: 'V2·焦点对齐', ota: 'Cortex', form: '日程列表→逐项聚焦', narrative: '结构化', turns: '0轮·可追问', clarify: '不澄清', selling: '低·提醒', memory: '时间冲突' },
   cortex_calendar_week_v3: { role: 'V3·英文提醒', ota: 'Cortex', form: '日程日期卡→逐项提醒', narrative: '结构化', turns: '0轮·贴心提醒', clarify: '不澄清', selling: '低·提醒', memory: '时间间隔' },
+  cortex_calendar_week_v4: { role: 'V4·日程brief', ota: 'Cortex', form: 'brief→日期卡→逐项提醒', narrative: '结构化', turns: '0轮·贴心提醒', clarify: '不澄清', selling: '低·提醒', memory: '时间间隔' },
 
   /* —— 对照：杭州三方案（同地不同形式，选型用） —— */
   travel_hangzhou_a: { role: '对照·封面钻取', ota: 'L1', form: '阶段轮播', narrative: '结构化', turns: '多轮·钻取', clarify: '停等', selling: '中', memory: '—' },

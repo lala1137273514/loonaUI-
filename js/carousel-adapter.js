@@ -92,7 +92,7 @@
       var meta = r.meta || r.time || r.lead;
       if (c.source_tool_name === 'list_events' && (r.raw_start || r.raw_end)) meta = [r.raw_start, r.raw_end].filter(Boolean).join(' - ');
       return mkItem(i + 1, 'event', {
-        id: r.id, title: r.title, meta: meta, location: r.location || r.sub,
+        id: r.id, title: r.title, meta: meta, summary: r.summary || null, location: r.location || r.sub,
         subtitle: r.organizer || r.subtitle || null,
         priority: r.priority || (r.badge && r.badge.text),
         event_date: r.event_date,
@@ -106,6 +106,8 @@
 
   function buildListCard(ev) {
     var c = ev.content || {}, rows = c.rows || [];
+    if (c.source_tool_name === 'get_mail_list') return buildEmail(ev);
+    if (c.source_tool_name === 'list_events') return buildCalendar(ev);
     if (rows.length && isTime(rows[0].lead)) return buildCalendar(ev);
     var looksMail = /邮件/.test(c.title || '') || rows.some(function (r) { return r.right || (r.badge && /^P\d/.test(r.badge.text || '')); });
     if (looksMail) return buildEmail(ev);

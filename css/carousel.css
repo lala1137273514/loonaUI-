@@ -191,6 +191,7 @@
   backdrop-filter: blur(25px);
   color: #ffffff;
   box-shadow: none;
+  overflow-y: auto;
 }
 
 .search-card.active {
@@ -373,7 +374,8 @@
 
 .news-points-card,
 .news-metric-card,
-.news-quote-card {
+.news-quote-card,
+.news-key-sentence-card {
   gap: 12px;
   padding: 18px;
   overflow-y: auto;
@@ -457,6 +459,41 @@
   overflow: visible;
   color: rgba(255, 255, 255, 0.58);
   font-size: 11.5px;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.news-key-sentence-card {
+  justify-content: flex-start;
+  background:
+    radial-gradient(120% 95% at 50% 0%, rgba(255, 180, 84, 0.2), transparent 52%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(13, 117, 109, 0.12)),
+    rgba(18, 20, 19, 0.9);
+}
+
+.search-card .news-key-sentence {
+  display: block;
+  margin: 0;
+  overflow: visible;
+  color: #ffffff;
+  font-size: 17.5px;
+  font-weight: 800;
+  line-height: 1.24;
+  letter-spacing: 0;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.search-card .news-key-title {
+  display: block;
+  margin: -2px 0 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11.5px;
+  font-weight: 620;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   -webkit-line-clamp: initial;
   -webkit-box-orient: initial;
 }
@@ -848,6 +885,36 @@ a.news-pill:hover {
 .mail-draft-top b {
   color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
+}
+
+.mail-draft-card.is-compact {
+  gap: 7px;
+  padding: 14px 15px;
+}
+
+.mail-draft-card.is-compact .mail-draft-top {
+  justify-content: flex-start;
+}
+
+.mail-draft-card.is-compact .mail-draft-title {
+  min-height: 0;
+  margin-top: 4px;
+  font-size: 16px;
+}
+
+.mail-draft-card.is-compact .mail-draft-meta {
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.mail-draft-card.is-compact .mail-draft-body {
+  margin-top: 6px;
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+.mail-draft-card.is-compact .mail-draft-actions {
+  margin-top: 9px;
 }
 
 .result-card .mail-draft-title {
@@ -1585,6 +1652,130 @@ a.news-pill:hover {
 
 .cal-card.active {
   border-color: rgba(255, 180, 84, 0.7);
+}
+
+.cal-brief-card {
+  gap: 0;
+  padding: 13px 14px;
+  overflow: hidden;
+  border-color: rgba(255, 180, 84, 0.42);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 171, 64, 0.16), rgba(255, 255, 255, 0.045) 42%, rgba(0, 0, 0, 0.18)),
+    rgba(25, 22, 18, 0.84);
+}
+
+.cal-brief-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cal-brief-top span {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 180, 84, 0.95);
+  color: #543d18;
+  font-size: 10px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.cal-brief-top b {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-brief-title {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.22;
+}
+
+.cal-brief-metrics {
+  margin-top: 9px;
+}
+
+.cal-brief-attention .mail-brief-attention-row {
+  grid-template-columns: 92px minmax(0, 1fr);
+}
+
+.cal-brief-metrics .mail-brief-metric span {
+  line-height: 1.12;
+}
+
+.cal-brief-attention .mail-brief-attention-row h4,
+.cal-brief-attention .mail-brief-attention-row p {
+  display: block;
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.cal-brief-summary {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: initial;
+}
+
+.cal-brief-days {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow-y: auto;
+}
+
+.cal-brief-day {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.cal-brief-day strong {
+  color: #ffc400;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.cal-brief-day span {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 12px;
+  font-weight: 660;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-brief-day em {
+  grid-column: 2;
+  margin-top: -2px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.25;
 }
 
 .cal-head {

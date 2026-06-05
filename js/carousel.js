@@ -207,6 +207,11 @@
 
     const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
     const cardType = raw.card_type || raw.news_card_type || "";
+    if (cardType === "key_sentence") {
+      card.classList.add("no-image", "news-key-sentence-card");
+      appendNewsKeySentenceCard(card, item, raw);
+      return card;
+    }
     if (cardType === "data_metric") {
       card.classList.add("no-image", "news-metric-card");
       appendNewsMetricCard(card, item, raw);
@@ -299,6 +304,15 @@
       card.appendChild(createTextElement("p", raw.speaker));
       card.lastChild.className = "news-quote-speaker";
     }
+    appendNewsFooter(card, item, { includeNoImage: true });
+  }
+
+  function appendNewsKeySentenceCard(card, item, raw) {
+    appendNewsTypeHead(card, item, raw.type_label || item.priority || "Detail");
+    const sentence = createTextElement("h3", raw.key_sentence || item.summary || item.title || "");
+    sentence.className = "news-key-sentence";
+    card.appendChild(sentence);
+    appendNewsBullets(card, raw.context_points || raw.detail_points || raw.bullets || []);
     appendNewsFooter(card, item, { includeNoImage: true });
   }
 
@@ -550,26 +564,33 @@
     }
 
     const card = document.createElement("article");
-    card.className = "result-card mail-draft-card";
+    card.className = "result-card mail-draft-card" + (raw.meta_mode === "compact_draft" ? " is-compact" : "");
     card.dataset.itemIdx = item.item_idx;
     card.title = item.title || `条目 ${item.item_idx}`;
 
     const top = document.createElement("div");
     top.className = "mail-draft-top";
     top.appendChild(createTextElement("span", raw.draft_label || "AI 草稿"));
-    const state = createTextElement("b", raw.status || "待确认");
-    top.appendChild(state);
+    if (raw.status !== "" && raw.show_status !== false) {
+      const state = createTextElement("b", raw.status || "待确认");
+      top.appendChild(state);
+    }
     card.appendChild(top);
 
-    const title = createTextElement("h3", item.title || "邮件回复草稿");
+    const draftTitle = raw.meta_mode === "compact_draft" ? (raw.draft_subject || item.title) : item.title;
+    const title = createTextElement("h3", draftTitle || "邮件回复草稿");
     title.className = "mail-draft-title";
     card.appendChild(title);
 
     const meta = document.createElement("div");
     meta.className = "mail-draft-meta";
-    if (raw.from) meta.appendChild(createTextElement("span", (raw.from_label || "发件人") + (raw.label_separator || "：") + raw.from));
-    if (raw.to) meta.appendChild(createTextElement("span", (raw.to_label || "收件人") + (raw.label_separator || "：") + raw.to));
-    if (raw.draft_subject) meta.appendChild(createTextElement("span", (raw.subject_label || "标题") + (raw.label_separator || "：") + raw.draft_subject));
+    if (raw.meta_mode === "compact_draft") {
+      if (raw.to) meta.appendChild(createTextElement("span", (raw.to_label || "To") + (raw.label_separator || ": ") + raw.to));
+    } else {
+      if (raw.from) meta.appendChild(createTextElement("span", (raw.from_label || "发件人") + (raw.label_separator || "：") + raw.from));
+      if (raw.to) meta.appendChild(createTextElement("span", (raw.to_label || "收件人") + (raw.label_separator || "：") + raw.to));
+      if (raw.draft_subject) meta.appendChild(createTextElement("span", (raw.subject_label || "标题") + (raw.label_separator || "：") + raw.draft_subject));
+    }
     card.appendChild(meta);
 
     const body = createTextElement("p", raw.draft_body || item.summary || "");
@@ -760,9 +781,16 @@
   /* 按日期把事件分组 → 每天一张日程卡（Figma：今日/明日/M.D 日程，横滑切天） */
   function buildCalendarDayCards(carousel) {
     const items = carousel.items || [];
+    const briefItems = [];
     const groups = {};
     const order = [];
     for (const item of items) {
+      const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
+      const row = raw.row && typeof raw.row === "object" ? raw.row : {};
+      if (raw.card_type === "calendar_brief" || row.card_type === "calendar_brief") {
+        briefItems.push(item);
+        continue;
+      }
       const date = calEventDate(item) || "未排期";
       if (!groups[date]) {
         groups[date] = [];
@@ -771,9 +799,85 @@
       groups[date].push(item);
     }
     order.sort();
-    return order.map(function (date, i) {
+    return briefItems.map(buildCalendarBriefCard).concat(order.map(function (date, i) {
       return buildCalendarDayCard(date, groups[date], i + 1);
-    });
+    }));
+  }
+
+  function buildCalendarBriefCard(item) {
+    const raw = item.raw && typeof item.raw === "object" ? item.raw : {};
+    const row = raw.row && typeof raw.row === "object" ? raw.row : {};
+    const data = Object.keys(row).length ? row : raw;
+    const card = document.createElement("article");
+    card.className = "result-card cal-card cal-brief-card mail-brief-card";
+    card.dataset.itemIdx = item.item_idx;
+    card.title = item.title || "Schedule Brief";
+
+    const top = document.createElement("div");
+    top.className = "cal-brief-top";
+    top.appendChild(createTextElement("span", data.brief_label || "brief"));
+    if (data.count_text || item.meta) top.appendChild(createTextElement("b", data.count_text || item.meta));
+    card.appendChild(top);
+
+    const title = createTextElement("h3", item.title || data.title || "Schedule Brief");
+    title.className = "cal-brief-title";
+    card.appendChild(title);
+
+    if (item.summary || data.summary) {
+      const summary = createTextElement("p", item.summary || data.summary);
+      summary.className = "cal-brief-summary";
+      card.appendChild(summary);
+    }
+
+    const metrics = Array.isArray(data.metrics) ? data.metrics : [];
+    if (metrics.length) {
+      const grid = document.createElement("div");
+      grid.className = "mail-brief-metrics cal-brief-metrics";
+      metrics.forEach(function (metric) {
+        const cell = document.createElement("div");
+        cell.className = "mail-brief-metric" + (metric.kind ? " is-" + metric.kind : "");
+        cell.appendChild(createTextElement("span", metric.value || ""));
+        cell.appendChild(createTextElement("b", metric.label || ""));
+        grid.appendChild(cell);
+      });
+      card.appendChild(grid);
+    }
+
+    const attention = Array.isArray(data.attention_items) ? data.attention_items : [];
+    if (attention.length) {
+      const wrap = document.createElement("div");
+      wrap.className = "mail-brief-attention cal-brief-attention";
+      const head = document.createElement("div");
+      head.className = "mail-brief-attention-head";
+      head.appendChild(createTextElement("span", data.attention_title || "Worth attention"));
+      head.appendChild(createTextElement("b", data.attention_count_text || (String(attention.length) + " days")));
+      wrap.appendChild(head);
+      attention.forEach(function (entry) {
+        const rowEl = document.createElement("div");
+        rowEl.className = "mail-brief-attention-row";
+        rowEl.appendChild(createTextElement("h4", entry.title || ""));
+        if (entry.summary) rowEl.appendChild(createTextElement("p", entry.summary));
+        wrap.appendChild(rowEl);
+      });
+      card.appendChild(wrap);
+      return card;
+    }
+
+    const days = Array.isArray(data.days) ? data.days : [];
+    if (days.length) {
+      const list = document.createElement("div");
+      list.className = "cal-brief-days";
+      days.forEach(function (day) {
+        const d = document.createElement("div");
+        d.className = "cal-brief-day";
+        d.appendChild(createTextElement("strong", day.label || ""));
+        d.appendChild(createTextElement("span", day.summary || ""));
+        if (day.note) d.appendChild(createTextElement("em", day.note));
+        list.appendChild(d);
+      });
+      card.appendChild(list);
+    }
+    return card;
   }
 
   function buildCalendarDayCard(date, items, dayIdx) {

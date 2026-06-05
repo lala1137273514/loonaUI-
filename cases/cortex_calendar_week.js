@@ -147,4 +147,55 @@
     ],
     annotations: []
   };
+
+  var calendarV4 = JSON.parse(JSON.stringify(global.LOONA_CASES['cortex_calendar_week_v3']));
+  calendarV4.task_id = 'cortex_calendar_week_v4';
+  calendarV4.title = '日程 · Cortex一周日程播报 V4';
+  calendarV4.source_case = 'Cortex web_ui · list_events / calendar_today · V4';
+  calendarV4.decision_record.primary_need = '查询今天到接下来一周的日程，先英文 brief，再按天和事件提醒';
+  calendarV4.events[1].decision = 'router → NEW；命中 list_events；V4 使用英文 brief 卡先概括一周形状，再按日期聚合并逐事件对齐提醒。';
+  calendarV4.events[1].fields = ['scene:calendar', 'tool:list_events', 'calendar-brief', 'per-event'];
+  calendarV4.events[2].text = 'I’ll check the week and flag what matters.';
+  calendarV4.events[4].decision = 'list_events → 返回 4 条；先插入 calendar brief card，再保留英文日期聚合卡，TTS 逐事件高亮。';
+  calendarV4.events[4].fields = ['source_tool_name:list_events', 'calendar-brief-card', 'calendar-day-card', 'tts_focus:per-event'];
+  calendarV4.events[5].card_id = 'calendar_focus_v4';
+  calendarV4.events[5].content.title = 'Weekly Schedule Brief';
+  calendarV4.events[5].content.status = { text: '2 days · 4 events', kind: 'ok' };
+  calendarV4.events[5].content.footer = '<span class="lbl">V4</span> Brief card first; day cards remain for event focus';
+  calendarV4.events[5].content.rows = [
+    { id: 'cal_brief_v4', title: 'Schedule brief: 4 events', card_type: 'calendar_brief',
+      sub: '',
+      summary: '',
+      brief_label: 'brief',
+      count_text: '2 days · 4 events',
+      metrics: [
+        { label: 'Total', value: '4', kind: 'hot' },
+        { label: 'Today', value: '2', kind: 'muted' },
+        { label: 'Tomorrow', value: '2', kind: 'muted' }
+      ],
+      attention_title: 'Worth attention',
+      attention_count_text: '2 days',
+      attention_items: [
+        { title: 'Today', summary: '2 events · 18:30 airport' },
+        { title: 'Tomorrow', summary: '2 events · 20:30 train' }
+      ],
+      badge: { text: 'brief', kind: 'ok' }, right: 'This week', copy_locale: 'en' },
+    { id: 'cal_meet_v4', title: 'Meet at conference room', sub: 'Today · Conference room', lead: '15:30', raw_start: '2026-05-28T15:30:00+08:00', raw_end: '2026-05-28T16:00:00+08:00', event_date: '2026-05-28', event_start_sort: 930, badge: { text: 'Focus', kind: 'p1' }, copy_locale: 'en' },
+    { id: 'cal_trip_today_v4', title: 'Business trip', sub: 'Today · Airport · 2.5 hours after the meeting', lead: '18:30', raw_start: '2026-05-28T18:30:00+08:00', raw_end: '2026-05-28T20:00:00+08:00', event_date: '2026-05-28', event_start_sort: 1110, badge: { text: 'Travel', kind: 'p1' }, copy_locale: 'en' },
+    { id: 'cal_wrap_v4', title: 'Project wrap-up', sub: 'Tomorrow · Online · Afternoon follow-up', lead: '14:30', raw_start: '2026-05-29T14:30:00+08:00', raw_end: '2026-05-29T15:30:00+08:00', event_date: '2026-05-29', event_start_sort: 870, badge: { text: 'Work', kind: 'p1' }, copy_locale: 'en' },
+    { id: 'cal_trip_next_v4', title: 'Business trip', sub: 'Tomorrow · Train station · Evening departure', lead: '20:30', raw_start: '2026-05-29T20:30:00+08:00', raw_end: '2026-05-29T22:00:00+08:00', event_date: '2026-05-29', event_start_sort: 1230, badge: { text: 'Reminder', kind: 'p2' }, copy_locale: 'en' }
+  ];
+  calendarV4.events[6].highlight = 'cal_brief_v4';
+  calendarV4.events[6].text = 'Four events across two days. Today watch the airport trip; tomorrow watch the train trip.';
+  calendarV4.events[7].highlight = 'cal_meet_v4';
+  calendarV4.events[7].text = 'At three thirty, meet in the conference room. Pack materials first.';
+  calendarV4.events[8].highlight = 'cal_trip_today_v4';
+  calendarV4.events[8].text = 'At six thirty, leave room for airport traffic and security.';
+  calendarV4.events[9].highlight = 'cal_wrap_v4';
+  calendarV4.events[9].text = 'Tomorrow afternoon is project wrap-up. Use the morning for open items.';
+  calendarV4.events[10].highlight = 'cal_trip_next_v4';
+  calendarV4.events[10].text = 'Tomorrow night is the train trip. Keep dinner and departure clean.';
+  calendarV4.events[11].decision = 'V4 只读日程 R0；英文 brief 卡先给整体形状，后续 day card 保持按日期聚合，单条 detail 仍一条 TTS 对一个 event ref。';
+  calendarV4.events[11].fields = ['query:R0', 'calendar-brief', 'day-card', 'detail:single-ref'];
+  global.LOONA_CASES['cortex_calendar_week_v4'] = calendarV4;
 })(window);

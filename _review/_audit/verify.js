@@ -4,15 +4,19 @@
    §12 audit has no blind spots. Returns a PASS/FAIL report (JSON string). */
 (function () {
   var W = window, CASES = W.LOONA_CASES, UI = W.LoonaUI, ENG = W.LoonaEngine;
-  var stage = document.querySelector('.loona-stage'), device = document.querySelector('.device');
+  var stage = document.querySelector('.loona-stage'), scaledDevice = document.querySelector('.device'), device = scaledDevice;
+  if (!device) device = document.querySelector('.sb-screen') || stage;
   var ca = document.getElementById('contentArea'), sub = document.getElementById('subtitle');
   var checks = [], matrix = [];
+  if (ENG && typeof ENG._clearStage === 'function') ENG._clearStage();
   function add(id, name, pass, detail) { checks.push({ id: id, name: name, pass: !!pass, detail: detail }); }
-  function scaleOf() { return parseFloat(getComputedStyle(device).getPropertyValue('--device-scale')) || 1; }
+  function scaleOf() { return scaledDevice ? (parseFloat(getComputedStyle(scaledDevice).getPropertyValue('--device-scale')) || 1) : 1; }
   function isCard(comp) { return !!(UI.CARD_BUILDERS && UI.CARD_BUILDERS[comp]) || comp === 'card'; }
   function isConfirm(comp) { return comp === 'confirm' || comp === 'ConfirmationCard'; }
   function isClarify(ev) { return ev.comp === 'ClarifyCard' || (ev.comp === 'pop_small' && ev.role === 'clarify'); }
   function focusedCard() {
+    var activeCarousel = document.querySelector('#carouselRail .result-card.active') || document.querySelector('#carouselRail .result-card');
+    if (activeCarousel) return activeCarousel;
     var k = ca.children;
     for (var i = 0; i < k.length; i++) { var c = k[i];
       if (c.classList.contains('pop-large') || c.classList.contains('news-form') || c.classList.contains('scenario-form') ||
@@ -24,12 +28,12 @@
   function loadSeek(id, skin, idx) { setSkin(skin); ENG.load(JSON.parse(JSON.stringify(CASES[id]))); ENG.seekTo(idx); stage.classList.remove('is-playing'); }
 
   /* ---- global (turn-independent) ---- */
-  add(8, '设备框固定 812×375', device.offsetWidth === 812 && device.offsetHeight === 375, device.offsetWidth + '×' + device.offsetHeight);
-  var eyes = document.querySelector('.loona-eyes-bg');
+  add(8, '设备框固定 812×375', !!device && device.offsetWidth === 812 && device.offsetHeight === 375, device ? (device.offsetWidth + '×' + device.offsetHeight) : 'missing');
+  var eyes = document.querySelector('.loona-eyes-bg') || document.querySelector('.web-stage');
   var bg = eyes ? getComputedStyle(eyes).backgroundImage : 'none';
   var eyesAnim = eyes ? getComputedStyle(eyes).animationName : 'none';
   add(9, '双眼在位且静态', !!eyes && bg !== 'none' && (eyesAnim === 'none' || eyesAnim === ''), 'bg=' + (bg !== 'none' ? 'set' : 'none') + ' anim=' + eyesAnim);
-  var stageH = Math.round(ca.getBoundingClientRect().height / scaleOf());
+  var stageH = Math.round(scaledDevice ? (ca.getBoundingClientRect().height / scaleOf()) : ca.offsetHeight);
   add(0, 'CardStage 高 ≈287', stageH >= 282 && stageH <= 292, stageH + 'px');
 
   var MATRIX = [
@@ -38,6 +42,9 @@
     ['news_briefing', ['glass', 'bubble', 'aura']],
     ['email_briefing', ['glass']],
     ['calendar_today', ['glass']],
+    ['cortex_mail_priority_v4', ['glass']],
+    ['cortex_news_hot_v4', ['glass']],
+    ['cortex_calendar_week_v4', ['glass']],
     ['email_calendar_workflow', ['glass']],
     ['restaurant_quiet', ['aura', 'glass']],
     ['travel_shanghai_3d', ['aura', 'glass']],

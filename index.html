@@ -273,7 +273,9 @@
   /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
   var CASES = window.LOONA_CASES || {};
   var ORDER = ['travel_dali_3d_solo', 'travel_japan_7d', 'travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2',
-    'cortex_mail_priority', 'cortex_mail_priority_v2', 'cortex_mail_priority_v3', 'cortex_news_hot', 'cortex_news_hot_v2', 'cortex_news_hot_v3', 'cortex_calendar_week', 'cortex_calendar_week_v2', 'cortex_calendar_week_v3'];
+    'cortex_mail_priority', 'cortex_mail_priority_v2', 'cortex_mail_priority_v3', 'cortex_mail_priority_v4',
+    'cortex_news_hot', 'cortex_news_hot_v2', 'cortex_news_hot_v3', 'cortex_news_hot_v4',
+    'cortex_calendar_week', 'cortex_calendar_week_v2', 'cortex_calendar_week_v3', 'cortex_calendar_week_v4'];
   var ids = ORDER.filter(function (k) { return CASES[k]; })
     .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
   /* case 选择器：分组(旅游规划/其他场景) + 搜索 的弹层，替代长下拉，一眼可选 */

@@ -10,7 +10,8 @@
   var UI = W.LoonaUI, ENG = W.LoonaEngine;
   var STRESS = !!W.__STRESS;
   var stage = document.querySelector('.loona-stage');
-  var device = document.querySelector('.device');
+  var scaledDevice = document.querySelector('.device');
+  var device = scaledDevice || document.querySelector('.sb-screen') || stage;
   var contentArea = document.getElementById('contentArea');
   var subtitle = document.getElementById('subtitle');
   var toastSlot = document.getElementById('toastSlot');
@@ -21,15 +22,20 @@
     ['news_briefing', ['glass', 'bubble', 'aura']],
     ['email_briefing', ['glass']],
     ['calendar_today', ['glass']],
+    ['cortex_mail_priority_v4', ['glass']],
+    ['cortex_news_hot_v4', ['glass']],
+    ['cortex_calendar_week_v4', ['glass']],
     ['email_calendar_workflow', ['glass']],
     ['restaurant_quiet', ['aura', 'glass']],
     ['travel_shanghai_3d', ['aura', 'glass']],
     ['meeting_action', ['glass']]
   ];
 
-  function scaleOf() { return parseFloat(getComputedStyle(device).getPropertyValue('--device-scale')) || 1; }
+  function scaleOf() { return scaledDevice ? (parseFloat(getComputedStyle(scaledDevice).getPropertyValue('--device-scale')) || 1) : 1; }
   function rect(el) { return el.getBoundingClientRect(); }
   function focusedCard() {
+    var activeCarousel = document.querySelector('#carouselRail .result-card.active') || document.querySelector('#carouselRail .result-card');
+    if (activeCarousel) return activeCarousel;
     var kids = contentArea.children;
     for (var i = 0; i < kids.length; i++) {
       var k = kids[i];

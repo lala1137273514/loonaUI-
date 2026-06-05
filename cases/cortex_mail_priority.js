@@ -251,4 +251,43 @@
     ],
     annotations: []
   };
+
+  var mailV4 = JSON.parse(JSON.stringify(global.LOONA_CASES['cortex_mail_priority_v3']));
+  mailV4.task_id = 'cortex_mail_priority_v4';
+  mailV4.title = '邮件 · Cortex重要邮件播报 V4';
+  mailV4.source_case = 'Cortex web_ui · get_mail_list / mail_auth_check · V4';
+  mailV4.decision_record.primary_need = '汇报最近收到的邮件，英文 brief 后给更紧凑的待发草稿';
+  mailV4.events[1].decision = 'router → NEW；命中 get_mail_list；V4 保留英文 brief 和草稿确认，但窄版草稿只保留必要收件信息。';
+  mailV4.events[1].fields = ['scene:email', 'tool:get_mail_list', 'business-mail', 'draft-confirm', 'compact-draft'];
+  mailV4.events[2].text = 'I’ll pull out what needs action.';
+  mailV4.events[5].card_id = 'mail_attention_v4';
+  mailV4.events[5].content.footer = '<span class="lbl">V4</span> Brief first, then action-ready business emails';
+  mailV4.events[12].text = 'Draft is ready. Please review before sending.';
+  mailV4.events[13].card_id = 'mail_draft_v4';
+  mailV4.events[13].content.title = 'Draft Reply';
+  mailV4.events[13].content.status = null;
+  mailV4.events[13].content.footer = '<span class="lbl">V4</span> Narrow draft keeps only subject, recipient, body, and actions';
+  mailV4.events[13].content.rows[0] = Object.assign({}, mailV4.events[13].content.rows[0], {
+    id: 'mail_partner_draft_v4',
+    title: 'Galaxy Retail Reply',
+    status: '',
+    show_status: false,
+    meta_mode: 'compact_draft',
+    right: '',
+    badge: { text: 'draft', kind: 'ok' }
+  });
+  mailV4.events[14].text = 'Here’s the wider review view too.';
+  mailV4.events[15].card_id = 'mail_draft_split_v4';
+  mailV4.events[15].content.title = 'Draft Reply · Review Layout';
+  mailV4.events[15].content.footer = '<span class="lbl">V4</span> Wide review layout remains available before confirmation';
+  mailV4.events[15].content.rows[0] = Object.assign({}, mailV4.events[15].content.rows[0], {
+    id: 'mail_partner_draft_split_v4',
+    title: 'Galaxy Retail Reply',
+    status: '',
+    show_status: false,
+    right: ''
+  });
+  mailV4.events[16].decision = 'V4 只读邮件并生成待确认英文草稿；窄版草稿压缩为主题+收件人+正文+按钮，宽版 review 保留对比。';
+  mailV4.events[16].fields = ['query:R0', 'draft:R1', 'confirm-before-send', 'compact-draft', 'split-draft'];
+  global.LOONA_CASES['cortex_mail_priority_v4'] = mailV4;
 })(window);
