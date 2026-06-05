@@ -160,14 +160,14 @@
         content: {
           source_tool_name: 'get_mail_list',
           title: 'Email Brief',
-          status: { text: '4 need replies · 9 low value', kind: 'ok' },
+          status: { text: '3 need action · 8 FYI · 9 low value', kind: 'ok' },
           rows: [
             { id: 'mail_summary_v3', title: 'Email brief: 20 new messages', card_type: 'brief',
               sub: 'Three messages need your attention: partner scheduling, review-deck decisions, and contract sign-off.',
-              summary: '3 need action; 8 are routine updates; 9 are marketing or low-value messages.',
+              summary: '3 need action; 8 are FYI updates; 9 are marketing or low-value messages.',
               metrics: [
                 { label: 'Need action', value: '3', kind: 'hot' },
-                { label: 'Routine', value: '8', kind: 'muted' },
+                { label: 'FYI', value: '8', kind: 'muted' },
                 { label: 'Low value', value: '9', kind: 'muted' }
               ],
               attention_title: 'Needs attention',
@@ -196,21 +196,22 @@
               summary: 'Check impact before contract sign-off.',
               from_label: 'From', summary_label: 'Summary', label_separator: ': ',
               badge: { text: 'Check', kind: 'ok' }, right: '14:06' },
-            { id: 'mail_low_value_v3', title: 'Subscriptions, promos, and routine CCs',
-              sub: 'Routine and low-value mail: eight regular updates and nine marketing or spam messages are grouped for now.',
-              summary: 'Grouped; no action needed now.',
+            { id: 'mail_low_value_v3', title: 'FYI updates and low-value mail',
+              sub: 'FYI mail includes calendar changes, meeting notes, and project notifications; marketing and spam-like messages stay grouped.',
+              summary: 'FYI kept for context; low value deprioritized.',
               from_label: 'From', summary_label: 'Summary', label_separator: ': ',
               badge: { text: 'Grouped', kind: 'p2' }, right: 'Multiple', dim: true }
           ],
           footer: '<span class="lbl">V3</span> Brief first, then action-ready business emails'
         } },
-      { t: 3900, gap_ms: 520, comp: 'tts', highlight: 'mail_summary_v3', text: 'You have 20 new emails. Three need your attention, eight are routine updates, and nine look like marketing, ads, or low-value messages.', pace: 'mid' },
-      { t: 4650, gap_ms: 520, comp: 'tts', highlight: 'mail_partner_v3', text: 'The top item is from Galaxy Retail. They are waiting for your confirmation on the joint launch timing, exposure scope, and budget wording, so this one is the most actionable.', pace: 'mid' },
-      { t: 5400, gap_ms: 520, comp: 'tts', highlight: 'mail_colleague_v3', text: 'The second one is from Zhou Yue. She has updated the review deck, but still needs your decision on the release metrics and rollout pace.', pace: 'mid' },
-      { t: 6150, gap_ms: 520, comp: 'tts', highlight: 'mail_contract_v3', text: 'The third one is from Beichen Procurement. The payment milestones and acceptance attachments changed, so I would confirm delivery impact before legal proceeds.', pace: 'mid' },
-      { t: 6900, gap_ms: 480, comp: 'tts', highlight: 'mail_low_value_v3', text: 'I will leave the routine updates and low-value messages grouped unless you want to inspect them later.', pace: 'mid' },
-      { t: 7500, gap_ms: 420, comp: 'tts', highlight: 'mail_partner_v3', text: 'I drafted a reply to the Galaxy Retail email. Please review it and confirm whether you want to send it.', pace: 'mid' },
-      { t: 8020, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_v3', visual_state: 'active',
+      { t: 3900, gap_ms: 520, comp: 'tts', highlight: 'mail_summary_v3', text: 'You have 20 new emails. Three need action, eight are for your information, and nine are marketing or low-value messages.', pace: 'mid' },
+      { t: 4550, gap_ms: 520, comp: 'tts', highlight: 'mail_summary_v3', text: 'For your information, the eight routine emails are mostly calendar changes, meeting notes, and regular project notifications. They are useful context, but they do not need a reply right now.', pace: 'mid' },
+      { t: 5250, gap_ms: 520, comp: 'tts', highlight: 'mail_low_value_v3', text: 'The low-value group has nine messages, mainly marketing, ads, or subscription-style updates. I grouped them so they do not compete with the business emails.', pace: 'mid' },
+      { t: 6000, gap_ms: 520, comp: 'tts', highlight: 'mail_partner_v3', text: 'The top action item is from Galaxy Retail. They are waiting for your confirmation on the joint launch timing, exposure scope, and budget wording, so this one is the most actionable.', pace: 'mid' },
+      { t: 6750, gap_ms: 520, comp: 'tts', highlight: 'mail_colleague_v3', text: 'The second action item is from Zhou Yue. She has updated the review deck, but still needs your decision on the release metrics and rollout pace.', pace: 'mid' },
+      { t: 7500, gap_ms: 520, comp: 'tts', highlight: 'mail_contract_v3', text: 'The third action item is from Beichen Procurement. The payment milestones and acceptance attachments changed, so I would confirm delivery impact before legal proceeds.', pace: 'mid' },
+      { t: 8250, gap_ms: 420, comp: 'tts', highlight: 'mail_partner_v3', text: 'I drafted a reply to the Galaxy Retail email. Please review it and confirm whether you want to send it.', pace: 'mid' },
+      { t: 8750, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_v3', visual_state: 'active',
         content: {
           source_tool_name: 'get_mail_list',
           title: 'Draft Reply',
@@ -227,25 +228,25 @@
           ],
           footer: '<span class="lbl">V3</span> Draft is not sent until you confirm'
         } },
-      { t: 8520, gap_ms: 420, comp: 'tts', text: 'Here is the same draft in a review layout, with message details on the left and the editable draft area on the right.', pace: 'mid' },
-      { t: 9000, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_split_v3', visual_state: 'active',
+      { t: 9250, gap_ms: 420, comp: 'tts', text: 'Here is the same draft in a review layout, with message details on the left and the editable draft area on the right.', pace: 'mid' },
+      { t: 9730, gap_ms: 420, comp: 'ListCard', card_id: 'mail_draft_split_v3', visual_state: 'active',
         content: {
           source_tool_name: 'get_mail_list',
           title: 'Draft Reply · Review Layout',
           status: { text: 'Pending confirmation', kind: 'ok' },
           rows: [
-            { id: 'mail_partner_draft_split_v3', card_type: 'draft', layout: 'split', title: 'Draft: Galaxy Retail Reply',
+            { id: 'mail_partner_draft_split_v3', card_type: 'draft', layout: 'split', title: 'Galaxy Retail Reply',
               from: 'You <you@loona.ai>',
               to: 'Li Ran <liran@galaxy-retail.com>',
               draft_subject: 'Re: Joint launch event confirmation',
               draft_body: 'Hi Li Ran,\nWe can tentatively proceed with next Wednesday morning for the joint launch. I will confirm the exposure scope and budget wording today and send any updates promptly.\nBest,',
               draft_label: 'AI Draft', from_label: 'From', to_label: 'To', subject_label: 'Subject', label_separator: ': ',
-              confirm_label: 'Send', cancel_label: 'Cancel', status: 'Pending',
+              confirm_label: 'Send', cancel_label: 'Cancel', status: '',
               badge: { text: 'draft', kind: 'ok' }, right: 'Pending' }
           ],
           footer: '<span class="lbl">V3</span> Split draft review; still requires confirmation before sending'
         } },
-      { t: 9700, gap_ms: 240, comp: 'agent_step', internal: true, label: 'DECISION_RECORD',
+      { t: 10400, gap_ms: 240, comp: 'agent_step', internal: true, label: 'DECISION_RECORD',
         decision: 'V3 只读邮件并生成待确认英文草稿；先展示竖版草稿，再展示左右分栏 review 草稿，发送前必须用户确认。', fields: ['query:R0', 'draft:R1', 'confirm-before-send', 'split-draft', 'english-copy'] }
     ],
     annotations: []

@@ -600,7 +600,9 @@
     const top = document.createElement("div");
     top.className = "mail-draft-top";
     top.appendChild(createTextElement("span", raw.draft_label || "AI 草稿"));
-    top.appendChild(createTextElement("b", raw.status || "待确认"));
+    if (raw.status !== "" && raw.show_status !== false) {
+      top.appendChild(createTextElement("b", raw.status || "待确认"));
+    }
     info.appendChild(top);
 
     const title = createTextElement("h3", item.title || "邮件回复草稿");
