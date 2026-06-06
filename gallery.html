@@ -3,140 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loona 组件库 · Gallery（对齐 web_ui 卡片 + Figma 浮层卡）</title>
+<title>Loona 链路编排台 · Flow Builder</title>
 <link rel="stylesheet" href="css/loona.css">
 <link rel="stylesheet" href="css/carousel.css">
-<style>
-  /* gallery 内把 web_ui 轮播卡当静态展示：去掉压暗缩放，原大原亮 */
-  .gcell .carousel-panel{position:static;display:block;height:auto;overflow:visible;background:transparent;color:#f6f0e2}
-  .gcell .carousel-panel .result-card{transform:none!important;filter:none!important;flex:0 0 auto}
-  .gcell .carousel-panel .result-card.glow{box-shadow:0 0 0 1px rgba(255,180,84,.5),0 0 48px rgba(255,150,40,.35)}
-  .sec-title{grid-column:1/-1;color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;margin:8px 0 -8px;display:flex;align-items:center;gap:8px}
-  .sec-title .src{font-size:11px;color:var(--wb-text-dim);font-weight:400}
-  .sec-title::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber-2);box-shadow:0 0 10px var(--amber-2)}
-</style>
+<link rel="stylesheet" href="css/flow-builder.css">
 </head>
-<body>
-<div class="gallery" id="gallery">
-  <div class="gallery-head">
-    <h1><span class="dot"></span>Loona 组件库 · Gallery</h1>
-    <p>暂时对齐 <b>web_ui 轮播卡</b>（trip 封面/详情 · news · mail · event · weather）+ <b>Figma 浮层卡</b>（pop_small · 澄清 · 确认 · btn-fill · toast）·
-       <a class="glink" href="index.html">← 回工作台</a></p>
+<body class="flow-body">
+
+<!-- 顶栏 -->
+<div class="fb-topbar">
+  <h1><span class="dot"></span>链路编排台</h1>
+  <input id="flowTitle" type="text" placeholder="链路标题" value="自定义链路">
+  <button class="fb-btn" id="flowPreviewBtn">▶ 预览播放</button>
+  <button class="fb-btn" id="flowExportBtn">导出 JSON</button>
+  <button class="fb-btn" id="flowDownloadBtn">下载 .js</button>
+  <button class="fb-btn" id="flowClearBtn">清空</button>
+  <span class="fb-msg" id="flowMsg"></span>
+  <span class="spacer"></span>
+  <a class="fb-glink" href="index.html">← 回工作台</a>
+</div>
+
+<!-- 三栏 -->
+<div class="fb-main">
+  <div class="fb-pane">
+    <div class="fb-pane-title">卡片库 · 拖到中间或点击添加</div>
+    <div id="flowPalette"></div>
+  </div>
+  <div class="fb-pane">
+    <div class="fb-pane-title">链路序列 · 拖拽排序 / 点击编辑</div>
+    <div id="flowCanvas"></div>
+  </div>
+  <div class="fb-pane">
+    <div class="fb-pane-title">检查器 · 编辑选中步骤</div>
+    <div id="flowInspector"></div>
   </div>
 </div>
 
+<!-- 预览弹层：内含完整 loona-stage（id 对齐工作台，供预览引擎渲染） -->
+<div class="fb-modal" id="flowPreviewModal">
+  <div class="fb-modal-box">
+    <div class="fb-modal-bar">
+      <button class="fb-btn primary" id="flowPreviewPlay">▶ 播放 / 重播</button>
+      <span class="spacer"></span>
+      <button class="fb-btn" id="flowPreviewClose">关闭</button>
+    </div>
+    <div class="sb-screen">
+      <div class="loona-stage web-stage" id="loonaStage" data-skin="glass">
+        <div class="content-scrim"></div>
+        <div class="story-layer" id="storyLayer"></div>
+        <section class="carousel-panel hidden" id="carouselPanel" aria-label="结构化结果">
+          <div class="carousel-head">
+            <button id="backOverview" class="carousel-back hidden" type="button">‹ 返回总览</button>
+            <h2 id="carouselTitle">旅行规划</h2>
+          </div>
+          <div id="carouselRail" class="carousel-rail"></div>
+        </section>
+        <div class="pop-slot" id="popSlot"></div>
+        <div class="content-area" id="contentArea"></div>
+        <div class="toast-slot" id="toastSlot"></div>
+        <div class="subtitle" id="subtitle"></div>
+      </div>
+    </div>
+    <!-- 引擎需要但预览不展示的落点（隐藏，防空指针） -->
+    <div style="display:none">
+      <div id="nowStage"></div><button id="annLive"></button>
+      <div id="sideTrack"></div><div id="timeline"></div><div id="waitBanner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 复用：组件 / 轮播 / 适配器 / TTS 清单 / 配置 / 引擎（预览） -->
 <script src="js/components.js"></script>
 <script src="js/carousel.js"></script>
-<script>
-(function () {
-  var UI = window.LoonaUI, el = UI.el;
-  var build = window.CortexCarousel.buildCarouselCard;   // 真实 web_ui 卡 builder
-  var root = document.getElementById('gallery');
-
-  function secTitle(text, src) {
-    var t = el('div', 'sec-title'); t.appendChild(el('span', null, text));
-    if (src) t.appendChild(el('span', 'src', src));
-    root.appendChild(t);
-  }
-  function cell(title, src, opts) {
-    opts = opts || {};
-    var c = el('div', 'gcell' + (opts.span2 ? ' span2' : ''));
-    var t = el('div', 'gtitle'); t.appendChild(el('span', null, title)); t.appendChild(el('span', 'src', src || ''));
-    c.appendChild(t);
-    var stage = el('div', 'gstage');
-    if (opts.bg) stage.style.background = opts.bg;
-    if (opts.col) { stage.style.flexDirection = 'column'; stage.style.alignItems = opts.align || 'flex-start'; }
-    c.appendChild(stage);
-    root.appendChild(c);
-    return stage;
-  }
-  // web_ui 卡：套 .carousel-panel 作用域（解析 web_ui token + 卡尺寸），加 .glow 高亮
-  function webCard(title, src, item, span2) {
-    var stage = cell(title, src, { bg: '#0b0d12', span2: span2 });
-    var panel = el('div', 'carousel-panel');
-    var card = build(item); card.classList.add('glow');
-    panel.appendChild(card); stage.appendChild(panel);
-  }
-
-  /* ============ A 区 · web_ui 轮播卡 ============ */
-  secTitle('A · web_ui 轮播卡', 'web_ui/carousel.js + carousel.css');
-
-  // 旅行·阶段封面（一阶段·新 UI）
-  webCard('trip-cover · 阶段封面（大图 + tag）', '工作台新增·两阶段一阶段', {
-    item_idx: 1, kind: 'trip-cover', title: '市区 × 人文', photo: 'assets/travel/bund.jpg', tags: ['轻松→适中', '2 天']
-  });
-  // 旅行·单日详情（二阶段）
-  webCard('trip · 单日详情（hero + 节点）', 'Figma 1104:6939', {
-    item_idx: 1, kind: 'trip', title: 'Day 2 · 人文慢看', subtitle: 'normal', photo: 'assets/travel/westbund.jpg',
-    nodes: [{ time: '上午', place: '武侯祠', note: '三国人文，上午先看' }, { time: '中午', place: '锦里', note: '边吃边逛不折返' }, { time: '下午', place: '杜甫草堂', note: '园林安静，放慢' }]
-  });
-  // 新闻
-  webCard('search · 新闻卡（hero + 摘要 + 来源）', 'Figma 1104:6679', {
-    item_idx: 1, kind: 'search', title: '主流大模型发布新版：上下文翻倍至 200 万 token',
-    photo: 'assets/news/news_model.jpg', summary: '上下文从 100 万提升到 200 万 token，长文档基本能一次喂进去。',
-    subtitle: '机器之心', meta: '09:20'
-  });
-  // 邮件
-  webCard('mail · 邮件卡（P 级 + 主题 + 摘要）', 'Figma 1202:6951', {
-    item_idx: 1, kind: 'mail', title: '项目评审确认', subtitle: '程楠', summary: '等你点头，4 点前要回。',
-    priority: 'P1', meta: '10:20'
-  });
-  // 日程
-  webCard('event · 日程卡（时间 + 地点 + 组织者）', 'Figma 1215:7240', {
-    item_idx: 1, kind: 'event', title: '项目评审', meta: '14:00 - 15:00', location: '会议室 A', subtitle: '程楠'
-  });
-  // 天气
-  webCard('weather · 天气卡（实况 + 逐日）', 'Figma 1227:79', {
-    item_idx: 1, kind: 'weather', title: '成都',
-    raw: { location: { name: '成都', country: '中国' }, current: { tempC: 22, condition: { text: 'Partly cloudy', code: 1003 } },
-      forecast: { forecastday: [
-        { date: '2026-06-04', day: { maxtempC: 25, mintempC: 19, condition: { code: 1003 } }, astro: { sunrise: '06:12 AM', sunset: '07:48 PM' } },
-        { date: '2026-06-05', day: { maxtempC: 23, mintempC: 18, condition: { code: 1183 } } },
-        { date: '2026-06-06', day: { maxtempC: 27, mintempC: 20, condition: { code: 1000 } } }
-      ] } }
-  });
-
-  /* ============ B 区 · Figma 浮层卡（澄清/确认/状态，工作台浮层层用） ============ */
-  secTitle('B · Figma 浮层卡', '工作台浮层（澄清/确认/状态/字幕）');
-
-  // pop_small 三态
-  var s = cell('pop_small · 状态 / ASR输入 / 澄清', 'Figma 58:5098', { col: true });
-  s.appendChild(UI.popSmall({ role: 'status', state_visual: 'searching', html: '正在搜索 <span class="kw">成都 近期活动</span>' }));
-  s.appendChild(UI.popSmall({ role: 'query', who: '我（语音）', text: '成都三日游' }));
-  s.appendChild(UI.popSmall({ role: 'clarify', text: '日期 / 出发地 / 预算 补不补都行，不补按轻松城市漫步排。' }));
-
-  // 澄清卡（槽位）
-  var sc = cell('ClarifyCard · 澄清槽位（必填✓ + 选填待补）', 'Figma 1224:123', { span2: true });
-  sc.appendChild(UI.clarifyCard({
-    title: '确认几个槽位', question: '必填已给；选填补不补都行，不补我按默认/你平时的来。',
-    slots: { required: [{ label: '目的地', value: '成都' }, { label: '周期', value: '3 天' }], optional: ['确切日期', '出发地', '同行人', '预算', '节奏'] },
-    options: [{ label: '确认' }, { label: '取消' }]
-  }));
-
-  // 确认门
-  var cc = cell('confirm · 确认门（双按钮 · 无 X · 无倒计时）', 'Figma btn-fill 组合', { span2: true });
-  cc.appendChild(UI.confirmCard({
-    action: '保存到长期知识库', target: '成都 3 天攻略', impact: '以后旅行默认参考',
-    content_summary: '成都 · 3 天 · 中等 · 轻松城市漫步', reversible: true, confirm_label: '保存', cancel_label: '先不用'
-  }, {}));
-
-  // btn-fill
-  var bf = cell('btn-fill · primary / ghost / disabled', '#ffb200 + 玻璃内阴影', {});
-  bf.appendChild(UI.btnFill('确认', 'primary')); bf.appendChild(UI.btnFill('取消', 'ghost')); bf.appendChild(UI.btnFill('确认', 'disabled'));
-
-  // toast 状态机
-  var tt = cell('toast · 任务状态机', 'pop_small 变体', { col: true });
-  [['searching', null], ['reading', null], ['sending', null], ['done', '已发送'], ['fail', '没成功']].forEach(function (x) {
-    tt.appendChild(UI.toast({ state: x[0], text: x[1] }));
-  });
-
-  // 状态图标
-  var iv = cell('状态图标 · 真实 .riv 渲染图', 'globe/loading/paperplane/check/xmark', {});
-  ['searching', 'loading', 'sending', 'done', 'fail'].forEach(function (k) {
-    var box = el('div'); box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:11px';
-    box.appendChild(UI.statusVis(k)); box.appendChild(el('span', null, k)); iv.appendChild(box);
-  });
-})();
-</script>
+<script src="js/carousel-adapter.js"></script>
+<script src="assets/tts/manifest.js"></script>
+<script src="js/config.js"></script>
+<script src="js/engine.js"></script>
+<!-- 编排台模块（松耦合，各管一文件） -->
+<script src="js/flow/flow-store.js"></script>
+<script src="js/flow/flow-templates.js"></script>
+<script src="js/flow/flow-render.js"></script>
+<script src="js/flow/flow-palette.js"></script>
+<script src="js/flow/flow-canvas.js"></script>
+<script src="js/flow/flow-inspector.js"></script>
+<script src="js/flow/flow-preview.js"></script>
+<script src="js/flow/flow-export.js"></script>
+<script src="js/flow/flow-builder.js"></script>
 </body>
 </html>

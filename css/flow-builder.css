@@ -1,0 +1,79 @@
+/* ============================================================
+   链路编排台 · 布局与样式（gallery.html 改造）
+   三栏：左卡片库 · 中序列画布 · 右检查器；顶栏 + 预览弹层。
+   复用 loona.css 的颜色变量（--amber-2 / --line / --muted 等）。
+   ============================================================ */
+:root { --fb-gap: 12px; --fb-bg: #0b0d12; --fb-panel: rgba(255,255,255,.04); --fb-line: rgba(255,255,255,.12); }
+
+body.flow-body { margin: 0; background: var(--fb-bg); color: #f6f0e2; font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; height: 100vh; overflow: hidden; }
+
+.fb-topbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--fb-line); background: rgba(0,0,0,.3); }
+.fb-topbar h1 { font-size: 15px; margin: 0; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.fb-topbar h1 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber-2, #ffb84a); box-shadow: 0 0 10px var(--amber-2, #ffb84a); }
+.fb-topbar .spacer { flex: 1; }
+.fb-topbar input#flowTitle { background: var(--fb-panel); border: 1px solid var(--fb-line); color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 13px; width: 200px; }
+.fb-btn { background: var(--fb-panel); border: 1px solid var(--fb-line); color: #f6f0e2; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; transition: .15s; }
+.fb-btn:hover { border-color: var(--amber-2, #ffb84a); }
+.fb-btn.primary { background: var(--amber-2, #ffb84a); color: #2a1d05; border-color: transparent; font-weight: 600; }
+.fb-msg { font-size: 12px; color: var(--muted, #9aa); margin-left: 6px; }
+.fb-glink { color: var(--muted, #9aa); font-size: 12px; text-decoration: none; }
+.fb-glink:hover { color: #fff; }
+
+.fb-main { display: grid; grid-template-columns: 240px 1fr 320px; gap: var(--fb-gap); padding: var(--fb-gap); height: calc(100vh - 53px); box-sizing: border-box; }
+.fb-pane { background: var(--fb-panel); border: 1px solid var(--fb-line); border-radius: 12px; overflow: auto; display: flex; flex-direction: column; }
+.fb-pane-title { padding: 10px 14px; font-size: 12px; font-weight: 700; letter-spacing: .5px; color: #fff; border-bottom: 1px solid var(--fb-line); position: sticky; top: 0; background: #11141b; z-index: 2; }
+
+/* —— 左：卡片库 palette —— */
+#flowPalette { padding: 0; }
+.fp-group { padding: 12px 14px 4px; font-size: 11px; color: var(--muted, #9aa); }
+.fp-item { margin: 4px 10px; padding: 10px 12px; border: 1px dashed var(--fb-line); border-radius: 8px; cursor: grab; font-size: 13px; background: rgba(255,255,255,.03); transition: .12s; }
+.fp-item:hover { border-color: var(--amber-2, #ffb84a); background: rgba(255,180,74,.08); }
+.fp-item:active { cursor: grabbing; }
+.fp-item .fp-comp { font-size: 10px; color: var(--muted, #9aa); font-family: ui-monospace, monospace; }
+
+/* —— 中：序列画布 canvas —— */
+#flowCanvas { padding: 14px; gap: 12px; }
+.fc-empty { color: var(--muted, #9aa); text-align: center; padding: 40px 20px; font-size: 13px; border: 1px dashed var(--fb-line); border-radius: 10px; }
+.fc-step { border: 1px solid var(--fb-line); border-radius: 10px; padding: 10px; margin-bottom: 12px; background: rgba(0,0,0,.25); position: relative; transition: .12s; }
+.fc-step.sel { border-color: var(--amber-2, #ffb84a); box-shadow: 0 0 0 1px var(--amber-2, #ffb84a), 0 0 24px rgba(255,150,40,.25); }
+.fc-step.drag-over { border-top: 2px solid var(--amber-2, #ffb84a); }
+.fc-step-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px; color: var(--muted, #9aa); }
+.fc-step-idx { width: 20px; height: 20px; border-radius: 50%; background: var(--fb-panel); display: grid; place-items: center; font-size: 11px; }
+.fc-step-comp { font-family: ui-monospace, monospace; }
+.fc-step-ops { margin-left: auto; display: flex; gap: 4px; }
+.fc-op { width: 24px; height: 24px; border: 1px solid var(--fb-line); border-radius: 6px; background: transparent; color: #f6f0e2; cursor: pointer; font-size: 12px; line-height: 1; }
+.fc-op:hover { border-color: var(--amber-2, #ffb84a); }
+.fc-step-body { display: flex; justify-content: center; }
+.fc-drag-handle { cursor: grab; }
+
+/* —— 右：检查器 inspector —— */
+#flowInspector { padding: 14px; }
+.fi-empty { color: var(--muted, #9aa); font-size: 13px; padding: 20px 0; text-align: center; }
+.fi-section { margin-bottom: 14px; }
+.fi-section-t { font-size: 11px; color: var(--amber-2, #ffb84a); font-weight: 700; margin-bottom: 6px; letter-spacing: .5px; }
+.fi-field { margin-bottom: 8px; }
+.fi-field label { display: block; font-size: 11px; color: var(--muted, #9aa); margin-bottom: 3px; }
+.fi-field input, .fi-field textarea, .fi-field select { width: 100%; box-sizing: border-box; background: rgba(0,0,0,.3); border: 1px solid var(--fb-line); color: #fff; border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+.fi-field textarea { min-height: 60px; resize: vertical; }
+.fi-row { display: flex; gap: 8px; }
+.fi-row .fi-field { flex: 1; }
+
+/* —— chip（文本类 step 预览）—— */
+.flow-chip { width: 320px; padding: 12px 14px; border-radius: 12px; box-sizing: border-box; }
+.flow-chip-who { font-size: 10px; opacity: .6; margin-bottom: 4px; }
+.flow-chip-txt { font-size: 14px; line-height: 1.5; }
+.flow-chip-user { background: rgba(120,170,255,.14); border: 1px solid rgba(120,170,255,.3); align-self: flex-end; }
+.flow-chip-tts { background: rgba(255,180,74,.1); border: 1px solid rgba(255,180,74,.25); }
+.flow-chip-agent { background: rgba(255,255,255,.05); border: 1px dashed var(--fb-line); font-family: ui-monospace, monospace; font-size: 12px; }
+.flow-unsupported { width: 300px; padding: 16px; border: 1px dashed #c66; border-radius: 10px; color: #f99; font-size: 12px; text-align: center; }
+
+/* 静态轮播：去掉工作台里的压暗/缩放，原大原亮并排 */
+.flow-static-carousel { position: static; display: flex; gap: 12px; height: auto; overflow-x: auto; background: transparent; padding: 4px; max-width: 100%; }
+.flow-static-carousel .result-card { transform: none !important; filter: none !important; flex: 0 0 auto; }
+
+/* —— 预览弹层 —— */
+.fb-modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 100; }
+.fb-modal.show { display: flex; }
+.fb-modal-box { background: #11141b; border: 1px solid var(--fb-line); border-radius: 16px; padding: 16px; max-width: 90vw; max-height: 90vh; overflow: auto; }
+.fb-modal-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.fb-modal-bar .spacer { flex: 1; }
