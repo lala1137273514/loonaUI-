@@ -35,12 +35,14 @@
       this.storyboardMode = false;     // 开启后播放/seek 不再渲染 live 舞台（tile 已预建），只滚动+念
       this._building = false;          // buildStoryboard 进行中（绕过 storyboardMode 门，真渲染以便克隆）
       this._initSynth();
+      // 轮播适配器：工厂产实例，engine 自己持有(像 _carousel)。切 case/clearStage 时重建 → 天然清残留态，去共享单例。
+      this._adapter = global.LoonaCarouselAdapter ? global.LoonaCarouselAdapter.create() : null;
       // web_ui 同款轮播控制器（原样搬来的 CortexCarousel）：结果卡走它，澄清/确认仍走玻璃浮层
       if (global.CortexCarousel && refs.carouselPanel && refs.carouselRail && refs.carouselTitle) {
         this._carousel = global.CortexCarousel.createCarouselController({ panelEl: refs.carouselPanel, titleEl: refs.carouselTitle, railEl: refs.carouselRail });
         var self = this;
         if (this._carousel.setOnCardClick) this._carousel.setOnCardClick(function (idx) {
-          if (self._travelStages && global.LoonaCarouselAdapter && LoonaCarouselAdapter.mode === 'overview') self._drill({ coverIdx: +idx });
+          if (self._travelStages && self._adapter && self._adapter.mode === 'overview') self._drill({ coverIdx: +idx });
         });
         if (refs.carouselBack) refs.carouselBack.addEventListener('click', function () { self._backToOverview(); });
       }
@@ -51,8 +53,8 @@
     /* 两阶段下钻：opts = {day:'d2'} | {coverIdx:1}；flip 默认开（seek 时关）
        封面↔详情切换走 View Transition 共享元素形变（hero 图 morph），不支持则 opacity 兜底 */
     _drill: function (opts) {
-      if (!this._travelStages || !this._carousel || !global.LoonaCarouselAdapter) return;
-      var A = LoonaCarouselAdapter, st = A.stages, self = this;
+      if (!this._travelStages || !this._carousel || !this._adapter) return;
+      var A = this._adapter, st = A.stages, self = this;
       // 同阶段内左右切天：只滑动聚焦，不重渲（更顺）
       if (opts.day && st && A.mode === 'detail' && st.dayToStage[opts.day] === st.curStage) {
         var di = st.detailByStage[st.curStage].dayIdx[opts.day];
@@ -67,8 +69,8 @@
       }, opts.flip !== false);
     },
     _backToOverview: function (animate) {
-      if (!this._travelStages || !this._carousel || !global.LoonaCarouselAdapter) return;
-      var d = LoonaCarouselAdapter.backToOverview(); if (!d) return;
+      if (!this._travelStages || !this._carousel || !this._adapter) return;
+      var d = this._adapter.backToOverview(); if (!d) return;
       var self = this;
       this._vtSwitch(function (useFlip) {
         self._carousel.renderCarousel(d.carousel, { flip: useFlip });
@@ -79,8 +81,8 @@
     /* 编辑器即改即见：用编辑后的 stages content 重渲轮播（不走 TTS/flip），按 target 定位预览。
        target = {stage:'s1'}(看封面) | {day:'d2'}(看该天详情) | 空(看封面总览) */
     previewStages: function (ev, target) {
-      if (!this._carousel || !global.LoonaCarouselAdapter || !ev || ev.comp !== 'TravelStages') return;
-      var cov = LoonaCarouselAdapter.feedStages(ev);
+      if (!this._carousel || !this._adapter || !ev || ev.comp !== 'TravelStages') return;
+      var cov = this._adapter.feedStages(ev);
       if (!cov || !cov.items.length) { this._hideCarousel(); return; }
       this._travelStages = true;
       this._dismissToastsOn('card', true);
@@ -91,8 +93,8 @@
       this._showCarousel(true);
       if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');   // 轮播在场字幕放 2 行（长口播多显）
       if (target && target.day) this._drill({ day: target.day, flip: false });
-      else if (target && target.stage && LoonaCarouselAdapter.stages) {
-        var ci = LoonaCarouselAdapter.stages.coverIdxByStage[target.stage]; if (ci) this._carousel.focusCarouselItem(ci);
+      else if (target && target.stage && this._adapter.stages) {
+        var ci = this._adapter.stages.coverIdxByStage[target.stage]; if (ci) this._carousel.focusCarouselItem(ci);
       }
       this._markContent();
     },
@@ -173,8 +175,8 @@
     },
     /* 结果卡 → 轮播（适配器映射）。list 类整张渲染，focus 类只重定位聚焦。 */
     _renderCarousel: function (ev, instant) {
-      if (!this._carousel || !global.LoonaCarouselAdapter) return false;
-      var A = LoonaCarouselAdapter;
+      if (!this._carousel || !this._adapter) return false;
+      var A = this._adapter;
       // 旅行首屏（三方案）→ 首屏轮播 + 下钻详情，复用同一套 _drill/_backToOverview
       //   A TravelStages=阶段封面 · C TravelOverview=城市总览+每日行 · B InspoFlow=种草灵感卡
       //   走哪个 feedXxx 由组件注册表的 feed 字段派生（单一真值），不再硬列 comp。
@@ -383,7 +385,7 @@
       if (comp === 'MomentCard') { this._renderMoment(ev, instant); return; }   // 叙事流：满屏一图一刻
 
       // 结果卡 → web_ui 同款轮播（trip/news/mail/event/weather/...）；其余卡(澄清/失败/generic)走玻璃浮层
-      if (global.LoonaCarouselAdapter && LoonaCarouselAdapter.isResult(ev)) {
+      if (this._adapter && this._adapter.isResult(ev)) {
         if (this._renderCarousel(ev, instant)) return;
       }
 
@@ -665,8 +667,8 @@
     /* ---------- 高亮 / toast / 字幕 ---------- */
     _highlightCard: function (id) {
       // 轮播在场：TTS 念到哪条 → 居中聚焦对应卡（web_ui focusCarouselItem）
-      if (this._carouselShowing() && global.LoonaCarouselAdapter) {
-        var hidx = LoonaCarouselAdapter.highlightToIdx(id);
+      if (this._carouselShowing() && this._adapter) {
+        var hidx = this._adapter.highlightToIdx(id);
         if (hidx) {
           this._carousel.focusCarouselItem(hidx);
           this._revealHlNode(hidx);   // 该卡时间轴若超高，把命门节点(★/highlight)滚进卡内视野，别藏在折叠区
@@ -751,7 +753,8 @@
       if (this.refs.stage) this.refs.stage.classList.remove('sub-1line');
       if (this.refs.sideTrack) this.refs.sideTrack.appendChild(UI.el('div', 'empty', 'agent 内部决策记录将在播放时出现…'));
       if (this.refs.annLive) { this.refs.annLive.hidden = true; this.refs.annLive.onclick = null; }
-      if (global.LoonaCarouselAdapter) LoonaCarouselAdapter.reset();
+      // 重建实例 = 天然清残留导航态（current/stages/mode），比 reset() 更彻底，去共享单例后切 case/seek 不串味
+      if (global.LoonaCarouselAdapter) this._adapter = global.LoonaCarouselAdapter.create();
       this._travelStages = false;
       this._setBackBtn(false);
       this._hideCarousel();

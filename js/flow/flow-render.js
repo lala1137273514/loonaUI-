@@ -19,14 +19,12 @@
   var FEED = { InspoFlow: 'feedInspo', TravelStages: 'feedStages', TravelOverview: 'feedOverview', DestCompare: 'feedDestCompare', ThemeFlow: 'feedThemeFlow' };
 
   function carouselItems(step) {
-    var A = g.LoonaCarouselAdapter; if (!A) return null;
+    var F = g.LoonaCarouselAdapter; if (!F) return null;
+    // 每次预览用即弃的独立实例：与播放引擎/其它预览天然隔离，不再有共享态可污染。
+    var A = F.create();
     var items = null;
-    try {
-      if (FEED[step.comp]) { var car = A[FEED[step.comp]](step); items = car && car.items; }
-      else if (A.isResult(step)) { var res = A.feed(step); items = res && res.carousel && res.carousel.items; }
-    } finally {
-      if (A.reset) A.reset();   // 不污染共享单例（预览引擎也用同一个 Adapter）
-    }
+    if (FEED[step.comp]) { var car = A[FEED[step.comp]](step); items = car && car.items; }
+    else if (A.isResult(step)) { var res = A.feed(step); items = res && res.carousel && res.carousel.items; }
     return (items && items.length) ? items : null;
   }
 

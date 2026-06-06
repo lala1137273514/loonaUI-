@@ -221,12 +221,13 @@
     return (fn || buildSubject)(ev);   // 兜底：generic 单卡
   }
 
-  var Adapter = {
-    current: null,
-    stages: null,        // 两阶段态：{coverCarousel, detailByStage, dayToStage, coverIdxByStage, mode, curStage}
-    mode: null,          // 'overview' | 'detail'（仅 stages 模式有效）
-    reset: function () { this.current = null; this.stages = null; this.mode = null; },
-    isResult: function (ev) { return !!(ev && RESULT_COMPS[ev.comp]); },
+  /* 无状态助手：与实例态无关的纯判定，既挂工厂(静态)又进实例原型（调用点二者皆可拿到）。 */
+  function isResult(ev) { return !!(ev && RESULT_COMPS[ev.comp]); }
+
+  /* 实例方法集：current/stages/mode/curStage 是「每个实例自己的」可变导航态，
+     不再是模块级共享单例——engine/flow-render 各持一个实例，跨调用/切 case 天然无残留。 */
+  var proto = {
+    isResult: isResult,
 
     /* TravelStages 事件 → 建封面轮播 + 各阶段详情轮播；返回封面轮播（一阶段总览） */
     feedStages: function (ev) {
@@ -373,5 +374,18 @@
     }
   };
 
-  global.LoonaCarouselAdapter = Adapter;
+  /* 工厂：每次 create() 产出一个带独立可变态(current/stages/mode/curStage)的新实例。
+     proto 的方法走原型链共享（无副本开销），状态字段在实例上初始化。 */
+  function Adapter() {
+    this.current = null;
+    this.stages = null;   // 两阶段态：{coverCarousel, detailByStage, dayToStage, coverIdxByStage, curStage}
+    this.mode = null;     // 'overview' | 'detail'（仅 stages 模式有效）
+  }
+  Adapter.prototype = proto;
+  proto.reset = function () { this.current = null; this.stages = null; this.mode = null; };
+
+  global.LoonaCarouselAdapter = {
+    create: function () { return new Adapter(); },
+    isResult: isResult   // 无状态助手挂静态：tools 自证 / 任意调用点无需先 create
+  };
 })(window);
