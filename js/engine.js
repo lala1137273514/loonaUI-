@@ -34,7 +34,7 @@
       this.onStep = null;              // (idx) 钩子，故事板 feed 滚动到 active tile 用
       this.storyboardMode = false;     // 开启后播放/seek 不再渲染 live 舞台（tile 已预建），只滚动+念
       this._building = false;          // buildStoryboard 进行中（绕过 storyboardMode 门，真渲染以便克隆）
-      this._initSynth();
+      this._tts = global.LoonaTTS ? global.LoonaTTS.create(this) : null;   // TTS 子系统：合成/音频/manifest 全在它里，engine 只委托
       // 轮播适配器：工厂产实例，engine 自己持有(像 _carousel)。切 case/clearStage 时重建 → 天然清残留态，去共享单例。
       this._adapter = global.LoonaCarouselAdapter ? global.LoonaCarouselAdapter.create() : null;
       // web_ui 同款轮播控制器（原样搬来的 CortexCarousel）：结果卡走它，澄清/确认仍走玻璃浮层
@@ -216,20 +216,6 @@
       this._markContent();
       return true;
     },
-    _initSynth: function () {
-      var self = this;
-      this._synth = global.speechSynthesis || null;
-      this._voice = null;
-      if (!this._synth) return;
-      function pick() {
-        var vs = self._synth.getVoices() || [];
-        var zh = vs.filter(function (v) { return /zh|cmn|Chinese/i.test(v.lang + ' ' + v.name); });
-        self._voice = zh[0] || vs[0] || null;
-      }
-      pick();
-      if (this._synth.onvoiceschanged !== undefined) this._synth.onvoiceschanged = pick;
-    },
-
     /* ---------- 载入 case ---------- */
     load: function (caseObj) {
       this._cancel();
@@ -254,7 +240,7 @@
     pause: function () {
       if (this.mode !== 'play') { this._setPlaying(false); return; }
       this._paused = true; this._emit('pause');
-      if (this._synth) try { this._synth.pause(); } catch (e) {}
+      if (this._tts) this._tts.pause();
       this.mode = 'idle'; this._emitState();
     },
     toggle: function () { (this.mode === 'play' && !this._paused) ? this.pause() : this.play(); },
@@ -266,7 +252,7 @@
     },
     replay: function () { this._softReset(); var self = this; setTimeout(function () { self._run(false); }, 60); },
     setSpeed: function (s) { this.speed = +s || 1; this._emitState(); },
-    setTTS: function (on) { this.ttsEnabled = !!on; if (!on && this._synth) try { this._synth.cancel(); } catch (e) {} this._emitState(); },
+    setTTS: function (on) { this.ttsEnabled = !!on; if (this._tts) this._tts.setEnabled(on); this._emitState(); },
     setAutoWaits: function (on) { this.autoWaits = !!on; this._emitState(); },
     setTheme: function (t) {
       var self = this; this.theme = t;
@@ -290,7 +276,7 @@
     },
 
     _softReset: function () { this._cancel(); this.idx = 0; this._prevT = 0; this._paused = false; this._clearStage(); this._refreshTimelineDoneState(); this._setNow('IDLE · 待命'); },
-    _cancel: function () { this._runId++; this._paused = false; this._emit('cancel'); this._bus = {}; if (this._synth) try { this._synth.cancel(); } catch (e) {} this._setPlaying(false); },
+    _cancel: function () { this._runId++; this._paused = false; this._emit('cancel'); this._bus = {}; if (this._tts) this._tts.cancel(); this._setPlaying(false); },
 
     /* ---------- 跳转（点时间线） ---------- */
     seekTo: function (idx) {
@@ -357,7 +343,7 @@
 
           if (tp && tp.text) {
             if (tp.highlight) self._highlightCard(tp.highlight);
-            self._speak(tp.text, tp).then(afterTTS);
+            self._tts.speak(tp.text, tp).then(afterTTS);
           } else { afterTTS('ok'); }
         });
       })();
@@ -438,7 +424,7 @@
           break;
         }
         case 'tts':
-          // 纯 TTS 事件：渲染交给 _speak 的字幕；此处无 DOM
+          // 纯 TTS 事件：渲染交给 _tts.speak 的字幕；此处无 DOM
           break;
         default:
           this._pushPop(UI.popSmall({ role: 'status', text: ev.text || comp }));
@@ -467,73 +453,6 @@
       if (ev.tts && ev.tts.text) return { text: ev.tts.text, pace: ev.tts.pace, highlight: ev.highlight };
       return null;
     },
-    /* 文案 → 稳定 id（djb2，与离线生成脚本 tools/gen_tts.mjs 同算法）→ 命中预渲染百炼 mp3 */
-    _ttsId: function (s) { var h = 5381, i = (s || '').length; while (i) h = (h * 33) ^ s.charCodeAt(--i); return (h >>> 0).toString(16); },
-    _ttsFile: function (text) { var m = global.LOONA_TTS; return (m && text) ? (m[this._ttsId(text)] || null) : null; },
-    _speak: function (text, opts) {
-      this._setSubtitle(text, true);
-      // 预渲染百炼 mp3（assets/tts/manifest.js → window.LOONA_TTS）优先；缺则回落浏览器合成/估时
-      if (this.ttsEnabled && text) { var url = this._ttsFile(text); if (url) return this._speakAudio(text, opts, url); }
-      return this._speakSynth(text, opts);
-    },
-    /* 播放预渲染百炼音频：可暂停/续/取消/调速；加载或解码失败 → 回落 _speakSynth */
-    _speakAudio: function (text, opts, url) {
-      var self = this;
-      return new Promise(function (resolve) {
-        var done = false, audio;
-        function clean() { self._off('cancel', onCancel); self._off('pause', onPause); self._off('resume', onResume); }
-        function fin(r) { if (done) return; done = true; clean(); self._subtitleSpeaking(false); try { audio && audio.pause(); } catch (e) {} resolve(r || 'ok'); }
-        function fallback() { if (done) return; done = true; clean(); try { audio && audio.pause(); } catch (e) {} self._speakSynth(text, opts).then(function (r) { resolve(r); }); }
-        function onCancel() { fin('cancel'); }
-        function onPause() { try { audio && audio.pause(); } catch (e) {} }
-        function onResume() { if (!done && audio) try { audio.play(); } catch (e) {} }
-        try { audio = new Audio(url); } catch (e) { fallback(); return; }
-        audio.playbackRate = Math.min(2.5, Math.max(0.6, self.speed));
-        audio.onended = function () { fin('ok'); };
-        audio.onerror = function () { fallback(); };
-        self._on('cancel', onCancel); self._on('pause', onPause); self._on('resume', onResume);
-        if (self._paused) return;                 // 暂停态：等 resume 再播
-        var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {});   // 自动播放被拦截：等手势/resume
-      });
-    },
-    _speakSynth: function (text, opts) {
-      var self = this;
-      // 无 TTS / 无 synth / 空文本：估时兜底，节奏完全交给 pause-aware 的 _sleep（暂停即冻结、继续即续，原生支持）
-      if (!this.ttsEnabled || !this._synth || !text) {
-        return this._sleep(Math.max(650, text ? text.length * 145 : 0)).then(function (r) { self._subtitleSpeaking(false); return r; });
-      }
-
-      // 有 TTS：朗读做成可暂停/可续。
-      //  · 暂停 = 取消当前朗读（synth.cancel 比 synth.pause 可靠得多）+ 冻结(promise 不 resolve)，兜底 guard 一并停。
-      //  · 继续 = 从这句重念。
-      //  · stale-utterance 守卫：暂停时取消触发的 onend 不会误结束（curU 失配 / paused）。
-      return new Promise(function (resolve) {
-        var done = false, paused = false, guard = null, curU = null;
-        function clearGuard() { if (guard) { clearTimeout(guard); guard = null; } }
-        function fin(r) {
-          if (done) return; done = true; clearGuard(); curU = null;
-          self._off('cancel', onCancel); self._off('pause', onPause); self._off('resume', onResume);
-          self._subtitleSpeaking(false); resolve(r || 'ok');
-        }
-        function onCancel() { try { self._synth.cancel(); } catch (e) {} fin('cancel'); }
-        function onPause() { if (done) return; paused = true; clearGuard(); curU = null; try { self._synth.cancel(); } catch (e) {} }
-        function onResume() { if (done || !paused) return; paused = false; speak(); }
-        function armGuard() { clearGuard(); guard = setTimeout(function () { if (!paused && !done) fin('ok'); }, (Math.max(1600, text.length * 230)) / self.speed + 1800); }
-        function speak() {
-          var u = new SpeechSynthesisUtterance(text); curU = u;
-          if (self._voice) u.voice = self._voice;
-          u.lang = 'zh-CN'; u.rate = Math.min(1.9, Math.max(0.6, 0.98 * self.speed)); u.pitch = 1.02;
-          u.onend = function () { if (!paused && u === curU) fin('ok'); };       // 暂停态/旧 utterance 的 onend 不结束
-          u.onerror = function () { if (!paused && u === curU) fin('ok'); };
-          try { self._synth.cancel(); self._synth.speak(u); armGuard(); }
-          catch (e) { self._sleep(Math.max(650, text.length * 145)).then(function (r) { if (!paused) fin(r); }); }
-        }
-        self._on('cancel', onCancel); self._on('pause', onPause); self._on('resume', onResume);
-        if (self._paused) { paused = true; return; }   // 已是暂停态：等 resume 再念
-        speak();
-      });
-    },
-
     /* ---------- 停等（澄清/确认门） ---------- */
     _waitUser: function (ev, i) {
       var self = this, myRun = this._runId;
