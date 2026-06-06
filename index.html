@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/news-forms.css">
 <link rel="stylesheet" href="css/scenario-forms.css">
 <link rel="stylesheet" href="css/carousel.css">
+<link rel="stylesheet" href="css/card-tokens.css">
 <link rel="stylesheet" href="css/console.css">
 <link rel="stylesheet" href="css/storyboard.css">
 </head>
@@ -270,18 +271,22 @@
   if ($('prevItem')) $('prevItem').addEventListener('click', function () { engine.carouselNav(-1); });
   if ($('nextItem')) $('nextItem').addEventListener('click', function () { engine.carouselNav(1); });
 
-  /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景恢复 */
+  /* 用例注册表（case 脚本各自挂到 window.LOONA_CASES）—— 旅游(两阶段)置顶为默认，其余场景按加载顺序自动派生
+     加 case 只需在上面 <script src="cases/..."> 加一行；顺序/分组自动来：
+       PINNED 置顶白名单 → 其余按 LOONA_CASES 加载(插入)顺序 → 归档(ARCHIVED_ORDER)永远排最后。
+     分组渲染按 scene 切片，组内顺序即此 ids 顺序。 */
   var CASES = window.LOONA_CASES || {};
-  var ORDER = ['travel_dali_3d_solo', 'travel_japan_7d',
-    'cortex_mail_priority', 'cortex_mail_priority_v2', 'cortex_mail_priority_v3', 'cortex_mail_priority_v4',
-    'cortex_news_hot', 'cortex_news_hot_v2', 'cortex_news_hot_v3', 'cortex_news_hot_v4',
-    'cortex_calendar_week', 'cortex_calendar_week_v2', 'cortex_calendar_week_v3', 'cortex_calendar_week_v4',
-    'travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2'];
-  /* 旅行老版本：从旅游规划分组移出，单独归到末尾「归档」分组 */
-  var ARCHIVED = { travel_chengdu_5d: 1, travel_chengdu_5d_v2: 1, travel_dali_friends: 1, travel_dali_friends_v2: 1 };
+  /* 置顶白名单：只列要钉在最前的几个（默认首个 case = PINNED[0]） */
+  var PINNED = ['travel_dali_3d_solo', 'travel_japan_7d'];
+  /* 旅行老版本：从旅游规划分组移出，单独归到末尾「归档」分组；此数组同时定义归档组内显示顺序 */
+  var ARCHIVED_ORDER = ['travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2'];
+  var ARCHIVED = {}; ARCHIVED_ORDER.forEach(function (k) { ARCHIVED[k] = 1; });
   function isArchived(id) { return !!ARCHIVED[id]; }
-  var ids = ORDER.filter(function (k) { return CASES[k]; })
-    .concat(Object.keys(CASES).filter(function (k) { return ORDER.indexOf(k) < 0; }));
+  /* ids = 置顶(存在的) + 其余按加载顺序(去重、排除置顶与归档) + 归档(按 ARCHIVED_ORDER，存在的) */
+  var pinned = PINNED.filter(function (k) { return CASES[k]; });
+  var middle = Object.keys(CASES).filter(function (k) { return CASES[k] && pinned.indexOf(k) < 0 && !isArchived(k); });
+  var archived = ARCHIVED_ORDER.filter(function (k) { return CASES[k]; });
+  var ids = pinned.concat(middle, archived);
   /* case 选择器：分组(旅游规划/其他场景) + 搜索 的弹层，替代长下拉，一眼可选 */
   var curCase = ids[0];
   function sceneOf(id) { return CASES[id] && CASES[id].scene; }

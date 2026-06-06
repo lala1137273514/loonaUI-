@@ -1,0 +1,101 @@
+/* ============================================================
+   卡片尺寸单一真值（card-tokens）
+   每个卡型的宽/高/最大高用 CSS 变量集中定义，component 规则只引用变量。
+   仲裁靠特异性：
+     默认值          .carousel-panel        (0,1,0)  = gallery/裸 carousel 值
+     工作台覆盖      .web-stage .carousel-panel (0,2,0)  覆盖默认
+     窄屏覆盖        @media .carousel-panel (0,1,0) 同特异性、靠加载顺序（本文件在 carousel.css 之后）
+   moment-card 在 .story-layer 上下文，单独一组变量。
+   本文件不含任何裸尺寸的 component 规则，只声明变量。
+   ============================================================ */
+
+/* ---------- 默认值（无 .web-stage：gallery / 裸 carousel） ---------- */
+.carousel-panel {
+  /* result：工作台只改高，宽恒 324 */
+  --card-result-w: 324px;
+  --card-result-h: 344px;
+
+  --card-trip-w: 460px;
+  --card-trip-h: 300px;
+
+  --card-inspo-w: 460px;
+  --card-inspo-h: 300px;
+
+  --card-cover-w: 460px;
+  --card-cover-h: 300px;
+
+  --card-dest-w: 468px;
+  --card-dest-h: 360px;
+
+  --card-theme-w: 468px;
+  --card-theme-h: 360px;
+
+  /* route/hotel/budget：高随内容（auto）+ 上限；工作台收上限到 232 */
+  --card-route-w: 360px;
+  --card-route-maxh: 100%;
+  --card-hotel-w: 360px;
+  --card-hotel-maxh: 100%;
+  --card-budget-w: 360px;
+  --card-budget-maxh: 100%;
+
+  /* travel-overview：两上下文一致（无覆盖） */
+  --card-tov-w: 460px;
+}
+
+/* ---------- 工作台覆盖（.web-stage：812×375 帧内，只覆盖变量） ---------- */
+.web-stage .carousel-panel {
+  --card-result-h: 232px;            /* 宽不变 324 */
+
+  --card-trip-w: 326px;
+  --card-trip-h: 296px;
+
+  --card-inspo-w: 326px;
+  --card-inspo-h: 296px;
+
+  --card-cover-w: 326px;
+  --card-cover-h: 232px;
+
+  --card-dest-w: 326px;
+  --card-dest-h: 232px;
+
+  --card-theme-w: 326px;
+  --card-theme-h: 232px;
+
+  --card-route-w: 300px;
+  --card-route-maxh: 232px;
+  --card-hotel-w: 300px;
+  --card-hotel-maxh: 232px;
+  --card-budget-w: 300px;
+  --card-budget-maxh: 232px;
+}
+
+/* ---------- moment-card：.story-layer 上下文 ---------- */
+.story-layer {
+  --card-moment-w: 468px;            /* gallery / 裸 */
+  --card-moment-h: 360px;
+}
+.web-stage .story-layer {
+  --card-moment-w: 380px;            /* 工作台 */
+  --card-moment-h: 300px;
+}
+
+/* ---------- 窄屏（@max-width:920px）：只覆盖变量 ---------- */
+@media (max-width: 920px) {
+  .carousel-panel {
+    --card-result-w: 280px;          /* result 窄屏改宽+高 */
+    --card-result-h: 332px;
+
+    --card-dest-w: 300px;
+    --card-dest-h: 300px;
+    --card-theme-w: 300px;
+    --card-theme-h: 300px;
+
+    --card-route-w: 300px;
+    --card-hotel-w: 300px;
+    --card-budget-w: 300px;
+  }
+  .story-layer {
+    --card-moment-w: 300px;
+    --card-moment-h: 300px;
+  }
+}

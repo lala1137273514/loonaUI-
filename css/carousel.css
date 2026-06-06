@@ -96,9 +96,9 @@
 
 /* 露边聚焦：固定尺寸；非聚焦缩小压暗，聚焦全亮 + 琥珀光晕（覆盖各卡型的 align-self/height） */
 .carousel-panel .result-card {
-  flex: 0 0 324px;
-  width: 324px;
-  height: 344px;
+  flex: 0 0 var(--card-result-w);
+  width: var(--card-result-w);
+  height: var(--card-result-h);
   align-self: center;
   scroll-snap-align: center;
   transform: scale(0.84);
@@ -1411,11 +1411,7 @@ a.news-pill:hover {
     padding-inline: calc(50% - 140px);
   }
 
-  .carousel-panel .result-card {
-    flex-basis: 280px;
-    width: 280px;
-    height: 332px;
-  }
+  /* result-card 窄屏尺寸已由 card-tokens.css 的 @media 变量覆盖 */
 
   .trip-titles {
     gap: 6px;
@@ -1928,8 +1924,8 @@ a.news-pill:hover {
    一阶段=阶段封面（大图+tag）；二阶段=逐天详情卡（复用 .trip-card）。待并回 web_ui。
    ============================================================ */
 /* 统一横滑卡尺寸 460×300（方案/封面/日程一致）。居中靠 centerCarouselCard。 */
-.carousel-panel .trip-cover { flex: 0 0 460px; width: 460px; height: 300px; }
-.carousel-panel .trip-card { flex: 0 0 460px; width: 460px; height: 300px; }
+.carousel-panel .trip-cover { flex: 0 0 var(--card-cover-w); width: var(--card-cover-w); height: var(--card-cover-h); }
+.carousel-panel .trip-card { flex: 0 0 var(--card-trip-w); width: var(--card-trip-w); height: var(--card-trip-h); }
 .trip-cover {
   position: relative; padding: 0; overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 24px; background: #222; box-shadow: none;
@@ -1993,7 +1989,7 @@ a.news-pill:hover {
 @media (prefers-reduced-motion: reduce) { .carousel-rail.flipping .result-card { animation: none; } }
 
 /* ===== C 方案：城市总览卡（hero + 元信息 tag + 每日亮点行） ===== */
-.carousel-panel .travel-overview { flex: 0 0 460px; width: 460px; height: auto; max-height: 100%; align-self: start; }
+.carousel-panel .travel-overview { flex: 0 0 var(--card-tov-w); width: var(--card-tov-w); height: auto; max-height: 100%; align-self: start; }
 .travel-overview {
   display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: none; color: #fff;
   border: 1px solid rgba(255,255,255,0.28); border-radius: 24px;
@@ -2019,7 +2015,7 @@ a.news-pill:hover {
 .tov-row-arr { flex: 0 0 auto; color: rgba(255,255,255,.5); font-size: 18px; line-height: 1; }
 
 /* ===== B/方案选择：灵感卡（大图 + 主题 + tags + 强 punchline）。尺寸统一 460×300 ===== */
-.carousel-panel .inspo-card { flex: 0 0 460px; width: 460px; height: 300px; }
+.carousel-panel .inspo-card { flex: 0 0 var(--card-inspo-w); width: var(--card-inspo-w); height: var(--card-inspo-h); }
 .inspo-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
 .inspo-card.active { border-color: rgba(255,180,84,0.85); }
 .inspo-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
@@ -2046,7 +2042,7 @@ a.news-pill:hover {
 .story-layer { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; }
 .story-layer.show { display: flex; }
 .moment-card {
-  position: relative; flex: 0 0 468px; width: 468px; height: 360px; overflow: hidden;
+  position: relative; flex: 0 0 var(--card-moment-w); width: var(--card-moment-w); height: var(--card-moment-h); overflow: hidden;
   border: 1px solid rgba(255, 180, 84, 0.5); border-radius: 24px; background: #222;
   box-shadow: 0 0 64px rgba(255, 150, 40, 0.4);
   animation: moment-in .5s cubic-bezier(.2,.8,.25,1) both;
@@ -2079,7 +2075,7 @@ a.news-pill:hover {
    交通路线(route) / 酒店住宿(hotel) / 预算花费(budget) 结果卡。待并回 web_ui。
    ============================================================ */
 /* ---- 多目的地对比：候选城市封面（大图 + 城市 + 对比数据条 + why） 468×360 ---- */
-.carousel-panel .dest-card { flex: 0 0 468px; width: 468px; height: 360px; }
+.carousel-panel .dest-card { flex: 0 0 var(--card-dest-w); width: var(--card-dest-w); height: var(--card-dest-h); }
 .dest-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
 .dest-card.active { border-color: rgba(255,180,84,0.85); }
 .dest-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
@@ -2094,7 +2090,7 @@ a.news-pill:hover {
 .dest-why { margin: 0; color: #fff; font-size: 13.5px; line-height: 1.4; text-shadow: 0 1px 12px rgba(0,0,0,.75); }
 
 /* ---- 主题玩法：主题封面（大图 + 玩法计数 + 主题名 + tags + punchline） 468×360 ---- */
-.carousel-panel .theme-card { flex: 0 0 468px; width: 468px; height: 360px; }
+.carousel-panel .theme-card { flex: 0 0 var(--card-theme-w); width: var(--card-theme-w); height: var(--card-theme-h); }
 .theme-card { position: relative; padding: 0; overflow: hidden; box-shadow: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 24px; background: #222; }
 .theme-card.active { border-color: rgba(255,180,84,0.85); }
 .theme-photo { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: 0; aspect-ratio: auto; object-fit: cover; }
@@ -2108,7 +2104,7 @@ a.news-pill:hover {
 .theme-punch { margin: 0; color: #fff; font-size: 13.5px; line-height: 1.42; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
 
 /* ---- 交通路线卡：from→to + 黄线 + 方式/时长/换乘 ---- */
-.carousel-panel .route-card { flex: 0 0 360px; width: 360px; align-self: center; height: auto; max-height: 100%; }
+.carousel-panel .route-card { flex: 0 0 var(--card-route-w); width: var(--card-route-w); align-self: center; height: auto; max-height: var(--card-route-maxh); }
 .route-card {
   position: relative; gap: 0; padding: 18px 18px 16px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
@@ -2126,7 +2122,7 @@ a.news-pill:hover {
 .route-note { margin: 6px 0 0; color: #ccc; font-size: 12.5px; line-height: 1.45; }
 
 /* ---- 酒店住宿卡：照片头 + 名称 + 价位/评分/区域 + 设施 tag ---- */
-.carousel-panel .hotel-card { flex: 0 0 360px; width: 360px; align-self: start; height: auto; max-height: 100%; }
+.carousel-panel .hotel-card { flex: 0 0 var(--card-hotel-w); width: var(--card-hotel-w); align-self: start; height: auto; max-height: var(--card-hotel-maxh); }
 .hotel-card {
   gap: 0; padding: 10px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
@@ -2150,7 +2146,7 @@ a.news-pill:hover {
 .hotel-note { margin: 10px 6px 2px; color: #ccc; font-size: 12.5px; line-height: 1.45; }
 
 /* ---- 预算花费卡：分项 CSS 条形 + 合计 ---- */
-.carousel-panel .budget-card { flex: 0 0 360px; width: 360px; align-self: start; height: auto; max-height: 100%; }
+.carousel-panel .budget-card { flex: 0 0 var(--card-budget-w); width: var(--card-budget-w); align-self: start; height: auto; max-height: var(--card-budget-maxh); }
 .budget-card {
   gap: 0; padding: 16px 18px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.3); border-radius: 24px;
@@ -2170,8 +2166,5 @@ a.news-pill:hover {
 .budget-amount { flex: 0 0 auto; width: 64px; text-align: right; color: #fff; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .budget-note { margin: 13px 0 0; color: #ccc; font-size: 12.5px; line-height: 1.45; }
 
-@media (max-width: 920px) {
-  .carousel-panel .dest-card, .carousel-panel .theme-card { flex-basis: 300px; width: 300px; height: 300px; }
-  .carousel-panel .route-card, .carousel-panel .hotel-card, .carousel-panel .budget-card { flex-basis: 300px; width: 300px; }
-}
-@media (max-width: 920px) { .moment-card { flex-basis: 300px; width: 300px; height: 300px; } .moment-title { font-size: 23px; } }
+/* dest/theme/route/hotel/budget/moment 窄屏尺寸已由 card-tokens.css 的 @media 变量覆盖 */
+@media (max-width: 920px) { .moment-title { font-size: 23px; } }
