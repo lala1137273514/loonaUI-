@@ -46,7 +46,7 @@
         var badge = el('span', 'sb-cmt'); head.appendChild(badge); tile._badge = badge;
         tile.appendChild(head);
         if (t.userContext) tile.appendChild(el('div', 'sb-userctx', '🗣 ' + esc(t.userContext)));   // 触发这帧的用户提问
-        var frame = el('div', 'sb-frame' + (t.empty ? ' sb-empty' : ''));
+        var frame = el('div', 'sb-frame' + (t.notice ? ' sb-notice' : (t.empty ? ' sb-empty' : '')));
         var screen = el('div', 'sb-screen');
         if (t.dom) screen.appendChild(t.dom);
         frame.appendChild(screen);

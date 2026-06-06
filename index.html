@@ -183,6 +183,9 @@
 <script src="cases/travel_chengdu_5d_v2.js"></script>
 <script src="cases/travel_dali_friends.js"></script>
 <script src="cases/travel_dali_friends_v2.js"></script>
+<script src="cases/travel_chengdu_3d_v5.js"></script>
+<script src="cases/travel_dali_3d_solo_v5.js"></script>
+<script src="cases/travel_japan_7d_v5.js"></script>
 <!-- case「立场标签」映射（演示对照用） -->
 <script src="js/case-stance.js"></script>
 <!-- 运行配置 + 评论同步层（Supabase 实时多人 / localStorage 单机兜底；file:// 可跑） -->
@@ -281,9 +284,9 @@
      分组渲染按 scene 切片，组内顺序即此 ids 顺序。 */
   var CASES = window.LOONA_CASES || {};
   /* 置顶白名单：只列要钉在最前的几个（默认首个 case = PINNED[0]） */
-  var PINNED = ['travel_dali_3d_solo', 'travel_japan_7d'];
+  var PINNED = ['travel_chengdu_3d_v5', 'travel_dali_3d_solo_v5', 'travel_japan_7d_v5'];
   /* 旅行老版本：从旅游规划分组移出，单独归到末尾「归档」分组；此数组同时定义归档组内显示顺序 */
-  var ARCHIVED_ORDER = ['travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2'];
+  var ARCHIVED_ORDER = ['travel_dali_3d_solo', 'travel_japan_7d', 'travel_chengdu_5d_v2', 'travel_chengdu_5d', 'travel_dali_friends', 'travel_dali_friends_v2'];
   var ARCHIVED = {}; ARCHIVED_ORDER.forEach(function (k) { ARCHIVED[k] = 1; });
   function isArchived(id) { return !!ARCHIVED[id]; }
   /* ids = 置顶(存在的) + 其余按加载顺序(去重、排除置顶与归档) + 归档(按 ARCHIVED_ORDER，存在的) */

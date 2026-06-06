@@ -718,6 +718,9 @@
         if (pureQuery) { pendingUser = ev.text || pendingUser; continue; }     // 提问并入下一帧作上下文
         if (ev.comp === 'agent_step' || ev.internal || ev.comp === 'toast') continue;
         var label = ev.drill_day ? '钻取 · 详情' : ev.travel_back ? '返回 · 总览' : this._stageLabel(ev);
+        // NOTICE 口播（中间调工具的进度提示，如「我查一下日程」）：只出文字帧、不配图，
+        // 否则会克隆上一张卡的残留快照，让人以为这帧有张内容卡。
+        if (ev.notice) { tiles.push({ idx: i, comp: ev.comp, label: label, text: (tp && tp.text) || ev.text || '', userContext: pendingUser, notice: true }); pendingUser = ''; continue; }
         var clone = this.refs.stage.cloneNode(true);
         var origRail = this.refs.carouselRail;
         var sl = origRail ? origRail.scrollLeft : 0;   // 居中位置（克隆不带 scrollLeft，存下来插入后再施加）
