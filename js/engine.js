@@ -177,11 +177,11 @@
       var A = LoonaCarouselAdapter;
       // 旅行首屏（三方案）→ 首屏轮播 + 下钻详情，复用同一套 _drill/_backToOverview
       //   A TravelStages=阶段封面 · C TravelOverview=城市总览+每日行 · B InspoFlow=种草灵感卡
-      if (ev.comp === 'TravelStages' || ev.comp === 'TravelOverview' || ev.comp === 'InspoFlow' || ev.comp === 'DestCompare' || ev.comp === 'ThemeFlow') {
-        var cov = ev.comp === 'TravelOverview' ? A.feedOverview(ev)
-          : ev.comp === 'InspoFlow' ? A.feedInspo(ev)
-          : ev.comp === 'DestCompare' ? A.feedDestCompare(ev)
-          : ev.comp === 'ThemeFlow' ? A.feedThemeFlow(ev) : A.feedStages(ev);
+      //   走哪个 feedXxx 由组件注册表的 feed 字段派生（单一真值），不再硬列 comp。
+      var _def = global.LoonaComponents && global.LoonaComponents.get(ev.comp);
+      var _feed = _def && _def.feed;
+      if (_feed) {
+        var cov = A[_feed](ev);
         if (!cov || !cov.items.length) return false;
         this._dismissToastsOn('card', instant);
         this._focusClear(instant);

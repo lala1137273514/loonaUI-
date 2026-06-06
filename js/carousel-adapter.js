@@ -33,15 +33,9 @@
     return { carousel: { source_tool_name: source_tool_name, title: title, items: items, active_item_idx: null }, idMap: idMap };
   }
 
-  /* 哪些 comp 算「结果卡」（进轮播）。澄清/确认/失败/状态/字幕不在此列。 */
-  var RESULT_COMPS = {
-    ListCard: 1, SubjectCard: 1, SectionCard: 1, WeatherView: 1, TravelView: 1,
-    TravelViewA: 1, TravelViewB: 1, TravelDayFocus: 1, TravelDayCard: 1,
-    NewsList: 1, NewsFocus: 1, RestaurantView: 1, card: 1, TravelStages: 1,
-    TravelOverview: 1, InspoFlow: 1,
-    RouteView: 1, HotelView: 1, BudgetView: 1,   // 交通/住宿/预算 平铺结果卡
-    DestCompare: 1, ThemeFlow: 1                   // 多目的地对比 / 主题玩法 封面→钻取范式
-  };
+  /* 哪些 comp 算「结果卡」（进轮播）。澄清/确认/失败/状态/字幕不在此列。
+     单一真值：由组件注册表派生（route==='carousel'），不再硬列。 */
+  var RESULT_COMPS = global.LoonaComponents.resultComps();
 
   /* ---- 旅行两阶段：stages（阶段，可含多天）→ ①封面 items ②按阶段分组的逐天详情 items ---- */
   function dayToItem(idx, day) {
@@ -52,7 +46,8 @@
       nodes: Array.isArray(day.nodes) ? day.nodes : null, summary: strip(day.footer || day.card_footer), raw: day
     });
   }
-  var FOCUS_COMPS = { NewsFocus: 1, TravelDayFocus: 1 };
+  /* 单一真值：由组件注册表派生（isFocus===true） */
+  var FOCUS_COMPS = global.LoonaComponents.focusComps();
 
   /* ---- 各 comp → items ---- */
   function buildNewsList(ev) {
@@ -210,22 +205,20 @@
     return wrap('budget', c.title || '预算', [mkItem(1, 'budget', { id: c.id || 'budget', title: c.title, raw: c })]);
   }
 
+  /* comp → buildXxx 数据转换函数：由注册表 build 字段派生（单一真值），不再硬写 switch。
+     注册表里 build:null（feed 类）或未登记的 comp 走兜底 buildSubject(generic 单卡)。 */
+  var BUILDERS = {
+    buildNewsList: buildNewsList, buildNewsSingle: buildNewsSingle,
+    buildListCard: buildListCard, buildMeeting: buildMeeting,
+    buildWeather: buildWeather, buildRestaurant: buildRestaurant,
+    buildSubject: buildSubject, buildTravel: buildTravel,
+    buildTravelDaySingle: buildTravelDaySingle,
+    buildRoute: buildRoute, buildHotels: buildHotels, buildBudget: buildBudget
+  };
   function build(ev) {
-    switch (ev.comp) {
-      case 'NewsList': return buildNewsList(ev);
-      case 'NewsFocus': return buildNewsSingle(ev);
-      case 'ListCard': return buildListCard(ev);
-      case 'SectionCard': return buildMeeting(ev);
-      case 'WeatherView': return buildWeather(ev);
-      case 'RestaurantView': return buildRestaurant(ev);
-      case 'SubjectCard': return buildSubject(ev);
-      case 'TravelView': case 'TravelViewA': case 'TravelViewB': case 'TravelDayCard': return buildTravel(ev);
-      case 'TravelDayFocus': return buildTravelDaySingle(ev);
-      case 'RouteView': return buildRoute(ev);
-      case 'HotelView': return buildHotels(ev);
-      case 'BudgetView': return buildBudget(ev);
-      default: return buildSubject(ev);   // 兜底：generic 单卡
-    }
+    var def = global.LoonaComponents.get(ev.comp);
+    var fn = def && def.build ? BUILDERS[def.build] : null;
+    return (fn || buildSubject)(ev);   // 兜底：generic 单卡
   }
 
   var Adapter = {

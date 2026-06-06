@@ -155,32 +155,26 @@
     };
   }
 
+  /* kind → DOM builder 单一映射（取代原 13 个 if 链）。kind 是数据层名(由 adapter build/feed 产出 item.kind)，
+     是 comp→kind→builder 的二级分发，故映射留在 carousel.js 内部，与组件注册表的 comp 级路由分层。 */
+  var KIND_BUILDERS = {
+    "travel-overview": buildTravelOverviewCard,   // C 方案：城市总览 + 每日亮点行
+    "inspo-card": buildInspoCard,                 // B 方案：种草灵感卡
+    "dest-card": buildDestCard,                   // 多目的地对比：候选城市封面（含对比数据）
+    "theme-card": buildThemeCard,                 // 主题玩法：主题封面（含玩法计数）
+    "route": buildRouteCard,                       // 交通路线卡
+    "hotel": buildHotelCard,                       // 酒店住宿卡
+    "budget": buildBudgetCard,                     // 预算花费卡
+    "trip-cover": buildTripCoverCard,              // 旅行阶段封面卡（大图 + tag）
+    "trip": buildTripCarouselCard,
+    "search": buildSearchCarouselCard,
+    "mail": buildMailCarouselCard,
+    "event": buildEventCarouselCard,
+    "weather": buildWeatherCarouselCard
+  };
   function buildCarouselCard(item) {
-    if (item.kind === "travel-overview") return buildTravelOverviewCard(item);   // C 方案：城市总览 + 每日亮点行
-    if (item.kind === "inspo-card") return buildInspoCard(item);                  // B 方案：种草灵感卡
-    if (item.kind === "dest-card") return buildDestCard(item);                    // 多目的地对比：候选城市封面（含对比数据）
-    if (item.kind === "theme-card") return buildThemeCard(item);                  // 主题玩法：主题封面（含玩法计数）
-    if (item.kind === "route") return buildRouteCard(item);                       // 交通路线卡
-    if (item.kind === "hotel") return buildHotelCard(item);                       // 酒店住宿卡
-    if (item.kind === "budget") return buildBudgetCard(item);                     // 预算花费卡
-    if (item.kind === "trip-cover") {       // 工作台新增：旅行阶段封面卡（大图 + tag）
-      return buildTripCoverCard(item);
-    }
-    if (item.kind === "trip") {
-      return buildTripCarouselCard(item);
-    }
-    if (item.kind === "search") {
-      return buildSearchCarouselCard(item);
-    }
-    if (item.kind === "mail") {
-      return buildMailCarouselCard(item);
-    }
-    if (item.kind === "event") {
-      return buildEventCarouselCard(item);
-    }
-    if (item.kind === "weather") {
-      return buildWeatherCarouselCard(item);
-    }
+    var kb = KIND_BUILDERS[item.kind];
+    if (kb) return kb(item);
 
     const card = document.createElement("article");
     card.className = "result-card";
