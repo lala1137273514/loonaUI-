@@ -49,7 +49,7 @@
   --card-trip-w: 326px;
   --card-trip-h: 296px;
 
-  --card-inspo-w: 326px;
+  --card-inspo-w: 400px;             /* 方案卡改横版长方形（400×296，高度受设备~303限制） */
   --card-inspo-h: 296px;
 
   --card-cover-w: 326px;
