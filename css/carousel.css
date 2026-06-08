@@ -851,12 +851,12 @@ a.news-pill:hover {
   gap: 8px;
   padding: 15px 16px;
   overflow-y: auto;
-  border-color: rgba(126, 224, 160, 0.55);
+  border-color: rgba(255, 180, 84, 0.52);
   border-radius: 20px;
   background:
-    radial-gradient(110% 80% at 18% 0%, rgba(126, 224, 160, 0.18), transparent 50%),
+    radial-gradient(110% 80% at 18% 0%, rgba(255, 180, 84, 0.2), transparent 50%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.22)),
-    rgba(17, 22, 19, 0.9);
+    rgba(25, 22, 18, 0.9);
   color: #fff;
 }
 
@@ -875,8 +875,8 @@ a.news-pill:hover {
 .mail-draft-top span {
   padding: 3px 9px;
   border-radius: 999px;
-  background: rgba(126, 224, 160, 0.92);
-  color: #12311e;
+  background: rgba(255, 196, 0, 0.94);
+  color: #503612;
   font-size: 10px;
   font-weight: 780;
   line-height: 1.2;
@@ -1036,8 +1036,8 @@ a.news-pill:hover {
 }
 
 .mail-draft-btn.confirm {
-  background: rgba(126, 224, 160, 0.95);
-  color: #12311e;
+  background: rgba(255, 196, 0, 0.94);
+  color: #503612;
 }
 
 .mail-draft-btn.cancel {

@@ -240,7 +240,7 @@
 
   var newsV4 = JSON.parse(JSON.stringify(global.LOONA_CASES['cortex_news_hot_v3']));
   newsV4.task_id = 'cortex_news_hot_v4';
-  newsV4.title = '新闻 · Cortex热点播报 V4';
+  newsV4.title = '新闻 · Cortex热点播报 V4（已优化）';
   newsV4.source_case = 'Cortex web_ui · web_search / news_hot_natural · V4';
   newsV4.decision_record.primary_need = '最近热点新闻，先给英文入口主线，详情用关键句展开';
   newsV4.events[1].decision = 'router → NEW；命中 web_search；V4 使用英文 TTS 与英文新闻卡片，入口总结后用关键句详情卡承接追问。';
@@ -250,13 +250,13 @@
   newsV4.events[4].fields = ['source_tool_name:web_search', 'topic-category', 'key-sentence-card', 'present_mode:entry_then_section'];
   newsV4.events[5].card_id = 'news_entry_v4';
   newsV4.events[5].content.intro = 'Topics: Politics · Technology · Agriculture · Economy · Policy';
-  newsV4.events[6].text = 'These cluster around risk: politics, chips, food supply, trade, and policy.';
-  newsV4.events[7].text = 'Start with the Iran deal. A late reversal can move markets fast.';
-  newsV4.events[8].text = 'The chip story matters because shortages are showing up in resale prices.';
-  newsV4.events[9].text = 'Weather and shipping pressure could feed into food prices.';
-  newsV4.events[10].text = 'The IMF line is a mood check on trade and growth.';
-  newsV4.events[11].text = 'The Taiwan-arms item is about credibility with allies.';
-  newsV4.events[12].text = 'I’d start with the political lead, then watch where pressure shows up.';
+  newsV4.events[6].text = 'The useful pattern is risk spreading across politics, chips, food supply, trade, and policy.';
+  newsV4.events[7].text = 'Start with the Iran deal. Since you usually care about market spillover, the late reversal is the part to watch.';
+  newsV4.events[8].text = 'The chip story is practical: a shortage is already showing up in resale prices, not just industry headlines.';
+  newsV4.events[9].text = 'Weather and shipping pressure are quieter, but they matter because they can move food prices after the headline fades.';
+  newsV4.events[10].text = 'The IMF line is a mood check. I would treat it as context for trade and growth, not a standalone shock.';
+  newsV4.events[11].text = 'The Taiwan-arms item is more about credibility than one shipment. It affects how allies read future signals.';
+  newsV4.events[12].text = 'So I’d start with political risk, then track where it becomes visible: markets, supply chains, and prices.';
   newsV4.events[14].decision = '用户指定第一条新闻；复用 n1 进入英文关键句详情，不强制拆成 facts/numbers。';
   newsV4.events[14].fields = ['selected:n1', 'followup:detail', 'key-sentence-card'];
   newsV4.events[15].card_id = 'news_detail_v4';
@@ -287,13 +287,13 @@
     ]
   };
   newsV4.events[16].highlight = 'n1_lead_v4';
-  newsV4.events[16].text = 'The reversal is the point. Expectations changed late.';
+  newsV4.events[16].text = 'The reversal is the point. A late change matters because markets react harder after expectations have already shifted.';
   newsV4.events[17].highlight = 'n1_terms_v4';
-  newsV4.events[17].text = 'The hard part is execution: uranium handling and inspections.';
+  newsV4.events[17].text = 'The hard part is execution: uranium handling and inspections. Without that, the deal is mostly headline risk.';
   newsV4.events[18].highlight = 'n1_signals_v4';
-  newsV4.events[18].text = 'Watch commitments, sanctions timing, oil, gold, and the dollar.';
+  newsV4.events[18].text = 'Watch commitments, sanctions timing, oil, gold, and the dollar. Those signals fit your usual market-impact lens.';
   newsV4.events[19].highlight = 'n1_watch_v4';
-  newsV4.events[19].text = 'If talks restart, it may fade. If pressure rises, risk spreads.';
+  newsV4.events[19].text = 'If talks restart, this may fade. If pressure rises, the risk spreads into energy and regional security.';
   newsV4.events[20].decision = 'V4 只读搜索 R0；英文 TTS/卡片；入口使用多模板新闻卡，详情由用户追问触发并用关键句卡泛化到不同题材。';
   newsV4.events[20].fields = ['query:R0', 'typed-card', 'key-sentence-detail', 'user-triggered-detail'];
   global.LOONA_CASES['cortex_news_hot_v4'] = newsV4;

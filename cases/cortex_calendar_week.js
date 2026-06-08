@@ -150,7 +150,7 @@
 
   var calendarV4 = JSON.parse(JSON.stringify(global.LOONA_CASES['cortex_calendar_week_v3']));
   calendarV4.task_id = 'cortex_calendar_week_v4';
-  calendarV4.title = '日程 · Cortex一周日程播报 V4';
+  calendarV4.title = '日程 · Cortex一周日程播报 V4（已优化）';
   calendarV4.source_case = 'Cortex web_ui · list_events / calendar_today · V4';
   calendarV4.decision_record.primary_need = '查询今天到接下来一周的日程，先英文 brief，再按天和事件提醒';
   calendarV4.events[1].decision = 'router → NEW；命中 list_events；V4 使用英文 brief 卡先概括一周形状，再按日期聚合并逐事件对齐提醒。';
@@ -169,15 +169,15 @@
       brief_label: 'brief',
       count_text: '2 days · 4 events',
       metrics: [
-        { label: 'Total', value: '4', kind: 'hot' },
-        { label: 'Today', value: '2', kind: 'muted' },
-        { label: 'Tomorrow', value: '2', kind: 'muted' }
+        { label: 'Travel', value: '2', kind: 'hot' },
+        { label: 'Meeting', value: '1', kind: 'muted' },
+        { label: 'Work', value: '1', kind: 'muted' }
       ],
       attention_title: 'Worth attention',
-      attention_count_text: '2 days',
+      attention_count_text: 'by type',
       attention_items: [
-        { title: 'Today', summary: '2 events · 18:30 airport' },
-        { title: 'Tomorrow', summary: '2 events · 20:30 train' }
+        { title: 'Travel', summary: '2 events · airport + train' },
+        { title: 'Work', summary: '1 wrap-up · prep early' }
       ],
       badge: { text: 'brief', kind: 'ok' }, right: 'This week', copy_locale: 'en' },
     { id: 'cal_meet_v4', title: 'Meet at conference room', sub: 'Today · Conference room', lead: '15:30', raw_start: '2026-05-28T15:30:00+08:00', raw_end: '2026-05-28T16:00:00+08:00', event_date: '2026-05-28', event_start_sort: 930, badge: { text: 'Focus', kind: 'p1' }, copy_locale: 'en' },
@@ -186,7 +186,7 @@
     { id: 'cal_trip_next_v4', title: 'Business trip', sub: 'Tomorrow · Train station · Evening departure', lead: '20:30', raw_start: '2026-05-29T20:30:00+08:00', raw_end: '2026-05-29T22:00:00+08:00', event_date: '2026-05-29', event_start_sort: 1230, badge: { text: 'Reminder', kind: 'p2' }, copy_locale: 'en' }
   ];
   calendarV4.events[6].highlight = 'cal_brief_v4';
-  calendarV4.events[6].text = 'Four events across two days. Today watch the airport trip; tomorrow watch the train trip.';
+  calendarV4.events[6].text = 'Four events: two travel, one meeting, one wrap-up. Watch the travel handoffs.';
   calendarV4.events[7].highlight = 'cal_meet_v4';
   calendarV4.events[7].text = 'At three thirty, meet in the conference room. Pack materials first.';
   calendarV4.events[8].highlight = 'cal_trip_today_v4';
